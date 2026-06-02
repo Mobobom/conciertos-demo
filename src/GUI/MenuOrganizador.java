@@ -71,6 +71,7 @@ public class MenuOrganizador extends JFrame {
         addButton(panel, "Crear concierto", e -> crearConcierto());
         addButton(panel, "Modificar concierto", e -> modificarConcierto());
         addButton(panel, "Ver informacion del evento", e -> verInformacionEvento());
+        addButton(panel, "Cerrar sesion", e -> cerrarSesion());
         addButton(panel, "Cerrar menu", e -> dispose());
 
         return panel;
@@ -175,6 +176,11 @@ public class MenuOrganizador extends JFrame {
         } catch (SQLException e) {
             mostrarError("No se pudo consultar el evento", e);
         }
+    }
+
+    private void cerrarSesion() {
+        dispose();
+        new LoginFrame().setVisible(true);
     }
 
     private void mostrarTablaConciertos(String titulo, LinkedList<Concierto> conciertos) {

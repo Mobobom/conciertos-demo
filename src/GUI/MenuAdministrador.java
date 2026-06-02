@@ -84,6 +84,7 @@ public class MenuAdministrador extends JFrame {
         addButton(panel, "Ver tickets", e -> verTicketsDeConcierto());
         addButton(panel, "Bloquear ticket", e -> bloquearTicket());
         addButton(panel, "Liberar ticket", e -> liberarTicket());
+        addButton(panel, "Cerrar sesion", e -> cerrarSesion());
         addButton(panel, "Cerrar menu", e -> dispose());
 
         return panel;
@@ -252,6 +253,11 @@ public class MenuAdministrador extends JFrame {
         } catch (SQLException e) {
             mostrarError("No se pudieron crear los tickets", e);
         }
+    }
+
+    private void cerrarSesion() {
+        dispose();
+        new LoginFrame().setVisible(true);
     }
 
     private void verTicketsDeConcierto() {
