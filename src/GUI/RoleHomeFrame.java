@@ -1,15 +1,16 @@
 package GUI;
 
 import BLL.Usuario;
-
+import java.awt.BorderLayout;
+import java.awt.FlowLayout;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.SwingConstants;
-import java.awt.BorderLayout;
-import java.awt.FlowLayout;
+import javax.swing.SwingUtilities;
 
 public class RoleHomeFrame extends JFrame {
 
@@ -29,6 +30,8 @@ public class RoleHomeFrame extends JFrame {
 
         add(buildHeader(), BorderLayout.NORTH);
         add(buildButtons(), BorderLayout.SOUTH);
+
+        SwingUtilities.invokeLater(this::openRoleMenuIfNeeded);
     }
 
     private JPanel buildHeader() {
@@ -72,6 +75,26 @@ public class RoleHomeFrame extends JFrame {
         dispose();
         LoginFrame loginFrame = new LoginFrame();
         loginFrame.setVisible(true);
+    }
+
+    private void openRoleMenuIfNeeded() {
+        String rol = usuario.getRol();
+        if ("Administrador".equals(rol)) {
+            dispose();
+            new MenuAdministrador(usuario).setVisible(true);
+            return;
+        }
+        if ("Organizador".equals(rol)) {
+            dispose();
+            new MenuOrganizador(usuario).setVisible(true);
+            return;
+        }
+        if (!"Comprador".equals(rol) && !"PersonalAcceso".equals(rol)) {
+            JOptionPane.showMessageDialog(this,
+                    "No hay menu definido para el rol: " + rol,
+                    "Rol no soportado",
+                    JOptionPane.INFORMATION_MESSAGE);
+        }
     }
 }
 
