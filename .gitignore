@@ -1,0 +1,12 @@
+docs/
+
+# Java build outputs
+bin/
+out/
+*.class
+
+# IntelliJ IDEA local metadata
+.idea/
+
+# macOS
+.DS_Store

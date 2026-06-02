@@ -42,7 +42,7 @@ public class ShowConciertosTable {
         frame.add(sp);
 
         frame.setSize(700, 400);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
     }

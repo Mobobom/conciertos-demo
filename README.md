@@ -73,17 +73,29 @@ Resultado esperado: `5 usuarios, 2 conciertos, 6 sectores, 120 tickets`.
 mkdir -p bin
 javac --release 11 -d bin -cp "lib/*" $(find src -name "*.java")
 
-# Ejecutar
-DISPLAY=:0 /usr/lib/jvm/java-11-openjdk-amd64/bin/java -cp "bin:lib/*" GUI.Main
+# Ejecutar en macOS / Linux
+java -cp "bin:lib/*" GUI.Main
+
+# Harness de desarrollo sin abrir Swing
+java -cp "bin:lib/*" GUI.DevHarness smoke
 ```
 
-Al iniciar, en consola se verá:
+Al iniciar, se abrirá la pantalla de **Login**. Se puede probar con:
+
+```text
+admin@ticket.com / admin123
+juan@mail.com / 1234
+```
+
+Luego se abrirá una pantalla base según el rol del usuario. Desde ahí se puede abrir la tabla de conciertos disponibles.
+
+En consola se verá:
 
 ```
 Conexion: conectado a jdbc:mysql://localhost:3306/ticketing?useSSL=false&serverTimezone=UTC
 ```
 
-Y se abrirá una ventana **"Conciertos disponibles"** con dos filas: *Coldplay* (15/06/2026, Estadio Monumental) y *Taylor Swift* (20/08/2026, Estadio Velez), ambas con 60 entradas disponibles.
+La ventana **"Conciertos disponibles"** muestra dos filas: *Coldplay* (15/06/2026, Estadio Monumental) y *Taylor Swift* (20/08/2026, Estadio Velez), ambas con 60 entradas disponibles.
 
 ## Datos de prueba
 
@@ -97,7 +109,7 @@ Y se abrirá una ventana **"Conciertos disponibles"** con dos filas: *Coldplay* 
 | juan@mail.com | 1234 | Comprador |
 | ana@mail.com | 1234 | Comprador |
 
-Los hashes bcrypt cargados son **placeholders** bien formados que **no** validan contra las contraseñas listadas. Se regenerarán con `Hashing.hash(...)` cuando se implemente el flujo de login en la próxima ronda.
+Los hashes bcrypt cargados validan contra las contraseñas listadas y son usados por `UsuarioService` para el flujo de autenticación del MVP.
 
 ### Conciertos
 
