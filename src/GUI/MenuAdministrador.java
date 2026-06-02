@@ -9,11 +9,11 @@ import BLL.TicketService;
 import BLL.Usuario;
 import java.awt.BorderLayout;
 import java.awt.GridLayout;
+import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
-import java.math.BigDecimal;
 import java.util.LinkedList;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -80,6 +80,7 @@ public class MenuAdministrador extends JFrame {
         addButton(panel, "Ver disponibilidad", e -> verDisponibilidadConcierto());
         addButton(panel, "Ver sectores", e -> verSectoresDeConcierto());
         addButton(panel, "Crear sector", e -> crearSector());
+        addButton(panel, "Crear tickets de sector", e -> crearTicketsDeSector());
         addButton(panel, "Ver tickets", e -> verTicketsDeConcierto());
         addButton(panel, "Bloquear ticket", e -> bloquearTicket());
         addButton(panel, "Liberar ticket", e -> liberarTicket());
@@ -238,6 +239,18 @@ public class MenuAdministrador extends JFrame {
             mostrarInfo("Datos invalidos", e.getMessage());
         } catch (SQLException e) {
             mostrarError("No se pudo crear el sector", e);
+        }
+    }
+
+    private void crearTicketsDeSector() {
+        try {
+            int sectorId = pedirEntero("ID del sector", null);
+            int creados = ticketService.generarTicketsParaSector(sectorId);
+            mostrarInfo("Tickets creados", "Se crearon " + creados + " tickets para el sector.");
+        } catch (IllegalArgumentException e) {
+            mostrarInfo("Datos invalidos", e.getMessage());
+        } catch (SQLException e) {
+            mostrarError("No se pudieron crear los tickets", e);
         }
     }
 
