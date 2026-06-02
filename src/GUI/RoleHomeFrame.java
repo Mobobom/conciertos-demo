@@ -8,8 +8,9 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingConstants;
-import java.awt.BorderLayout;
+import javax.swing.JOptionPane;
 import java.awt.FlowLayout;
+import java.awt.BorderLayout;
 
 public class RoleHomeFrame extends JFrame {
 
@@ -56,6 +57,9 @@ public class RoleHomeFrame extends JFrame {
         JButton concertsButton = new JButton("Ver conciertos disponibles");
         concertsButton.addActionListener(e -> ShowConciertosTable.showTable());
 
+        JButton roleButton = new JButton("Ir a menu de rol");
+        roleButton.addActionListener(e -> openRoleMenu());
+
         JButton logoutButton = new JButton("Cerrar sesion");
         logoutButton.addActionListener(e -> logout());
 
@@ -63,9 +67,26 @@ public class RoleHomeFrame extends JFrame {
         exitButton.addActionListener(e -> System.exit(0));
 
         panel.add(concertsButton);
+        panel.add(roleButton);
         panel.add(logoutButton);
         panel.add(exitButton);
         return panel;
+    }
+
+    private void openRoleMenu() {
+        if ("Comprador".equals(usuario.getRol())) {
+            MenuComprador menu = new MenuComprador(usuario);
+            menu.setVisible(true);
+            return;
+        }
+        if ("PersonalAcceso".equals(usuario.getRol())) {
+            MenuPersonalAcceso menu = new MenuPersonalAcceso(usuario);
+            menu.setVisible(true);
+            return;
+        }
+        JOptionPane.showMessageDialog(this,
+                "No hay un menu configurado para el rol: " + usuario.getRol(),
+                "Rol sin menu", JOptionPane.INFORMATION_MESSAGE);
     }
 
     private void logout() {
