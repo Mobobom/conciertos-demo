@@ -13,6 +13,7 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
+import java.math.BigDecimal;
 import java.util.LinkedList;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -78,6 +79,7 @@ public class MenuAdministrador extends JFrame {
         addButton(panel, "Cancelar concierto", e -> cancelarConcierto());
         addButton(panel, "Ver disponibilidad", e -> verDisponibilidadConcierto());
         addButton(panel, "Ver sectores", e -> verSectoresDeConcierto());
+        addButton(panel, "Crear sector", e -> crearSector());
         addButton(panel, "Ver tickets", e -> verTicketsDeConcierto());
         addButton(panel, "Bloquear ticket", e -> bloquearTicket());
         addButton(panel, "Liberar ticket", e -> liberarTicket());
@@ -213,6 +215,29 @@ public class MenuAdministrador extends JFrame {
             mostrarInfo("Datos invalidos", e.getMessage());
         } catch (SQLException e) {
             mostrarError("No se pudieron listar los sectores", e);
+        }
+    }
+
+    private void crearSector() {
+        try {
+            int conciertoId = pedirEntero("ID del concierto", null);
+            String tipo = pedirTexto("Tipo de sector (ej. PLATEA, VIP)", "PLATEA");
+            String nombre = pedirTexto("Nombre del sector", "Principal");
+            int capacidad = pedirEntero("Capacidad del sector", "10");
+            String precioStr = pedirTexto("Precio (ej. 100.00)", "100.00");
+            BigDecimal precio;
+            try {
+                precio = new BigDecimal(precioStr.trim());
+            } catch (NumberFormatException ex) {
+                throw new IllegalArgumentException("Precio invalido.");
+            }
+
+            int id = sectorService.crearSector(conciertoId, tipo, nombre, capacidad, precio);
+            mostrarInfo("Sector creado", "Se creo el sector con ID " + id + ".");
+        } catch (IllegalArgumentException e) {
+            mostrarInfo("Datos invalidos", e.getMessage());
+        } catch (SQLException e) {
+            mostrarError("No se pudo crear el sector", e);
         }
     }
 
