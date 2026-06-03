@@ -7,7 +7,7 @@ Basado en la especificación de requisitos `Especificacion_de_requisitos_-_Versi
 ## Estructura del proyecto
 
 ```
-rentacar-demo-main/
+conciertos-demo-main/
 ├── db/
 │   ├── setup_mysql_ticketing.sh    Crea usuario y base de datos
 │   ├── create_ticketing.sql        Crea las tablas del esquema
