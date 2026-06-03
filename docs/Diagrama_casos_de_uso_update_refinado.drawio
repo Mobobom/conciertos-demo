@@ -1,0 +1,442 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="Casos de uso" id="UseCase-TicketSystem-Refinado">
+    <mxGraphModel dx="934" dy="657" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2500" pageHeight="1700" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="sys" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#333333;strokeWidth=2;verticalAlign=top;align=center;fontSize=18;fontStyle=1;spacingTop=8;" value="Sistema de Venta de Tickets para Conciertos" vertex="1">
+          <mxGeometry height="1540" width="2060" x="220" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="actor-comprador" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fontFamily=Verdana;fontSize=12;fontStyle=1;" value="Comprador" vertex="1">
+          <mxGeometry height="70" width="40" x="100" y="840" as="geometry" />
+        </mxCell>
+        <mxCell id="actor-admin" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fontFamily=Verdana;fontSize=12;fontStyle=1;" value="Administrador" vertex="1">
+          <mxGeometry height="70" width="40" x="1180" as="geometry" />
+        </mxCell>
+        <mxCell id="actor-org" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fontFamily=Verdana;fontSize=12;fontStyle=1;" value="Organizador" vertex="1">
+          <mxGeometry height="70" width="40" x="1780" as="geometry" />
+        </mxCell>
+        <mxCell id="actor-acceso" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fontFamily=Verdana;fontSize=12;fontStyle=1;" value="Personal de acceso" vertex="1">
+          <mxGeometry height="70" width="40" x="2310" y="1160" as="geometry" />
+        </mxCell>
+        <mxCell id="blk-shared" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f7fb;strokeColor=#c8d1e1;dashed=1;fontSize=14;fontStyle=1;verticalAlign=top;align=left;spacingTop=6;spacingLeft=8;" value="Servicios comunes y reutilizables" vertex="1">
+          <mxGeometry height="160" width="1860" x="320" y="120" as="geometry" />
+        </mxCell>
+        <mxCell id="blk-buyer" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fbfbfb;strokeColor=#cfcfcf;dashed=1;fontSize=14;fontStyle=1;verticalAlign=top;align=left;spacingTop=6;spacingLeft=8;" value="Comprador" vertex="1">
+          <mxGeometry height="1230" width="560" x="320" y="330" as="geometry" />
+        </mxCell>
+        <mxCell id="blk-admin" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#faf8ff;strokeColor=#d3c6f3;dashed=1;fontSize=14;fontStyle=1;verticalAlign=top;align=left;spacingTop=6;spacingLeft=8;" value="Administrador" vertex="1">
+          <mxGeometry height="1230" width="670" x="920" y="330" as="geometry" />
+        </mxCell>
+        <mxCell id="blk-org" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5fbff;strokeColor=#b8d7ea;dashed=1;fontSize=14;fontStyle=1;verticalAlign=top;align=left;spacingTop=6;spacingLeft=8;" value="Organizador" vertex="1">
+          <mxGeometry height="560" width="510" x="1630" y="330" as="geometry" />
+        </mxCell>
+        <mxCell id="blk-access" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fffaf2;strokeColor=#ead7ac;dashed=1;fontSize=14;fontStyle=1;verticalAlign=top;align=left;spacingTop=6;spacingLeft=8;" value="Personal de acceso" vertex="1">
+          <mxGeometry height="560" width="510" x="1630" y="930" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-login" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e8f0fe;strokeColor=#5b7bd5;fontSize=11;fontStyle=1;" value="Iniciar sesión" vertex="1">
+          <mxGeometry height="55" width="180" x="1040" y="170" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-disp" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e8f0fe;strokeColor=#5b7bd5;fontSize=11;fontStyle=1;" value="Obtener disponibilidad&#xa;de tickets" vertex="1">
+          <mxGeometry height="65" width="260" x="1270" y="165" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-update-disp" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e8f0fe;strokeColor=#5b7bd5;fontSize=11;fontStyle=1;" value="Actualizar&#xa;disponibilidad" vertex="1">
+          <mxGeometry height="55" width="220" x="1580" y="170" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-permisos" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e8f0fe;strokeColor=#5b7bd5;fontSize=11;fontStyle=1;" value="Verificar permisos&#xa;y autorizaciones" vertex="1">
+          <mxGeometry height="65" width="250" x="1840" y="165" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-registrar" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#4d4d4d;fontSize=11;fontStyle=1;" value="Registrarse" vertex="1">
+          <mxGeometry height="55" width="180" x="30" y="240" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-visualizar" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#4d4d4d;fontSize=11;fontStyle=1;" value="Visualizar conciertos" vertex="1">
+          <mxGeometry height="60" width="230" x="260" y="430" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-info" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#4d4d4d;fontSize=11;fontStyle=1;" value="Ver información&#xa;del concierto" vertex="1">
+          <mxGeometry height="60" width="260" x="530" y="370" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-comprar" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#4d4d4d;fontSize=11;fontStyle=1;" value="Comprar tickets" vertex="1">
+          <mxGeometry height="60" width="220" x="430" y="580" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-sector" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8f9fa;strokeColor=#6c757d;fontSize=11;" value="Seleccionar sector" vertex="1">
+          <mxGeometry height="50" width="210" x="780" y="570" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-cupo" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8f9fa;strokeColor=#6c757d;fontSize=11;" value="Validar cupo&#xa;disponible" vertex="1">
+          <mxGeometry height="50" width="210" x="660" y="730" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-limite" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8f9fa;strokeColor=#6c757d;fontSize=11;" value="Validar límite de&#xa;compra por usuario" vertex="1">
+          <mxGeometry height="55" width="220" x="650" y="820" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-datos" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8f9fa;strokeColor=#6c757d;fontSize=11;" value="Ingresar datos&#xa;personales" vertex="1">
+          <mxGeometry height="50" width="210" x="830" y="910" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-campos" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8f9fa;strokeColor=#6c757d;fontSize=11;" value="Validar campos&#xa;obligatorios" vertex="1">
+          <mxGeometry height="50" width="220" x="650" y="995" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-pago" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8f9fa;strokeColor=#6c757d;fontSize=11;" value="Procesar pago" vertex="1">
+          <mxGeometry height="50" width="180" x="670" y="1080" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-reg-compra" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8f9fa;strokeColor=#6c757d;fontSize=11;" value="Registrar compra" vertex="1">
+          <mxGeometry height="50" width="180" x="670" y="1160" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-ticket" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8f9fa;strokeColor=#6c757d;fontSize=11;" value="Generar ticket&#xa;digital (QR / barras)" vertex="1">
+          <mxGeometry height="60" width="220" x="650" y="1240" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-confirmacion" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8f9fa;strokeColor=#6c757d;fontSize=11;" value="Enviar confirmación&#xa;por email / SMS" vertex="1">
+          <mxGeometry height="60" width="220" x="650" y="1335" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-fila" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" value="Gestionar fila virtual" vertex="1">
+          <mxGeometry height="50" width="210" x="650" y="480" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-cupo-agotado" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" value="Informar cupo agotado" vertex="1">
+          <mxGeometry height="50" width="220" x="270" y="805" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-limite-exc" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" value="Informar límite&#xa;excedido" vertex="1">
+          <mxGeometry height="50" width="190" x="220" y="930" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-pago-rech" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" value="Rechazar pago" vertex="1">
+          <mxGeometry height="50" width="170" x="300" y="1080" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-merch" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#4d4d4d;fontSize=11;fontStyle=1;" value="Comprar merchandising" vertex="1">
+          <mxGeometry height="55" width="240" x="400" y="1110" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-estac" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#4d4d4d;fontSize=11;fontStyle=1;" value="Reservar&#xa;estacionamiento" vertex="1">
+          <mxGeometry height="55" width="260" x="280" y="1327.5" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-trans" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#4d4d4d;fontSize=11;fontStyle=1;" value="Reservar transporte" vertex="1">
+          <mxGeometry height="55" width="220" x="530" y="1310" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-crear" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#4d4d4d;fontSize=11;fontStyle=1;" value="Crear concierto" vertex="1">
+          <mxGeometry height="60" width="220" x="980" y="420" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-modificar" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#4d4d4d;fontSize=11;fontStyle=1;" value="Modificar concierto" vertex="1">
+          <mxGeometry height="60" width="220" x="980" y="560" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-bloquear" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#4d4d4d;fontSize=11;fontStyle=1;" value="Bloquear o liberar&#xa;tickets" vertex="1">
+          <mxGeometry height="60" width="280" x="960" y="760" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-vis-admin" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#4d4d4d;fontSize=11;fontStyle=1;" value="Visualizar disponibilidad" vertex="1">
+          <mxGeometry height="60" width="260" x="970" y="900" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-admin-merch" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#4d4d4d;fontSize=11;fontStyle=1;" value="Administrar&#xa;merchandising" vertex="1">
+          <mxGeometry height="60" width="250" x="970" y="1080" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-admin-estac" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#4d4d4d;fontSize=11;fontStyle=1;" value="Administrar&#xa;estacionamientos" vertex="1">
+          <mxGeometry height="60" width="270" x="960" y="1200" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-admin-trans" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#4d4d4d;fontSize=11;fontStyle=1;" value="Administrar&#xa;transportes" vertex="1">
+          <mxGeometry height="60" width="240" x="980" y="1320" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-datos-conc" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8f9fa;strokeColor=#6c757d;fontSize=11;" value="Ingresar datos&#xa;del concierto" vertex="1">
+          <mxGeometry height="50" width="240" x="1270" y="380" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-validar-conc" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8f9fa;strokeColor=#6c757d;fontSize=11;" value="Validar datos&#xa;obligatorios" vertex="1">
+          <mxGeometry height="50" width="230" x="1270" y="460" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-superpos" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8f9fa;strokeColor=#6c757d;fontSize=11;" value="Verificar superposición&#xa;fecha/hora/lugar" vertex="1">
+          <mxGeometry height="60" width="260" x="1270" y="540" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-sectores" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8f9fa;strokeColor=#6c757d;fontSize=11;" value="Definir sectores" vertex="1">
+          <mxGeometry height="50" width="200" x="1270" y="630" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-capacidad" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8f9fa;strokeColor=#6c757d;fontSize=11;" value="Definir capacidad&#xa;por sector" vertex="1">
+          <mxGeometry height="55" width="220" x="1270" y="710" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-guardar-conc" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8f9fa;strokeColor=#6c757d;fontSize=11;" value="Guardar concierto" vertex="1">
+          <mxGeometry height="50" width="200" x="1270" y="795" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-editar-conc" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8f9fa;strokeColor=#6c757d;fontSize=11;" value="Editar datos&#xa;del concierto" vertex="1">
+          <mxGeometry height="50" width="220" x="1270" y="900" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-modif-ok" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8f9fa;strokeColor=#6c757d;fontSize=11;" value="Verificar modificación&#xa;permitida" vertex="1">
+          <mxGeometry height="55" width="235" x="1270" y="985" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-guardar-cambios" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8f9fa;strokeColor=#6c757d;fontSize=11;" value="Guardar cambios" vertex="1">
+          <mxGeometry height="50" width="180" x="1270" y="1070" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-sector-rango" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8f9fa;strokeColor=#6c757d;fontSize=11;" value="Seleccionar sector&#xa;o rango" vertex="1">
+          <mxGeometry height="55" width="220" x="1270" y="1160" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-estado-tickets" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8f9fa;strokeColor=#6c757d;fontSize=11;" value="Actualizar estado&#xa;de tickets" vertex="1">
+          <mxGeometry height="55" width="220" x="1270" y="1245" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-reg-mov" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8f9fa;strokeColor=#6c757d;fontSize=11;" value="Registrar movimiento" vertex="1">
+          <mxGeometry height="50" width="200" x="1270" y="1330" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-gest-prod" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8f9fa;strokeColor=#6c757d;fontSize=11;" value="Gestionar productos&#xa;y stock" vertex="1">
+          <mxGeometry height="55" width="220" x="1495" y="1080" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-def-esp" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8f9fa;strokeColor=#6c757d;fontSize=11;" value="Definir espacios,&#xa;ubicación y precio" vertex="1">
+          <mxGeometry height="55" width="240" x="1495" y="1200" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-def-trans" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8f9fa;strokeColor=#6c757d;fontSize=11;" value="Definir punto de salida,&#xa;horario, capacidad y costo" vertex="1">
+          <mxGeometry height="65" width="290" x="1495" y="1320" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-conc-superp" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" value="Rechazar concierto&#xa;superpuesto" vertex="1">
+          <mxGeometry height="50" width="210" x="1495" y="545" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-modif-deneg" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" value="Denegar modificación&#xa;por ventas / evento iniciado" vertex="1">
+          <mxGeometry height="55" width="280" x="1495" y="985" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-info-evento" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#4d4d4d;fontSize=11;fontStyle=1;" value="Administrar información&#xa;del evento" vertex="1">
+          <mxGeometry height="60" width="300" x="1720" y="450" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-editar-info" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8f9fa;strokeColor=#6c757d;fontSize=11;" value="Editar información&#xa;del evento" vertex="1">
+          <mxGeometry height="55" width="280" x="1730" y="560" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-guardar-info" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8f9fa;strokeColor=#6c757d;fontSize=11;" value="Guardar cambios&#xa;de información" vertex="1">
+          <mxGeometry height="55" width="260" x="1740" y="650" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-validar" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#4d4d4d;fontSize=11;fontStyle=1;" value="Validar ticket" vertex="1">
+          <mxGeometry height="60" width="220" x="1760" y="1040" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-escanear" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8f9fa;strokeColor=#6c757d;fontSize=11;" value="Escanear código&#xa;QR / barras" vertex="1">
+          <mxGeometry height="55" width="240" x="1750" y="1150" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-estado-ticket" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8f9fa;strokeColor=#6c757d;fontSize=11;" value="Consultar estado&#xa;del ticket" vertex="1">
+          <mxGeometry height="55" width="260" x="1740" y="1240" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-reg-ingreso" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8f9fa;strokeColor=#6c757d;fontSize=11;" value="Registrar ingreso" vertex="1">
+          <mxGeometry height="55" width="220" x="1760" y="1330" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-marcar-usado" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8f9fa;strokeColor=#6c757d;fontSize=11;" value="Marcar ticket&#xa;como usado" vertex="1">
+          <mxGeometry height="55" width="240" x="1750" y="1420" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-ticket-invalido" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" value="Rechazar ticket inválido&#xa;o ya utilizado" vertex="1">
+          <mxGeometry height="50" width="380" x="1675" y="1495" as="geometry" />
+        </mxCell>
+        <mxCell id="a1" edge="1" parent="1" source="actor-comprador" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;strokeColor=#666666;" target="uc-login" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a2" edge="1" parent="1" source="actor-comprador" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;strokeColor=#666666;" target="uc-registrar" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a3" edge="1" parent="1" source="actor-comprador" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;strokeColor=#666666;" target="uc-visualizar" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a4" edge="1" parent="1" source="actor-comprador" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;strokeColor=#666666;" target="uc-comprar" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a5" edge="1" parent="1" source="actor-comprador" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;strokeColor=#666666;" target="uc-merch" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a6" edge="1" parent="1" source="actor-comprador" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;strokeColor=#666666;" target="uc-estac" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a7" edge="1" parent="1" source="actor-comprador" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;strokeColor=#666666;" target="uc-trans" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a8" edge="1" parent="1" source="actor-admin" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;strokeColor=#666666;" target="uc-login" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a9" edge="1" parent="1" source="actor-admin" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;strokeColor=#666666;" target="uc-crear" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a10" edge="1" parent="1" source="actor-admin" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;strokeColor=#666666;" target="uc-modificar" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a11" edge="1" parent="1" source="actor-admin" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;strokeColor=#666666;" target="uc-bloquear" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a12" edge="1" parent="1" source="actor-admin" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;strokeColor=#666666;" target="uc-vis-admin" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a13" edge="1" parent="1" source="actor-admin" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;strokeColor=#666666;" target="uc-admin-merch" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a14" edge="1" parent="1" source="actor-admin" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;strokeColor=#666666;" target="uc-admin-estac" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a15" edge="1" parent="1" source="actor-admin" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;strokeColor=#666666;" target="uc-admin-trans" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a16" edge="1" parent="1" source="actor-org" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;strokeColor=#666666;" target="uc-login" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a17" edge="1" parent="1" source="actor-org" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;strokeColor=#666666;" target="uc-crear" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a18" edge="1" parent="1" source="actor-org" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;strokeColor=#666666;" target="uc-modificar" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a19" edge="1" parent="1" source="actor-org" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;strokeColor=#666666;" target="uc-info-evento" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a20" edge="1" parent="1" source="actor-acceso" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;strokeColor=#666666;" target="uc-login" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a21" edge="1" parent="1" source="actor-acceso" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;strokeColor=#666666;" target="uc-validar" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="i1" edge="1" parent="1" source="uc-visualizar" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=10;labelBackgroundColor=#ffffff;strokeColor=#4d4d4d;" target="uc-info" value="&lt;&lt;include&gt;&gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="i2" edge="1" parent="1" source="uc-info" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=10;labelBackgroundColor=#ffffff;strokeColor=#4d4d4d;" target="uc-disp" value="&lt;&lt;include&gt;&gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="i3" edge="1" parent="1" source="uc-comprar" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=10;labelBackgroundColor=#ffffff;strokeColor=#4d4d4d;" target="uc-login" value="&lt;&lt;include&gt;&gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="i4" edge="1" parent="1" source="uc-comprar" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=10;labelBackgroundColor=#ffffff;strokeColor=#4d4d4d;" target="uc-sector" value="&lt;&lt;include&gt;&gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="i5" edge="1" parent="1" source="uc-sector" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=10;labelBackgroundColor=#ffffff;strokeColor=#4d4d4d;" target="uc-disp" value="&lt;&lt;include&gt;&gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="i6" edge="1" parent="1" source="uc-sector" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=10;labelBackgroundColor=#ffffff;strokeColor=#4d4d4d;" target="uc-cupo" value="&lt;&lt;include&gt;&gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="i7" edge="1" parent="1" source="uc-comprar" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=10;labelBackgroundColor=#ffffff;strokeColor=#4d4d4d;" target="uc-limite" value="&lt;&lt;include&gt;&gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="i8" edge="1" parent="1" source="uc-comprar" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=10;labelBackgroundColor=#ffffff;strokeColor=#4d4d4d;" target="uc-datos" value="&lt;&lt;include&gt;&gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="i9" edge="1" parent="1" source="uc-datos" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=10;labelBackgroundColor=#ffffff;strokeColor=#4d4d4d;" target="uc-campos" value="&lt;&lt;include&gt;&gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="i10" edge="1" parent="1" source="uc-comprar" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=10;labelBackgroundColor=#ffffff;strokeColor=#4d4d4d;" target="uc-pago" value="&lt;&lt;include&gt;&gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="i11" edge="1" parent="1" source="uc-comprar" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=10;labelBackgroundColor=#ffffff;strokeColor=#4d4d4d;" target="uc-reg-compra" value="&lt;&lt;include&gt;&gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="i12" edge="1" parent="1" source="uc-comprar" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=10;labelBackgroundColor=#ffffff;strokeColor=#4d4d4d;" target="uc-ticket" value="&lt;&lt;include&gt;&gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="i13" edge="1" parent="1" source="uc-comprar" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=10;labelBackgroundColor=#ffffff;strokeColor=#4d4d4d;" target="uc-confirmacion" value="&lt;&lt;include&gt;&gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="i14" edge="1" parent="1" source="uc-comprar" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=10;labelBackgroundColor=#ffffff;strokeColor=#4d4d4d;" target="uc-update-disp" value="&lt;&lt;include&gt;&gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="i15" edge="1" parent="1" source="uc-crear" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=10;labelBackgroundColor=#ffffff;strokeColor=#4d4d4d;" target="uc-permisos" value="&lt;&lt;include&gt;&gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="i16" edge="1" parent="1" source="uc-crear" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=10;labelBackgroundColor=#ffffff;strokeColor=#4d4d4d;" target="uc-datos-conc" value="&lt;&lt;include&gt;&gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="i17" edge="1" parent="1" source="uc-crear" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=10;labelBackgroundColor=#ffffff;strokeColor=#4d4d4d;" target="uc-validar-conc" value="&lt;&lt;include&gt;&gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="i18" edge="1" parent="1" source="uc-crear" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=10;labelBackgroundColor=#ffffff;strokeColor=#4d4d4d;" target="uc-superpos" value="&lt;&lt;include&gt;&gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="i19" edge="1" parent="1" source="uc-crear" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=10;labelBackgroundColor=#ffffff;strokeColor=#4d4d4d;" target="uc-sectores" value="&lt;&lt;include&gt;&gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="i20" edge="1" parent="1" source="uc-crear" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=10;labelBackgroundColor=#ffffff;strokeColor=#4d4d4d;" target="uc-capacidad" value="&lt;&lt;include&gt;&gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="i21" edge="1" parent="1" source="uc-crear" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=10;labelBackgroundColor=#ffffff;strokeColor=#4d4d4d;" target="uc-guardar-conc" value="&lt;&lt;include&gt;&gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="i22" edge="1" parent="1" source="uc-modificar" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=10;labelBackgroundColor=#ffffff;strokeColor=#4d4d4d;" target="uc-permisos" value="&lt;&lt;include&gt;&gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="i23" edge="1" parent="1" source="uc-modificar" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=10;labelBackgroundColor=#ffffff;strokeColor=#4d4d4d;" target="uc-editar-conc" value="&lt;&lt;include&gt;&gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="i24" edge="1" parent="1" source="uc-modificar" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=10;labelBackgroundColor=#ffffff;strokeColor=#4d4d4d;" target="uc-modif-ok" value="&lt;&lt;include&gt;&gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="i25" edge="1" parent="1" source="uc-modificar" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=10;labelBackgroundColor=#ffffff;strokeColor=#4d4d4d;" target="uc-guardar-cambios" value="&lt;&lt;include&gt;&gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="i26" edge="1" parent="1" source="uc-bloquear" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=10;labelBackgroundColor=#ffffff;strokeColor=#4d4d4d;" target="uc-permisos" value="&lt;&lt;include&gt;&gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="i27" edge="1" parent="1" source="uc-bloquear" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=10;labelBackgroundColor=#ffffff;strokeColor=#4d4d4d;" target="uc-sector-rango" value="&lt;&lt;include&gt;&gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="i28" edge="1" parent="1" source="uc-bloquear" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=10;labelBackgroundColor=#ffffff;strokeColor=#4d4d4d;" target="uc-estado-tickets" value="&lt;&lt;include&gt;&gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="i29" edge="1" parent="1" source="uc-bloquear" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=10;labelBackgroundColor=#ffffff;strokeColor=#4d4d4d;" target="uc-reg-mov" value="&lt;&lt;include&gt;&gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="i30" edge="1" parent="1" source="uc-bloquear" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=10;labelBackgroundColor=#ffffff;strokeColor=#4d4d4d;" target="uc-update-disp" value="&lt;&lt;include&gt;&gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="i31" edge="1" parent="1" source="uc-vis-admin" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=10;labelBackgroundColor=#ffffff;strokeColor=#4d4d4d;" target="uc-disp" value="&lt;&lt;include&gt;&gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="i32" edge="1" parent="1" source="uc-admin-merch" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=10;labelBackgroundColor=#ffffff;strokeColor=#4d4d4d;" target="uc-permisos" value="&lt;&lt;include&gt;&gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="i33" edge="1" parent="1" source="uc-admin-merch" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=10;labelBackgroundColor=#ffffff;strokeColor=#4d4d4d;" target="uc-gest-prod" value="&lt;&lt;include&gt;&gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="i34" edge="1" parent="1" source="uc-admin-estac" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=10;labelBackgroundColor=#ffffff;strokeColor=#4d4d4d;" target="uc-permisos" value="&lt;&lt;include&gt;&gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="i35" edge="1" parent="1" source="uc-admin-estac" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=10;labelBackgroundColor=#ffffff;strokeColor=#4d4d4d;" target="uc-def-esp" value="&lt;&lt;include&gt;&gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="i36" edge="1" parent="1" source="uc-admin-trans" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=10;labelBackgroundColor=#ffffff;strokeColor=#4d4d4d;" target="uc-permisos" value="&lt;&lt;include&gt;&gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="i37" edge="1" parent="1" source="uc-admin-trans" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=10;labelBackgroundColor=#ffffff;strokeColor=#4d4d4d;" target="uc-def-trans" value="&lt;&lt;include&gt;&gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="i38" edge="1" parent="1" source="uc-info-evento" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=10;labelBackgroundColor=#ffffff;strokeColor=#4d4d4d;" target="uc-permisos" value="&lt;&lt;include&gt;&gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="i39" edge="1" parent="1" source="uc-info-evento" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=10;labelBackgroundColor=#ffffff;strokeColor=#4d4d4d;" target="uc-editar-info" value="&lt;&lt;include&gt;&gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="i40" edge="1" parent="1" source="uc-info-evento" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=10;labelBackgroundColor=#ffffff;strokeColor=#4d4d4d;" target="uc-guardar-info" value="&lt;&lt;include&gt;&gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="i41" edge="1" parent="1" source="uc-validar" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=10;labelBackgroundColor=#ffffff;strokeColor=#4d4d4d;" target="uc-login" value="&lt;&lt;include&gt;&gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="i42" edge="1" parent="1" source="uc-validar" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=10;labelBackgroundColor=#ffffff;strokeColor=#4d4d4d;" target="uc-escanear" value="&lt;&lt;include&gt;&gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="i43" edge="1" parent="1" source="uc-validar" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=10;labelBackgroundColor=#ffffff;strokeColor=#4d4d4d;" target="uc-estado-ticket" value="&lt;&lt;include&gt;&gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="i44" edge="1" parent="1" source="uc-validar" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=10;labelBackgroundColor=#ffffff;strokeColor=#4d4d4d;" target="uc-reg-ingreso" value="&lt;&lt;include&gt;&gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="i45" edge="1" parent="1" source="uc-validar" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=10;labelBackgroundColor=#ffffff;strokeColor=#4d4d4d;" target="uc-marcar-usado" value="&lt;&lt;include&gt;&gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="x1" edge="1" parent="1" source="uc-registrar" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=10;labelBackgroundColor=#ffffff;strokeColor=#b38f00;" target="uc-login" value="&lt;&lt;extend&gt;&gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="x2" edge="1" parent="1" source="uc-fila" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=10;labelBackgroundColor=#ffffff;strokeColor=#b38f00;" target="uc-comprar" value="&lt;&lt;extend&gt;&gt;&#xa;{alta concurrencia}">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="x3" edge="1" parent="1" source="uc-cupo-agotado" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=10;labelBackgroundColor=#ffffff;strokeColor=#b38f00;" target="uc-cupo" value="&lt;&lt;extend&gt;&gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="x4" edge="1" parent="1" source="uc-limite-exc" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=10;labelBackgroundColor=#ffffff;strokeColor=#b38f00;" target="uc-limite" value="&lt;&lt;extend&gt;&gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="x5" edge="1" parent="1" source="uc-pago-rech" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=10;labelBackgroundColor=#ffffff;strokeColor=#b38f00;" target="uc-pago" value="&lt;&lt;extend&gt;&gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="x6" edge="1" parent="1" source="uc-merch" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=10;labelBackgroundColor=#ffffff;strokeColor=#b38f00;" target="uc-comprar" value="&lt;&lt;extend&gt;&gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="x7" edge="1" parent="1" source="uc-estac" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=10;labelBackgroundColor=#ffffff;strokeColor=#b38f00;" target="uc-comprar" value="&lt;&lt;extend&gt;&gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="x8" edge="1" parent="1" source="uc-trans" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=10;labelBackgroundColor=#ffffff;strokeColor=#b38f00;" target="uc-comprar" value="&lt;&lt;extend&gt;&gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="x9" edge="1" parent="1" source="uc-conc-superp" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=10;labelBackgroundColor=#ffffff;strokeColor=#b38f00;" target="uc-superpos" value="&lt;&lt;extend&gt;&gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="x10" edge="1" parent="1" source="uc-modif-deneg" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=10;labelBackgroundColor=#ffffff;strokeColor=#b38f00;" target="uc-modif-ok" value="&lt;&lt;extend&gt;&gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="x11" edge="1" parent="1" source="uc-ticket-invalido" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;fontSize=10;labelBackgroundColor=#ffffff;strokeColor=#b38f00;" target="uc-validar" value="&lt;&lt;extend&gt;&gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
