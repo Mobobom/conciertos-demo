@@ -15,8 +15,10 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
-import java.util.Arrays;
+import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.Map;
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Supplier;
@@ -136,18 +138,8 @@ public class MenuAdministrador extends JFrame {
 
     private void modificarConcierto() {
         try {
-            int id = pedirEntero("ID del concierto", null);
-            modificarConcierto(id);
-        } catch (IllegalArgumentException e) {
-            mostrarInfo("Datos invalidos", e.getMessage());
-        }
-    }
-
-    private void modificarConcierto(int id) {
-        try {
-            Concierto concierto = conciertoService.buscarPorId(id);
+            Concierto concierto = seleccionarConcierto();
             if (concierto == null) {
-                mostrarInfo("Concierto no encontrado", "No existe un concierto con ID " + id + ".");
                 return;
             }
 
@@ -166,7 +158,7 @@ public class MenuAdministrador extends JFrame {
             concierto.setOrganizadorId(organizadorId);
 
             if (conciertoService.modificarConcierto(concierto)) {
-                mostrarInfo("Concierto modificado", "Se actualizo el concierto ID " + id + ".");
+                mostrarInfo("Concierto modificado", "Se actualizo el concierto " + concierto.getArtista() + ".");
             } else {
                 mostrarInfo("Sin cambios", "No se pudo modificar el concierto.");
             }
@@ -179,16 +171,12 @@ public class MenuAdministrador extends JFrame {
 
     private void cancelarConcierto() {
         try {
-            int id = pedirEntero("ID del concierto a cancelar", null);
-            cancelarConcierto(id);
-        } catch (IllegalArgumentException e) {
-            mostrarInfo("Datos invalidos", e.getMessage());
-        }
-    }
+            Concierto concierto = seleccionarConcierto();
+            if (concierto == null) {
+                return;
+            }
 
-    private void cancelarConcierto(int id) {
-        try {
-            boolean cancelado = conciertoService.cancelarConcierto(id);
+            boolean cancelado = conciertoService.cancelarConcierto(concierto.getId());
             mostrarInfo("Cancelar concierto", cancelado
                     ? "El concierto fue cancelado."
                     : "No se encontro el concierto indicado.");
@@ -201,10 +189,8 @@ public class MenuAdministrador extends JFrame {
 
     private void verDisponibilidadConcierto() {
         try {
-            int id = pedirEntero("ID del concierto", null);
-            Concierto concierto = conciertoService.buscarPorId(id);
+            Concierto concierto = seleccionarConcierto();
             if (concierto == null) {
-                mostrarInfo("Concierto no encontrado", "No existe un concierto con ID " + id + ".");
                 return;
             }
 
@@ -223,8 +209,24 @@ public class MenuAdministrador extends JFrame {
 
     private void verSectoresDeConcierto() {
         try {
-            int id = pedirEntero("ID del concierto", null);
-            verSectoresDeConcierto(id);
+            Concierto concierto = seleccionarConcierto();
+            if (concierto == null) {
+                return;
+            }
+
+            LinkedList<Sector> sectores = sectorService.listarPorConcierto(concierto.getId());
+            String[] columns = {"ID", "Tipo", "Nombre", "Capacidad", "Precio", "Disponibles"};
+            Object[][] rows = new Object[sectores.size()][columns.length];
+            for (int i = 0; i < sectores.size(); i++) {
+                Sector sector = sectores.get(i);
+                rows[i][0] = sector.getId();
+                rows[i][1] = sector.getTipo();
+                rows[i][2] = sector.getNombre();
+                rows[i][3] = sector.getCapacidad();
+                rows[i][4] = sector.getPrecio();
+                rows[i][5] = sector.getDisponibles();
+            }
+            mostrarTabla("Sectores del concierto " + concierto.getArtista(), columns, rows);
         } catch (IllegalArgumentException e) {
             mostrarInfo("Datos invalidos", e.getMessage());
         }
@@ -232,16 +234,14 @@ public class MenuAdministrador extends JFrame {
 
     private void crearSector() {
         try {
-            int conciertoId = pedirEntero("ID del concierto", null);
-            crearSector(conciertoId);
-        } catch (IllegalArgumentException e) {
-            mostrarInfo("Datos invalidos", e.getMessage());
-        }
-    }
-
-    private void crearSector(int conciertoId) {
-        try {
-            String tipo = pedirTexto("Tipo de sector (ej. PLATEA, VIP)", "PLATEA");
+            Concierto concierto = seleccionarConcierto();
+            if (concierto == null) {
+                return;
+            }
+            String tipo = seleccionarTipoSector();
+            if (tipo == null) {
+                return;
+            }
             String nombre = pedirTexto("Nombre del sector", "Principal");
             int capacidad = pedirEntero("Capacidad del sector", "10");
             String precioStr = pedirTexto("Precio (ej. 100.00)", "100.00");
@@ -252,7 +252,7 @@ public class MenuAdministrador extends JFrame {
                 throw new IllegalArgumentException("Precio invalido.");
             }
 
-            int id = sectorService.crearSector(conciertoId, tipo, nombre, capacidad, precio);
+            int id = sectorService.crearSector(concierto.getId(), tipo, nombre, capacidad, precio);
             mostrarInfo("Sector creado", "Se creo el sector con ID " + id + ".");
         } catch (IllegalArgumentException e) {
             mostrarInfo("Datos invalidos", e.getMessage());
@@ -261,75 +261,142 @@ public class MenuAdministrador extends JFrame {
         }
     }
 
-    private void modificarSector(int id) {
-        try {
-            Sector sector = sectorService.buscarPorId(id);
-            if (sector == null) {
-                mostrarInfo("Sector no encontrado", "No existe un sector con ID " + id + ".");
-                return;
-            }
-
-            String tipo = pedirTexto("Tipo de sector", sector.getTipo());
-            String nombre = pedirTexto("Nombre del sector", sector.getNombre());
-            int capacidad = pedirEntero("Capacidad del sector", String.valueOf(sector.getCapacidad()));
-            String precioStr = pedirTexto("Precio (ej. 100.00)", String.valueOf(sector.getPrecio()));
-            BigDecimal precio;
-            try {
-                precio = new BigDecimal(precioStr.trim());
-            } catch (NumberFormatException ex) {
-                throw new IllegalArgumentException("Precio invalido.");
-            }
-
-            Sector actualizado = new Sector(id, sector.getConciertoId(), tipo, nombre, capacidad, precio);
-            if (sectorService.modificarSector(actualizado)) {
-                mostrarInfo("Sector modificado", "Se actualizo el sector ID " + id + ".");
-            } else {
-                mostrarInfo("Sin cambios", "No se pudo modificar el sector.");
-            }
-        } catch (IllegalArgumentException e) {
-            mostrarInfo("Datos invalidos", e.getMessage());
-        } catch (SQLException e) {
-            mostrarError("No se pudo modificar el sector", e);
-        }
-    }
-
-    private void eliminarSector(int id) {
-        try {
-            int opcion = JOptionPane.showConfirmDialog(this,
-                    "¿Eliminar el sector ID " + id + "?", "Eliminar sector",
-                    JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
-            if (opcion != JOptionPane.YES_OPTION) {
-                return;
-            }
-            boolean eliminado = sectorService.eliminarSector(id);
-            mostrarInfo("Eliminar sector", eliminado
-                    ? "El sector fue eliminado."
-                    : "No se pudo eliminar el sector.");
-        } catch (IllegalArgumentException e) {
-            mostrarInfo("Datos invalidos", e.getMessage());
-        } catch (SQLException e) {
-            mostrarError("No se pudo eliminar el sector", e);
-        }
+    private String seleccionarTipoSector() {
+        String[] tipos = {"VIP", "Platea", "Campo", "Preferencial"};
+        return (String) JOptionPane.showInputDialog(
+                this,
+                "Seleccione el tipo de sector:",
+                "Tipo de sector",
+                JOptionPane.PLAIN_MESSAGE,
+                null,
+                tipos,
+                tipos[0]);
     }
 
     private void crearTicketsDeSector() {
         try {
-            int sectorId = pedirEntero("ID del sector", null);
-            generarTicketsDeSector(sectorId);
-        } catch (IllegalArgumentException e) {
-            mostrarInfo("Datos invalidos", e.getMessage());
-        }
-    }
-
-    private void generarTicketsDeSector(int sectorId) {
-        try {
-            int creados = ticketService.generarTicketsParaSector(sectorId);
+            Sector sector = seleccionarSector();
+            if (sector == null) {
+                return;
+            }
+            int creados = ticketService.generarTicketsParaSector(sector.getId());
             mostrarInfo("Tickets creados", "Se crearon " + creados + " tickets para el sector.");
         } catch (IllegalArgumentException e) {
             mostrarInfo("Datos invalidos", e.getMessage());
         } catch (SQLException e) {
             mostrarError("No se pudieron crear los tickets", e);
         }
+    }
+
+    private Sector seleccionarSector() throws SQLException {
+        LinkedList<Sector> sectores = sectorService.listarTodos();
+        if (sectores.isEmpty()) {
+            mostrarInfo("Sin sectores", "No hay sectores registrados. Cree un sector primero.");
+            return null;
+        }
+
+        Map<Integer, Concierto> conciertosPorId = cargarConciertosPorId();
+        Map<String, Sector> sectoresPorEtiqueta = new HashMap<>();
+        String[] opciones = new String[sectores.size()];
+        for (int i = 0; i < sectores.size(); i++) {
+            Sector sector = sectores.get(i);
+            Concierto concierto = conciertosPorId.get(sector.getConciertoId());
+            String artista = concierto == null ? "Concierto " + sector.getConciertoId() : concierto.getArtista();
+            String etiqueta = String.format("%s - %s - %s - capacidad: %d - disponibles: %d",
+                artista, sector.getTipo(), sector.getNombre(),
+                    sector.getCapacidad(), sector.getDisponibles());
+            opciones[i] = etiqueta;
+            sectoresPorEtiqueta.put(etiqueta, sector);
+        }
+
+        String seleccionado = (String) JOptionPane.showInputDialog(
+                this,
+                "Seleccione un sector:",
+                "Sectores disponibles",
+                JOptionPane.PLAIN_MESSAGE,
+                null,
+                opciones,
+                opciones[0]);
+
+        return seleccionado == null ? null : sectoresPorEtiqueta.get(seleccionado);
+    }
+
+    private Concierto seleccionarConcierto() throws SQLException {
+        LinkedList<Concierto> conciertos = conciertoService.listarTodos();
+        if (conciertos.isEmpty()) {
+            mostrarInfo("Sin conciertos", "No hay conciertos registrados.");
+            return null;
+        }
+
+        Map<String, Concierto> conciertosPorEtiqueta = new HashMap<>();
+        String[] opciones = new String[conciertos.size()];
+        for (int i = 0; i < conciertos.size(); i++) {
+            Concierto concierto = conciertos.get(i);
+            String etiqueta = String.format("%s - %s %s - %s - disponibles: %d",
+                    concierto.getArtista(), concierto.getFecha(), concierto.getHora(),
+                    concierto.getLugar(), concierto.getDisponibles());
+            opciones[i] = etiqueta;
+            conciertosPorEtiqueta.put(etiqueta, concierto);
+        }
+
+        String seleccionado = (String) JOptionPane.showInputDialog(
+                this,
+                "Seleccione un concierto:",
+                "Conciertos disponibles",
+                JOptionPane.PLAIN_MESSAGE,
+                null,
+                opciones,
+                opciones[0]);
+
+        return seleccionado == null ? null : conciertosPorEtiqueta.get(seleccionado);
+    }
+
+    private Ticket seleccionarTicket(Concierto concierto) throws SQLException {
+        LinkedList<Ticket> tickets = ticketService.listarPorConcierto(concierto.getId());
+        if (tickets.isEmpty()) {
+            mostrarInfo("Sin tickets", "No hay tickets creados para el concierto seleccionado.");
+            return null;
+        }
+
+        LinkedList<Sector> sectores = sectorService.listarPorConcierto(concierto.getId());
+        Map<Integer, Sector> sectoresPorId = new HashMap<>();
+        for (Sector sector : sectores) {
+            sectoresPorId.put(sector.getId(), sector);
+        }
+
+        Map<String, Ticket> ticketsPorEtiqueta = new HashMap<>();
+        String[] opciones = new String[tickets.size()];
+        for (int i = 0; i < tickets.size(); i++) {
+            Ticket ticket = tickets.get(i);
+            Sector sector = sectoresPorId.get(ticket.getSectorId());
+            String sectorTexto = sector == null
+                    ? "Sector " + ticket.getSectorId()
+                    : sector.getTipo() + " - " + sector.getNombre();
+            String etiqueta = String.format("%s - %s - %s - %s",
+                    concierto.getArtista(), sectorTexto, ticket.getCodigo(), ticket.getEstado());
+            opciones[i] = etiqueta;
+            ticketsPorEtiqueta.put(etiqueta, ticket);
+        }
+
+        String seleccionado = (String) JOptionPane.showInputDialog(
+                this,
+                "Seleccione un ticket:",
+                "Tickets disponibles",
+                JOptionPane.PLAIN_MESSAGE,
+                null,
+                opciones,
+                opciones[0]);
+
+        return seleccionado == null ? null : ticketsPorEtiqueta.get(seleccionado);
+    }
+
+    private Map<Integer, Concierto> cargarConciertosPorId() throws SQLException {
+        LinkedList<Concierto> conciertos = conciertoService.listarTodos();
+        Map<Integer, Concierto> conciertosPorId = new HashMap<>();
+        for (Concierto concierto : conciertos) {
+            conciertosPorId.put(concierto.getId(), concierto);
+        }
+        return conciertosPorId;
     }
 
     private void cerrarSesion() {
@@ -339,8 +406,25 @@ public class MenuAdministrador extends JFrame {
 
     private void verTicketsDeConcierto() {
         try {
-            int id = pedirEntero("ID del concierto", null);
-            verTicketsDeConcierto(id);
+            Concierto concierto = seleccionarConcierto();
+            if (concierto == null) {
+                return;
+            }
+
+            LinkedList<Ticket> tickets = ticketService.listarPorConcierto(concierto.getId());
+            String[] columns = {"ID", "Concierto", "Sector", "Codigo", "Precio", "Estado", "Compra"};
+            Object[][] rows = new Object[tickets.size()][columns.length];
+            for (int i = 0; i < tickets.size(); i++) {
+                BLL.Ticket ticket = tickets.get(i);
+                rows[i][0] = ticket.getId();
+                rows[i][1] = ticket.getConciertoId();
+                rows[i][2] = ticket.getSectorId();
+                rows[i][3] = ticket.getCodigo();
+                rows[i][4] = ticket.getPrecio();
+                rows[i][5] = ticket.getEstado();
+                rows[i][6] = ticket.getCompraId();
+            }
+            mostrarTabla("Tickets del concierto " + concierto.getArtista(), columns, rows);
         } catch (IllegalArgumentException e) {
             mostrarInfo("Datos invalidos", e.getMessage());
         }
@@ -348,16 +432,17 @@ public class MenuAdministrador extends JFrame {
 
     private void bloquearTicket() {
         try {
-            int id = pedirEntero("ID del ticket a bloquear", null);
-            bloquearTicket(id);
-        } catch (IllegalArgumentException e) {
-            mostrarInfo("Datos invalidos", e.getMessage());
-        }
-    }
+            Concierto concierto = seleccionarConcierto();
+            if (concierto == null) {
+                return;
+            }
 
-    private void bloquearTicket(int id) {
-        try {
-            boolean bloqueado = ticketService.bloquearTicket(id);
+            Ticket ticket = seleccionarTicket(concierto);
+            if (ticket == null) {
+                return;
+            }
+
+            boolean bloqueado = ticketService.bloquearTicket(ticket.getId());
             mostrarInfo("Bloquear ticket", bloqueado
                     ? "El ticket fue bloqueado."
                     : "No se pudo bloquear el ticket.");
@@ -370,16 +455,17 @@ public class MenuAdministrador extends JFrame {
 
     private void liberarTicket() {
         try {
-            int id = pedirEntero("ID del ticket a liberar", null);
-            liberarTicket(id);
-        } catch (IllegalArgumentException e) {
-            mostrarInfo("Datos invalidos", e.getMessage());
-        }
-    }
+            Concierto concierto = seleccionarConcierto();
+            if (concierto == null) {
+                return;
+            }
 
-    private void liberarTicket(int id) {
-        try {
-            boolean liberado = ticketService.liberarTicket(id);
+            Ticket ticket = seleccionarTicket(concierto);
+            if (ticket == null) {
+                return;
+            }
+
+            boolean liberado = ticketService.liberarTicket(ticket.getId());
             mostrarInfo("Liberar ticket", liberado
                     ? "El ticket fue liberado."
                     : "No se pudo liberar el ticket.");

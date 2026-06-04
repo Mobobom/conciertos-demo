@@ -1,7 +1,6 @@
 package DLL;
 
 import BLL.Concierto;
-
 import java.sql.Connection;
 import java.sql.Date;
 import java.sql.PreparedStatement;
@@ -10,7 +9,6 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Time;
 import java.time.LocalDate;
-import java.time.LocalTime;
 import java.util.LinkedList;
 
 public class ControllerConcierto {
@@ -125,14 +123,13 @@ public class ControllerConcierto {
         return cancelar(id);
     }
 
-    public boolean existeSuperposicion(LocalDate fecha, LocalTime hora, String lugar, int excludeId) throws SQLException {
+    public boolean existeMismoDiaYLugar(LocalDate fecha, String lugar, int excludeId) throws SQLException {
         String sql = "SELECT COUNT(*) AS total FROM concierto "
-                + "WHERE fecha = ? AND hora = ? AND lugar = ? AND id <> ?";
+                + "WHERE fecha = ? AND lugar = ? AND id <> ?";
         try (PreparedStatement stmt = getConnection().prepareStatement(sql)) {
             stmt.setDate(1, Date.valueOf(fecha));
-            stmt.setTime(2, Time.valueOf(hora));
-            stmt.setString(3, lugar);
-            stmt.setInt(4, excludeId);
+            stmt.setString(2, lugar);
+            stmt.setInt(3, excludeId);
             try (ResultSet rs = stmt.executeQuery()) {
                 return rs.next() && rs.getInt("total") > 0;
             }
