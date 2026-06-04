@@ -98,6 +98,13 @@ public class TicketService {
         return controllerTicket.listarPorConcierto(conciertoId);
     }
 
+    public LinkedList<Ticket> listarCompradosPorComprador(int compradorId) throws SQLException {
+        if (compradorId <= 0) {
+            throw new IllegalArgumentException("El id de comprador debe ser mayor a cero.");
+        }
+        return controllerTicket.listarCompradosPorComprador(compradorId);
+    }
+
     public int contarDisponiblesPorSector(int sectorId) throws SQLException {
         if (sectorId <= 0) {
             throw new IllegalArgumentException("El id de sector debe ser mayor a cero.");

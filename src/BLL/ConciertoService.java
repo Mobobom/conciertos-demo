@@ -45,8 +45,12 @@ public class ConciertoService {
         }
         validarConcierto(concierto);
         validarOrganizador(concierto.getOrganizadorId());
-        if (controllerConcierto.buscarPorId(concierto.getId()) == null) {
+        Concierto existente = controllerConcierto.buscarPorId(concierto.getId());
+        if (existente == null) {
             throw new IllegalArgumentException("No existe el concierto indicado.");
+        }
+        if ("Cancelado".equals(existente.getEstado())) {
+            throw new IllegalArgumentException("No se puede modificar un concierto cancelado.");
         }
         if (controllerConcierto.existeMismoDiaYLugar(concierto.getFecha(), concierto.getLugar().trim(),
                 concierto.getId())) {

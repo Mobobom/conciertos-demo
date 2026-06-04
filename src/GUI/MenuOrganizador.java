@@ -124,6 +124,9 @@ public class MenuOrganizador extends JFrame {
             if (concierto == null) {
                 return;
             }
+            if (!puedeModificarConcierto(concierto)) {
+                return;
+            }
 
             String artista = pedirTexto("Artista", concierto.getArtista());
             LocalDate fecha = pedirFecha("Fecha (yyyy-MM-dd)", concierto.getFecha().toString());
@@ -159,6 +162,9 @@ public class MenuOrganizador extends JFrame {
             Concierto concierto = conciertoService.buscarPorId(conciertoId);
             if (concierto == null) {
                 mostrarInfo("Sin concierto", "No se encontro el concierto indicado.");
+                return;
+            }
+            if (!puedeModificarConcierto(concierto)) {
                 return;
             }
 
@@ -225,6 +231,14 @@ public class MenuOrganizador extends JFrame {
         } catch (SQLException e) {
             mostrarError("No se pudo consultar el evento", e);
         }
+    }
+
+    private boolean puedeModificarConcierto(Concierto concierto) {
+        if ("Cancelado".equals(concierto.getEstado())) {
+            mostrarInfo("Concierto cancelado", "No se puede modificar un concierto cancelado.");
+            return false;
+        }
+        return true;
     }
 
     private void verInformacionEvento(int conciertoId) {

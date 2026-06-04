@@ -13,10 +13,9 @@ import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.SwingConstants;
 import javax.swing.JTextArea;
 import java.awt.BorderLayout;
-import java.awt.FlowLayout;
+import java.awt.GridLayout;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -45,7 +44,7 @@ public class MenuComprador extends JFrame {
         setLayout(new BorderLayout(10, 10));
 
         add(buildHeader(), BorderLayout.NORTH);
-        add(buildButtons(), BorderLayout.SOUTH);
+        add(buildButtons(), BorderLayout.CENTER);
     }
 
     private JPanel buildHeader() {
@@ -65,14 +64,17 @@ public class MenuComprador extends JFrame {
     }
 
     private JPanel buildButtons() {
-        JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
-        panel.setBorder(BorderFactory.createEmptyBorder(5, 15, 15, 15));
+        JPanel panel = new JPanel(new GridLayout(0, 1, 10, 10));
+        panel.setBorder(BorderFactory.createEmptyBorder(15, 80, 25, 80));
 
         JButton showButton = new JButton("Ver conciertos disponibles");
         showButton.addActionListener(e -> ShowConciertosTable.showTable(this::iniciarCompra));
 
         JButton buyButton = new JButton("Comprar tickets");
         buyButton.addActionListener(e -> comprarTickets());
+
+        JButton purchasedTicketsButton = new JButton("Tickets comprados");
+        purchasedTicketsButton.addActionListener(e -> TicketsCompradosTable.showTable(usuario));
 
         JButton closeButton = new JButton("Cerrar");
         closeButton.addActionListener(e -> dispose());
@@ -82,6 +84,7 @@ public class MenuComprador extends JFrame {
 
         panel.add(showButton);
         panel.add(buyButton);
+        panel.add(purchasedTicketsButton);
         panel.add(closeButton);
         panel.add(exitButton);
         return panel;
