@@ -130,10 +130,8 @@ public class MenuAdministrador extends JFrame {
 
     private void modificarConcierto() {
         try {
-            int id = pedirEntero("ID del concierto", null);
-            Concierto concierto = conciertoService.buscarPorId(id);
+            Concierto concierto = seleccionarConcierto();
             if (concierto == null) {
-                mostrarInfo("Concierto no encontrado", "No existe un concierto con ID " + id + ".");
                 return;
             }
 
@@ -152,7 +150,7 @@ public class MenuAdministrador extends JFrame {
             concierto.setOrganizadorId(organizadorId);
 
             if (conciertoService.modificarConcierto(concierto)) {
-                mostrarInfo("Concierto modificado", "Se actualizo el concierto ID " + id + ".");
+                mostrarInfo("Concierto modificado", "Se actualizo el concierto " + concierto.getArtista() + ".");
             } else {
                 mostrarInfo("Sin cambios", "No se pudo modificar el concierto.");
             }
@@ -165,8 +163,12 @@ public class MenuAdministrador extends JFrame {
 
     private void cancelarConcierto() {
         try {
-            int id = pedirEntero("ID del concierto a cancelar", null);
-            boolean cancelado = conciertoService.cancelarConcierto(id);
+            Concierto concierto = seleccionarConcierto();
+            if (concierto == null) {
+                return;
+            }
+
+            boolean cancelado = conciertoService.cancelarConcierto(concierto.getId());
             mostrarInfo("Cancelar concierto", cancelado
                     ? "El concierto fue cancelado."
                     : "No se encontro el concierto indicado.");

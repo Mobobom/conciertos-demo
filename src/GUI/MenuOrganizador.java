@@ -11,7 +11,9 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
+import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.Map;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -107,10 +109,8 @@ public class MenuOrganizador extends JFrame {
 
     private void modificarConcierto() {
         try {
-            int id = pedirEntero("ID del concierto", null);
-            Concierto concierto = conciertoService.buscarPorId(id);
+            Concierto concierto = seleccionarConcierto();
             if (concierto == null) {
-                mostrarInfo("Concierto no encontrado", "No existe un concierto con ID " + id + ".");
                 return;
             }
 
@@ -129,7 +129,7 @@ public class MenuOrganizador extends JFrame {
             concierto.setOrganizadorId(organizadorId);
 
             if (conciertoService.modificarConcierto(concierto)) {
-                mostrarInfo("Concierto modificado", "Se actualizo el concierto ID " + id + ".");
+                mostrarInfo("Concierto modificado", "Se actualizo el concierto " + concierto.getArtista() + ".");
             } else {
                 mostrarInfo("Sin cambios", "No se pudo modificar el concierto.");
             }
@@ -142,14 +142,12 @@ public class MenuOrganizador extends JFrame {
 
     private void verInformacionEvento() {
         try {
-            int id = pedirEntero("ID del concierto", null);
-            Concierto concierto = conciertoService.buscarPorId(id);
+            Concierto concierto = seleccionarConcierto();
             if (concierto == null) {
-                mostrarInfo("Concierto no encontrado", "No existe un concierto con ID " + id + ".");
                 return;
             }
 
-            LinkedList<Sector> sectores = sectorService.listarPorConcierto(id);
+            LinkedList<Sector> sectores = sectorService.listarPorConcierto(concierto.getId());
             StringBuilder message = new StringBuilder();
             message.append("Concierto: ").append(concierto.getArtista()).append('\n');
             message.append("Fecha: ").append(concierto.getFecha()).append('\n');
@@ -176,6 +174,36 @@ public class MenuOrganizador extends JFrame {
         } catch (SQLException e) {
             mostrarError("No se pudo consultar el evento", e);
         }
+    }
+
+    private Concierto seleccionarConcierto() throws SQLException {
+        LinkedList<Concierto> conciertos = conciertoService.listarTodos();
+        if (conciertos.isEmpty()) {
+            mostrarInfo("Sin conciertos", "No hay conciertos registrados.");
+            return null;
+        }
+
+        Map<String, Concierto> conciertosPorEtiqueta = new HashMap<>();
+        String[] opciones = new String[conciertos.size()];
+        for (int i = 0; i < conciertos.size(); i++) {
+            Concierto concierto = conciertos.get(i);
+            String etiqueta = String.format("%s - %s %s - %s - disponibles: %d",
+                    concierto.getArtista(), concierto.getFecha(), concierto.getHora(),
+                    concierto.getLugar(), concierto.getDisponibles());
+            opciones[i] = etiqueta;
+            conciertosPorEtiqueta.put(etiqueta, concierto);
+        }
+
+        String seleccionado = (String) JOptionPane.showInputDialog(
+                this,
+                "Seleccione un concierto:",
+                "Conciertos disponibles",
+                JOptionPane.PLAIN_MESSAGE,
+                null,
+                opciones,
+                opciones[0]);
+
+        return seleccionado == null ? null : conciertosPorEtiqueta.get(seleccionado);
     }
 
     private void cerrarSesion() {
