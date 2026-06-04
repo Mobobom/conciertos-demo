@@ -69,7 +69,7 @@ public class MenuComprador extends JFrame {
         panel.setBorder(BorderFactory.createEmptyBorder(5, 15, 15, 15));
 
         JButton showButton = new JButton("Ver conciertos disponibles");
-        showButton.addActionListener(e -> ShowConciertosTable.showTable());
+        showButton.addActionListener(e -> ShowConciertosTable.showTable(this::iniciarCompra));
 
         JButton buyButton = new JButton("Comprar tickets");
         buyButton.addActionListener(e -> comprarTickets());
@@ -93,7 +93,17 @@ public class MenuComprador extends JFrame {
             if (concierto == null) {
                 return;
             }
+            iniciarCompra(concierto);
+        } catch (SQLException e) {
+            mostrarError("Error de base de datos: " + e.getMessage());
+        }
+    }
 
+    public void iniciarCompra(Concierto concierto) {
+        if (concierto == null) {
+            return;
+        }
+        try {
             Sector sector = seleccionarSector(concierto.getId());
             if (sector == null) {
                 return;
