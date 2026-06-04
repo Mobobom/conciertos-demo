@@ -1,5 +1,10 @@
 package GUI;
 
+import BLL.Concierto;
+import BLL.ConciertoService;
+import BLL.Sector;
+import BLL.SectorService;
+import BLL.Ticket;
 import BLL.TicketService;
 import BLL.Usuario;
 import BLL.ValidacionTicketResult;
@@ -11,29 +16,36 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
 import java.awt.BorderLayout;
-import java.awt.FlowLayout;
+import java.awt.GridLayout;
 import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.Map;
 
 public class MenuPersonalAcceso extends JFrame {
 
     private final Usuario usuario;
+    private final ConciertoService conciertoService;
+    private final SectorService sectorService;
     private final TicketService ticketService;
 
     public MenuPersonalAcceso(Usuario usuario) {
         this.usuario = usuario;
+        this.conciertoService = new ConciertoService();
+        this.sectorService = new SectorService();
         this.ticketService = new TicketService();
         initialize();
     }
 
     private void initialize() {
         setTitle("Menu Personal de Acceso - " + usuario.getNombre());
-        setSize(520, 240);
+        setSize(520, 280);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout(10, 10));
 
         add(buildHeader(), BorderLayout.NORTH);
-        add(buildButtons(), BorderLayout.SOUTH);
+        add(buildButtons(), BorderLayout.CENTER);
     }
 
     private JPanel buildHeader() {
@@ -43,7 +55,7 @@ public class MenuPersonalAcceso extends JFrame {
         JTextArea header = new JTextArea(
                 "Bienvenido " + usuario.getNombre() + " " + usuario.getApellido() + "\n"
                         + "Rol: " + usuario.getRol() + "\n"
-                        + "Valide codes de ticket con el boton de abajo.");
+                        + "Valide tickets seleccionando concierto y ticket.");
         header.setEditable(false);
         header.setOpaque(false);
         header.setFocusable(false);
@@ -53,8 +65,8 @@ public class MenuPersonalAcceso extends JFrame {
     }
 
     private JPanel buildButtons() {
-        JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
-        panel.setBorder(BorderFactory.createEmptyBorder(5, 15, 15, 15));
+        JPanel panel = new JPanel(new GridLayout(0, 1, 10, 10));
+        panel.setBorder(BorderFactory.createEmptyBorder(15, 80, 25, 80));
 
         JButton validateButton = new JButton("Validar codigo de ticket");
         validateButton.addActionListener(e -> validarTicket());
@@ -72,14 +84,18 @@ public class MenuPersonalAcceso extends JFrame {
     }
 
     private void validarTicket() {
-        String codigo = JOptionPane.showInputDialog(this,
-                "Ingrese el codigo del ticket:", "Validar ticket", JOptionPane.QUESTION_MESSAGE);
-        if (codigo == null || codigo.trim().isEmpty()) {
-            return;
-        }
-
         try {
-            ValidacionTicketResult resultado = ticketService.validarAcceso(codigo.trim());
+            Concierto concierto = seleccionarConcierto();
+            if (concierto == null) {
+                return;
+            }
+
+            Ticket ticket = seleccionarTicket(concierto);
+            if (ticket == null) {
+                return;
+            }
+
+            ValidacionTicketResult resultado = ticketService.validarAcceso(ticket.getCodigo());
             int tipo = resultado.isValido() ? JOptionPane.INFORMATION_MESSAGE : JOptionPane.WARNING_MESSAGE;
             StringBuilder mensaje = new StringBuilder();
             mensaje.append(resultado.getMensaje());
@@ -93,5 +109,78 @@ public class MenuPersonalAcceso extends JFrame {
                     "Error de base de datos: " + e.getMessage(),
                     "Error", JOptionPane.ERROR_MESSAGE);
         }
+    }
+
+    private Concierto seleccionarConcierto() throws SQLException {
+        LinkedList<Concierto> conciertos = conciertoService.listarActivos();
+        if (conciertos.isEmpty()) {
+            JOptionPane.showMessageDialog(this,
+                    "No hay conciertos activos disponibles.",
+                    "Sin conciertos", JOptionPane.WARNING_MESSAGE);
+            return null;
+        }
+
+        Map<String, Concierto> conciertosPorEtiqueta = new HashMap<>();
+        String[] opciones = new String[conciertos.size()];
+        for (int i = 0; i < conciertos.size(); i++) {
+            Concierto concierto = conciertos.get(i);
+            String etiqueta = String.format("%d - %s (%s %s) - %s",
+                    concierto.getId(), concierto.getArtista(),
+                    concierto.getFecha(), concierto.getHora(), concierto.getLugar());
+            opciones[i] = etiqueta;
+            conciertosPorEtiqueta.put(etiqueta, concierto);
+        }
+
+        String seleccionado = (String) JOptionPane.showInputDialog(
+                this,
+                "Seleccione un concierto:",
+                "Conciertos activos",
+                JOptionPane.PLAIN_MESSAGE,
+                null,
+                opciones,
+                opciones[0]);
+
+        return seleccionado == null ? null : conciertosPorEtiqueta.get(seleccionado);
+    }
+
+    private Ticket seleccionarTicket(Concierto concierto) throws SQLException {
+        LinkedList<Ticket> tickets = ticketService.listarPorConcierto(concierto.getId());
+        if (tickets.isEmpty()) {
+            JOptionPane.showMessageDialog(this,
+                    "No hay tickets creados para el concierto seleccionado.",
+                    "Sin tickets", JOptionPane.WARNING_MESSAGE);
+            return null;
+        }
+
+        LinkedList<Sector> sectores = sectorService.listarPorConcierto(concierto.getId());
+        Map<Integer, Sector> sectoresPorId = new HashMap<>();
+        for (Sector sector : sectores) {
+            sectoresPorId.put(sector.getId(), sector);
+        }
+
+        Map<String, Ticket> ticketsPorEtiqueta = new HashMap<>();
+        String[] opciones = new String[tickets.size()];
+        for (int i = 0; i < tickets.size(); i++) {
+            Ticket ticket = tickets.get(i);
+            Sector sector = sectoresPorId.get(ticket.getSectorId());
+            String sectorTexto = sector == null
+                    ? "Sector " + ticket.getSectorId()
+                    : sector.getTipo() + " - " + sector.getNombre();
+            String etiqueta = String.format("%s - %s - %s - %s",
+                    concierto.getArtista(), sectorTexto, ticket.getCodigo(), ticket.getEstado());
+            opciones[i] = etiqueta;
+            ticketsPorEtiqueta.put(etiqueta, ticket);
+        }
+
+        String seleccionado = (String) JOptionPane.showInputDialog(
+                this,
+                "Seleccione un ticket:",
+                "Tickets del concierto",
+                JOptionPane.PLAIN_MESSAGE,
+                null,
+                opciones,
+                opciones[0]);
+
+        return seleccionado == null ? null : ticketsPorEtiqueta.get(seleccionado);
     }
 }

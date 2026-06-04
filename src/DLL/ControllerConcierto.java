@@ -36,7 +36,7 @@ public class ControllerConcierto {
                 result.add(mapConciertoConDisponibles(rs));
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            System.err.println("Error al listar conciertos activos: " + e.getMessage());
         }
         return result;
     }
