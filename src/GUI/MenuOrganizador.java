@@ -5,6 +5,7 @@ import BLL.ConciertoService;
 import BLL.Sector;
 import BLL.SectorService;
 import BLL.Usuario;
+import BLL.UsuarioService;
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
@@ -35,11 +36,13 @@ public class MenuOrganizador extends JFrame {
     private final Usuario usuario;
     private final ConciertoService conciertoService;
     private final SectorService sectorService;
+    private final UsuarioService usuarioService;
 
     public MenuOrganizador(Usuario usuario) {
         this.usuario = usuario;
         this.conciertoService = new ConciertoService();
         this.sectorService = new SectorService();
+        this.usuarioService = new UsuarioService();
         initialize();
     }
 
@@ -101,7 +104,10 @@ public class MenuOrganizador extends JFrame {
             LocalTime hora = pedirHora("Hora (HH:mm)", "21:00");
             String lugar = pedirTexto("Lugar", "Ingrese el lugar del concierto");
             int capacidadTotal = pedirEntero("Capacidad total", "60");
-            int organizadorId = pedirEnteroOpcional("ID del organizador", String.valueOf(usuario.getId()));
+            Integer organizadorId = seleccionarOrganizador();
+            if (organizadorId == null) {
+                return;
+            }
 
             int id = conciertoService.crearConcierto(artista, fecha, hora, lugar, capacidadTotal, organizadorId);
             mostrarInfo("Concierto creado", "Se creo el concierto con ID " + id + ".");
@@ -124,7 +130,47 @@ public class MenuOrganizador extends JFrame {
             LocalTime hora = pedirHora("Hora (HH:mm)", concierto.getHora().toString());
             String lugar = pedirTexto("Lugar", concierto.getLugar());
             int capacidadTotal = pedirEntero("Capacidad total", String.valueOf(concierto.getCapacidadTotal()));
-            int organizadorId = pedirEnteroOpcional("ID del organizador", String.valueOf(concierto.getOrganizadorId()));
+            Integer organizadorId = seleccionarOrganizador(concierto.getOrganizadorId());
+            if (organizadorId == null) {
+                return;
+            }
+
+            concierto.setArtista(artista);
+            concierto.setFecha(fecha);
+            concierto.setHora(hora);
+            concierto.setLugar(lugar);
+            concierto.setCapacidadTotal(capacidadTotal);
+            concierto.setOrganizadorId(organizadorId);
+
+            if (conciertoService.modificarConcierto(concierto)) {
+                mostrarInfo("Concierto modificado", "Se actualizo el concierto " + concierto.getArtista() + ".");
+            } else {
+                mostrarInfo("Sin cambios", "No se pudo modificar el concierto.");
+            }
+        } catch (IllegalArgumentException e) {
+            mostrarInfo("Datos invalidos", e.getMessage());
+        } catch (SQLException e) {
+            mostrarError("No se pudo modificar el concierto", e);
+        }
+    }
+
+    private void modificarConcierto(int conciertoId) {
+        try {
+            Concierto concierto = conciertoService.buscarPorId(conciertoId);
+            if (concierto == null) {
+                mostrarInfo("Sin concierto", "No se encontro el concierto indicado.");
+                return;
+            }
+
+            String artista = pedirTexto("Artista", concierto.getArtista());
+            LocalDate fecha = pedirFecha("Fecha (yyyy-MM-dd)", concierto.getFecha().toString());
+            LocalTime hora = pedirHora("Hora (HH:mm)", concierto.getHora().toString());
+            String lugar = pedirTexto("Lugar", concierto.getLugar());
+            int capacidadTotal = pedirEntero("Capacidad total", String.valueOf(concierto.getCapacidadTotal()));
+            Integer organizadorId = seleccionarOrganizador(concierto.getOrganizadorId());
+            if (organizadorId == null) {
+                return;
+            }
 
             concierto.setArtista(artista);
             concierto.setFecha(fecha);
@@ -149,6 +195,43 @@ public class MenuOrganizador extends JFrame {
         try {
             Concierto concierto = seleccionarConcierto();
             if (concierto == null) {
+                return;
+            }
+
+            LinkedList<Sector> sectores = sectorService.listarPorConcierto(concierto.getId());
+            StringBuilder message = new StringBuilder();
+            message.append("Concierto: ").append(concierto.getArtista()).append('\n');
+            message.append("Fecha: ").append(concierto.getFecha()).append('\n');
+            message.append("Hora: ").append(concierto.getHora()).append('\n');
+            message.append("Lugar: ").append(concierto.getLugar()).append('\n');
+            message.append("Estado: ").append(concierto.getEstado()).append('\n');
+            message.append("Disponibles: ").append(concierto.getDisponibles()).append('\n');
+            message.append('\n').append("Sectores:").append('\n');
+            for (Sector sector : sectores) {
+                message.append("- ")
+                        .append(sector.getTipo())
+                        .append(" / ")
+                        .append(sector.getNombre())
+                        .append(" / Capacidad: ")
+                        .append(sector.getCapacidad())
+                        .append(" / Disponibles: ")
+                        .append(sector.getDisponibles())
+                        .append('\n');
+            }
+
+            mostrarInfo("Informacion del evento", message.toString());
+        } catch (IllegalArgumentException e) {
+            mostrarInfo("Datos invalidos", e.getMessage());
+        } catch (SQLException e) {
+            mostrarError("No se pudo consultar el evento", e);
+        }
+    }
+
+    private void verInformacionEvento(int conciertoId) {
+        try {
+            Concierto concierto = conciertoService.buscarPorId(conciertoId);
+            if (concierto == null) {
+                mostrarInfo("Sin concierto", "No se encontro el concierto indicado.");
                 return;
             }
 
@@ -209,6 +292,47 @@ public class MenuOrganizador extends JFrame {
                 opciones[0]);
 
         return seleccionado == null ? null : conciertosPorEtiqueta.get(seleccionado);
+    }
+
+    private Integer seleccionarOrganizador() throws SQLException {
+        return seleccionarOrganizador(0);
+    }
+
+    private Integer seleccionarOrganizador(int organizadorActualId) throws SQLException {
+        LinkedList<Usuario> usuarios = usuarioService.listarUsuarios();
+        Map<String, Integer> opcionesPorEtiqueta = new HashMap<>();
+        LinkedList<String> opciones = new LinkedList<>();
+
+        String sinOrganizador = "0 - Organizador indefinido";
+        opciones.add(sinOrganizador);
+        opcionesPorEtiqueta.put(sinOrganizador, 0);
+
+        String seleccionInicial = sinOrganizador;
+        for (Usuario usuarioListado : usuarios) {
+            if (!"Organizador".equals(usuarioListado.getRol())) {
+                continue;
+            }
+            String etiqueta = String.format("%d - %s %s",
+                    usuarioListado.getId(),
+                    usuarioListado.getNombre(),
+                    usuarioListado.getApellido());
+            opciones.add(etiqueta);
+            opcionesPorEtiqueta.put(etiqueta, usuarioListado.getId());
+            if (usuarioListado.getId() == organizadorActualId) {
+                seleccionInicial = etiqueta;
+            }
+        }
+
+        String seleccionado = (String) JOptionPane.showInputDialog(
+                this,
+                "Seleccione un organizador:",
+                "Organizadores disponibles",
+                JOptionPane.PLAIN_MESSAGE,
+                null,
+                opciones.toArray(new String[0]),
+                seleccionInicial);
+
+        return seleccionado == null ? null : opcionesPorEtiqueta.get(seleccionado);
     }
 
     private void cerrarSesion() {
@@ -351,24 +475,6 @@ public class MenuOrganizador extends JFrame {
             throw new IllegalArgumentException("Operacion cancelada.");
         }
         return Integer.parseInt(valor.trim());
-    }
-
-    private int pedirEnteroOpcional(String campo, String valorInicial) {
-        String valor = (String) JOptionPane.showInputDialog(this,
-                "Ingrese " + campo + " (dejar en 0 si no aplica)",
-                campo,
-                JOptionPane.PLAIN_MESSAGE,
-                null,
-                null,
-                valorInicial);
-        if (valor == null) {
-            throw new IllegalArgumentException("Operacion cancelada.");
-        }
-        String trimmed = valor.trim();
-        if (trimmed.isEmpty()) {
-            return 0;
-        }
-        return Integer.parseInt(trimmed);
     }
 
     private LocalDate pedirFecha(String campo, String valorInicial) {

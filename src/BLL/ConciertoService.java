@@ -1,6 +1,7 @@
 package BLL;
 
 import DLL.ControllerConcierto;
+import DLL.ControllerUsuario;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -9,13 +10,19 @@ import java.util.LinkedList;
 public class ConciertoService {
 
     private final ControllerConcierto controllerConcierto;
+    private final ControllerUsuario controllerUsuario;
 
     public ConciertoService() {
-        this(new ControllerConcierto());
+        this(new ControllerConcierto(), new ControllerUsuario());
     }
 
     public ConciertoService(ControllerConcierto controllerConcierto) {
+        this(controllerConcierto, new ControllerUsuario());
+    }
+
+    public ConciertoService(ControllerConcierto controllerConcierto, ControllerUsuario controllerUsuario) {
         this.controllerConcierto = controllerConcierto;
+        this.controllerUsuario = controllerUsuario;
     }
 
     public int crearConcierto(String artista, LocalDate fecha, LocalTime hora,
@@ -23,6 +30,7 @@ public class ConciertoService {
         Concierto concierto = new Concierto(0, artista, fecha, hora, lugar,
                 capacidadTotal, organizadorId, "Activo");
         validarConcierto(concierto);
+        validarOrganizador(concierto.getOrganizadorId());
         if (controllerConcierto.existeMismoDiaYLugar(fecha, lugar.trim(), 0)) {
             throw new IllegalArgumentException("Ya existe un concierto en la misma fecha y lugar.");
         }
@@ -36,6 +44,7 @@ public class ConciertoService {
             throw new IllegalArgumentException("El id de concierto debe ser mayor a cero.");
         }
         validarConcierto(concierto);
+        validarOrganizador(concierto.getOrganizadorId());
         if (controllerConcierto.buscarPorId(concierto.getId()) == null) {
             throw new IllegalArgumentException("No existe el concierto indicado.");
         }
@@ -84,6 +93,19 @@ public class ConciertoService {
         }
         if (!"Activo".equals(concierto.getEstado()) && !"Cancelado".equals(concierto.getEstado())) {
             throw new IllegalArgumentException("Estado de concierto invalido: " + concierto.getEstado());
+        }
+    }
+
+    private void validarOrganizador(int organizadorId) throws SQLException {
+        if (organizadorId == 0) {
+            return;
+        }
+        if (organizadorId < 0) {
+            throw new IllegalArgumentException("El organizador debe ser 0 o un usuario Organizador.");
+        }
+        Usuario organizador = controllerUsuario.buscarPorId(organizadorId);
+        if (organizador == null || !"Organizador".equals(organizador.getRol())) {
+            throw new IllegalArgumentException("El organizador debe ser 0 o un usuario con rol Organizador.");
         }
     }
 
