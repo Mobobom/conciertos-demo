@@ -2,7 +2,6 @@ package BLL;
 
 import DLL.ControllerConcierto;
 import DLL.ControllerSector;
-
 import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.util.LinkedList;
@@ -61,6 +60,10 @@ public class SectorService {
             throw new IllegalArgumentException("El id de concierto debe ser mayor a cero.");
         }
         return controllerSector.listarPorConcierto(conciertoId);
+    }
+
+    public LinkedList<Sector> listarTodos() throws SQLException {
+        return controllerSector.listar();
     }
 
     private void validarSector(Sector sector) throws SQLException {
