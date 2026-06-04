@@ -226,8 +226,25 @@ public class ControllerTicket {
         return 0;
     }
 
+    public LinkedList<Ticket> listarCompradosPorComprador(int compradorId) throws SQLException {
+        LinkedList<Ticket> tickets = new LinkedList<>();
+        String sql = baseSelect()
+                + " INNER JOIN compra c ON c.id = t.compra_id"
+                + " WHERE c.comprador_id = ? AND t.estado IN ('Vendido', 'Usado')"
+                + " ORDER BY c.fecha DESC, t.id";
+        try (PreparedStatement stmt = getConnection().prepareStatement(sql)) {
+            stmt.setInt(1, compradorId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    tickets.add(mapTicket(rs));
+                }
+            }
+        }
+        return tickets;
+    }
+
     private String baseSelect() {
-        return "SELECT id, concierto_id, sector_id, codigo, precio, estado, compra_id FROM ticket";
+        return "SELECT t.id, t.concierto_id, t.sector_id, t.codigo, t.precio, t.estado, t.compra_id FROM ticket t";
     }
 
     private void fillStatement(PreparedStatement stmt, Ticket ticket) throws SQLException {
@@ -255,4 +272,3 @@ public class ControllerTicket {
         );
     }
 }
-

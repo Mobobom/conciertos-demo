@@ -2,7 +2,7 @@ package GUI;
 
 import BLL.Usuario;
 import java.awt.BorderLayout;
-import java.awt.FlowLayout;
+import java.awt.GridLayout;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -29,7 +29,7 @@ public class RoleHomeFrame extends JFrame {
         setLayout(new BorderLayout(10, 10));
 
         add(buildHeader(), BorderLayout.NORTH);
-        add(buildButtons(), BorderLayout.SOUTH);
+        add(buildButtons(), BorderLayout.CENTER);
 
         SwingUtilities.invokeLater(this::openRoleMenuIfNeeded);
     }
@@ -53,14 +53,17 @@ public class RoleHomeFrame extends JFrame {
     }
 
     private JPanel buildButtons() {
-        JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        panel.setBorder(BorderFactory.createEmptyBorder(5, 15, 15, 15));
+        JPanel panel = new JPanel(new GridLayout(0, 1, 10, 10));
+        panel.setBorder(BorderFactory.createEmptyBorder(35, 120, 35, 120));
 
         JButton concertsButton = new JButton("Ver conciertos disponibles");
         concertsButton.addActionListener(e -> ShowConciertosTable.showTable());
 
         JButton roleButton = new JButton("Ir a menu de rol");
         roleButton.addActionListener(e -> openRoleMenu());
+
+        JButton purchasedTicketsButton = new JButton("Tickets comprados");
+        purchasedTicketsButton.addActionListener(e -> TicketsCompradosTable.showTable(usuario));
 
         JButton logoutButton = new JButton("Cerrar sesion");
         logoutButton.addActionListener(e -> logout());
@@ -70,6 +73,9 @@ public class RoleHomeFrame extends JFrame {
 
         panel.add(concertsButton);
         panel.add(roleButton);
+        if ("Comprador".equals(usuario.getRol())) {
+            panel.add(purchasedTicketsButton);
+        }
         panel.add(logoutButton);
         panel.add(exitButton);
         return panel;
@@ -117,5 +123,4 @@ public class RoleHomeFrame extends JFrame {
         }
     }
 }
-
 
