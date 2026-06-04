@@ -6,12 +6,17 @@ import BLL.Sector;
 import BLL.SectorService;
 import BLL.Usuario;
 import java.awt.BorderLayout;
+import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
+import java.util.Arrays;
 import java.util.LinkedList;
+import java.util.List;
+import java.util.function.BiFunction;
+import java.util.function.Supplier;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -84,7 +89,7 @@ public class MenuOrganizador extends JFrame {
     }
 
     private void mostrarConciertosActivos() {
-        mostrarTablaConciertos("Conciertos activos", conciertoService.listarActivos());
+        mostrarTablaConciertos("Conciertos activos", () -> conciertoService.listarActivos());
     }
 
     private void crearConcierto() {
@@ -108,6 +113,14 @@ public class MenuOrganizador extends JFrame {
     private void modificarConcierto() {
         try {
             int id = pedirEntero("ID del concierto", null);
+            modificarConcierto(id);
+        } catch (IllegalArgumentException e) {
+            mostrarInfo("Datos invalidos", e.getMessage());
+        }
+    }
+
+    private void modificarConcierto(int id) {
+        try {
             Concierto concierto = conciertoService.buscarPorId(id);
             if (concierto == null) {
                 mostrarInfo("Concierto no encontrado", "No existe un concierto con ID " + id + ".");
@@ -143,6 +156,14 @@ public class MenuOrganizador extends JFrame {
     private void verInformacionEvento() {
         try {
             int id = pedirEntero("ID del concierto", null);
+            verInformacionEvento(id);
+        } catch (IllegalArgumentException e) {
+            mostrarInfo("Datos invalidos", e.getMessage());
+        }
+    }
+
+    private void verInformacionEvento(int id) {
+        try {
             Concierto concierto = conciertoService.buscarPorId(id);
             if (concierto == null) {
                 mostrarInfo("Concierto no encontrado", "No existe un concierto con ID " + id + ".");
@@ -183,22 +204,10 @@ public class MenuOrganizador extends JFrame {
         new LoginFrame().setVisible(true);
     }
 
-    private void mostrarTablaConciertos(String titulo, LinkedList<Concierto> conciertos) {
-        String[] columns = {"ID", "Artista", "Fecha", "Hora", "Lugar", "Capacidad", "Disponibles", "Estado"};
-        Object[][] rows = new Object[conciertos.size()][columns.length];
-        for (int i = 0; i < conciertos.size(); i++) {
-            Concierto concierto = conciertos.get(i);
-            rows[i][0] = concierto.getId();
-            rows[i][1] = concierto.getArtista();
-            rows[i][2] = concierto.getFecha();
-            rows[i][3] = concierto.getHora();
-            rows[i][4] = concierto.getLugar();
-            rows[i][5] = concierto.getCapacidadTotal();
-            rows[i][6] = concierto.getDisponibles();
-            rows[i][7] = concierto.getEstado();
-        }
-
-        DefaultTableModel model = new DefaultTableModel(rows, columns) {
+    private void mostrarTablaConBotones(String titulo, String[] columns,
+            Supplier<Object[][]> rowsSupplier,
+            BiFunction<JTable, Runnable, List<JButton>> extraButtons) {
+        DefaultTableModel model = new DefaultTableModel(rowsSupplier.get(), columns) {
             @Override
             public boolean isCellEditable(int row, int column) {
                 return false;
@@ -210,10 +219,95 @@ public class MenuOrganizador extends JFrame {
 
         JFrame frame = new JFrame(titulo);
         frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        frame.add(scrollPane);
-        frame.setSize(820, 380);
+        frame.setLayout(new BorderLayout(5, 5));
+        frame.add(scrollPane, BorderLayout.CENTER);
+
+        Runnable refrescar = () -> model.setDataVector(rowsSupplier.get(), columns);
+
+        JPanel bar = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 6));
+        if (extraButtons != null) {
+            for (JButton button : extraButtons.apply(table, refrescar)) {
+                bar.add(button);
+            }
+        }
+
+        JButton subir = new JButton("Subir");
+        subir.addActionListener(e -> moverFila(table, -1));
+        JButton bajar = new JButton("Bajar");
+        bajar.addActionListener(e -> moverFila(table, 1));
+        JButton actualizar = new JButton("Actualizar");
+        actualizar.addActionListener(e -> refrescar.run());
+        JButton cerrar = new JButton("Cerrar");
+        cerrar.addActionListener(e -> frame.dispose());
+        bar.add(subir);
+        bar.add(bajar);
+        bar.add(actualizar);
+        bar.add(cerrar);
+
+        frame.add(bar, BorderLayout.SOUTH);
+        frame.setSize(880, 420);
         frame.setLocationRelativeTo(this);
         frame.setVisible(true);
+    }
+
+    private void moverFila(JTable table, int delta) {
+        int row = table.getSelectedRow();
+        if (row < 0) {
+            mostrarInfo("Mover fila", "Seleccione una fila.");
+            return;
+        }
+        int target = row + delta;
+        DefaultTableModel model = (DefaultTableModel) table.getModel();
+        if (target < 0 || target >= model.getRowCount()) {
+            return;
+        }
+        model.moveRow(row, row, target);
+        table.setRowSelectionInterval(target, target);
+    }
+
+    private Integer idSeleccionado(JTable table) {
+        int row = table.getSelectedRow();
+        if (row < 0) {
+            mostrarInfo("Accion", "Seleccione una fila.");
+            return null;
+        }
+        Object value = table.getModel().getValueAt(row, 0);
+        return Integer.valueOf(value.toString());
+    }
+
+    private void mostrarTablaConciertos(String titulo, Supplier<LinkedList<Concierto>> fetcher) {
+        String[] columns = {"ID", "Artista", "Fecha", "Hora", "Lugar", "Capacidad", "Disponibles", "Estado"};
+        Supplier<Object[][]> rows = () -> {
+            LinkedList<Concierto> conciertos = fetcher.get();
+            Object[][] data = new Object[conciertos.size()][columns.length];
+            for (int i = 0; i < conciertos.size(); i++) {
+                Concierto concierto = conciertos.get(i);
+                data[i][0] = concierto.getId();
+                data[i][1] = concierto.getArtista();
+                data[i][2] = concierto.getFecha();
+                data[i][3] = concierto.getHora();
+                data[i][4] = concierto.getLugar();
+                data[i][5] = concierto.getCapacidadTotal();
+                data[i][6] = concierto.getDisponibles();
+                data[i][7] = concierto.getEstado();
+            }
+            return data;
+        };
+        mostrarTablaConBotones(titulo, columns, rows, (table, refrescar) -> {
+            JButton crear = new JButton("Crear");
+            crear.addActionListener(e -> { crearConcierto(); refrescar.run(); });
+            JButton editar = new JButton("Editar");
+            editar.addActionListener(e -> {
+                Integer id = idSeleccionado(table);
+                if (id != null) { modificarConcierto(id); refrescar.run(); }
+            });
+            JButton verInfo = new JButton("Ver informacion");
+            verInfo.addActionListener(e -> {
+                Integer id = idSeleccionado(table);
+                if (id != null) { verInformacionEvento(id); }
+            });
+            return Arrays.asList(crear, editar, verInfo);
+        });
     }
 
     private String pedirTexto(String campo, String valorInicial) {
