@@ -232,7 +232,10 @@ public class MenuAdministrador extends JFrame {
             if (concierto == null) {
                 return;
             }
-            String tipo = pedirTexto("Tipo de sector (ej. PLATEA, VIP)", "PLATEA");
+            String tipo = seleccionarTipoSector();
+            if (tipo == null) {
+                return;
+            }
             String nombre = pedirTexto("Nombre del sector", "Principal");
             int capacidad = pedirEntero("Capacidad del sector", "10");
             String precioStr = pedirTexto("Precio (ej. 100.00)", "100.00");
@@ -250,6 +253,18 @@ public class MenuAdministrador extends JFrame {
         } catch (SQLException e) {
             mostrarError("No se pudo crear el sector", e);
         }
+    }
+
+    private String seleccionarTipoSector() {
+        String[] tipos = {"VIP", "Platea", "Campo", "Preferencial"};
+        return (String) JOptionPane.showInputDialog(
+                this,
+                "Seleccione el tipo de sector:",
+                "Tipo de sector",
+                JOptionPane.PLAIN_MESSAGE,
+                null,
+                tipos,
+                tipos[0]);
     }
 
     private void crearTicketsDeSector() {
@@ -281,9 +296,8 @@ public class MenuAdministrador extends JFrame {
             Sector sector = sectores.get(i);
             Concierto concierto = conciertosPorId.get(sector.getConciertoId());
             String artista = concierto == null ? "Concierto " + sector.getConciertoId() : concierto.getArtista();
-            String fechaHora = concierto == null ? "" : " - " + concierto.getFecha() + " " + concierto.getHora();
-            String etiqueta = String.format("%s%s - %s - %s - capacidad: %d - disponibles: %d",
-                    artista, fechaHora, sector.getTipo(), sector.getNombre(),
+            String etiqueta = String.format("%s - %s - %s - capacidad: %d - disponibles: %d",
+                artista, sector.getTipo(), sector.getNombre(),
                     sector.getCapacidad(), sector.getDisponibles());
             opciones[i] = etiqueta;
             sectoresPorEtiqueta.put(etiqueta, sector);

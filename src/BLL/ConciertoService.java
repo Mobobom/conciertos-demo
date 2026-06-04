@@ -1,7 +1,6 @@
 package BLL;
 
 import DLL.ControllerConcierto;
-
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -24,8 +23,8 @@ public class ConciertoService {
         Concierto concierto = new Concierto(0, artista, fecha, hora, lugar,
                 capacidadTotal, organizadorId, "Activo");
         validarConcierto(concierto);
-        if (controllerConcierto.existeSuperposicion(fecha, hora, lugar.trim(), 0)) {
-            throw new IllegalArgumentException("Ya existe un concierto en la misma fecha, hora y lugar.");
+        if (controllerConcierto.existeMismoDiaYLugar(fecha, lugar.trim(), 0)) {
+            throw new IllegalArgumentException("Ya existe un concierto en la misma fecha y lugar.");
         }
         concierto.setArtista(artista.trim());
         concierto.setLugar(lugar.trim());
@@ -40,9 +39,9 @@ public class ConciertoService {
         if (controllerConcierto.buscarPorId(concierto.getId()) == null) {
             throw new IllegalArgumentException("No existe el concierto indicado.");
         }
-        if (controllerConcierto.existeSuperposicion(concierto.getFecha(), concierto.getHora(),
-                concierto.getLugar().trim(), concierto.getId())) {
-            throw new IllegalArgumentException("Ya existe otro concierto en la misma fecha, hora y lugar.");
+        if (controllerConcierto.existeMismoDiaYLugar(concierto.getFecha(), concierto.getLugar().trim(),
+                concierto.getId())) {
+            throw new IllegalArgumentException("Ya existe otro concierto en la misma fecha y lugar.");
         }
         concierto.setArtista(concierto.getArtista().trim());
         concierto.setLugar(concierto.getLugar().trim());
