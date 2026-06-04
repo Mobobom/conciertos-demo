@@ -17,11 +17,11 @@ USE `ticketing`;
 -- Hashes below verify against the plain-text passwords above
 
 INSERT INTO `usuario` (`id`,`nombre`,`apellido`,`email`,`documento`,`password`,`rol`) VALUES
-(1,'Admin','Sistema','admin@ticket.com','10000001','$2a$10$1aAj8WB5XQ3m35iMxWYGdO3UiAJ5KiJhVo58taJJ4yfNBXOb8Il4W','Administrador'),
-(2,'Olivia','Ramos','org@ticket.com','20000002','$2a$10$ppGSC/rSZNModeQeSIthkOIpgkavyyTOrMlounf5gD7ecQTuxtLk.','Organizador'),
-(3,'Pablo','Soto','acceso@ticket.com','30000003','$2a$10$PtSmhjLgc9eVTfkJDCOV3ODfsahd9l/z2WlkvXjc1COjo.UgJAHpW','PersonalAcceso'),
-(4,'Juan','Perez','juan@mail.com','40000004','$2a$10$HO0Hn2e49ThOerz187Vwf.vvo8BCyQOUKO8BdAisagYfMuFYqILoG','Comprador'),
-(5,'Ana','Gomez','ana@mail.com','40000005','$2a$10$HO0Hn2e49ThOerz187Vwf.vvo8BCyQOUKO8BdAisagYfMuFYqILoG','Comprador');
+(1,'Admin','Sistema','admin@ticket.com','10000001','$2a$10$wYbMlacHS0K9eo5rZovGE.SsW/gmHeJFk7L6yPby0OBph8JAtERIK','Administrador'),
+(2,'Olivia','Ramos','org@ticket.com','20000002','$2a$10$8K5GJBmZjSL8N7fnqJn.1u67JRiUqwtqXnZ78J8l/IktY112G.JB6','Organizador'),
+(3,'Pablo','Soto','acceso@ticket.com','30000003','$2a$10$BUKwJsMvd.52wWTrO.9PtuN9qXJLSB32qWheqkYVnsvu279QcCMG2','PersonalAcceso'),
+(4,'Juan','Perez','juan@mail.com','40000004','$2a$10$717u/hhDE9AFYRvh5UG2TekY7X3aLur5ZDcp2Mmtun0zsizVcurl.','Comprador'),
+(5,'Ana','Gomez','ana@mail.com','40000005','$2a$10$3nJwdDrnPURizLR86uB/s.5B08VForJQpgKS0dXs4NIMtsYM2vUeq','Comprador');
 
 -- concierto
 
