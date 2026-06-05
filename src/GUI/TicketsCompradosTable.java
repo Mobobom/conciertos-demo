@@ -41,8 +41,8 @@ public class TicketsCompradosTable {
             String[] columns = {"Concierto", "Fecha", "Hora", "Lugar", "Sector", "Codigo", "Precio", "Estado"};
             Object[][] rows = new Object[tickets.size()][columns.length];
 
-            for (int i = 0; i < tickets.size(); i++) {
-                Ticket ticket = tickets.get(i);
+            int i = 0;
+            for (Ticket ticket : tickets) {
                 Concierto concierto = conciertosPorId.get(ticket.getConciertoId());
                 if (concierto == null) {
                     concierto = conciertoService.buscarPorId(ticket.getConciertoId());
@@ -63,9 +63,15 @@ public class TicketsCompradosTable {
                 rows[i][5] = ticket.getCodigo();
                 rows[i][6] = ticket.getPrecio();
                 rows[i][7] = ticket.getEstado();
+                i++;
             }
 
             mostrarTabla("Tickets comprados - " + comprador.getNombre(), columns, rows);
+        } catch (IllegalArgumentException e) {
+            JOptionPane.showMessageDialog(null,
+                    e.getMessage(),
+                    "Tickets comprados",
+                    JOptionPane.WARNING_MESSAGE);
         } catch (SQLException e) {
             JOptionPane.showMessageDialog(null,
                     "Error de base de datos: " + e.getMessage(),
