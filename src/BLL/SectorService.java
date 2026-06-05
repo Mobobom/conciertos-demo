@@ -23,8 +23,9 @@ public class SectorService {
     public int crearSector(int conciertoId, String tipo, String nombre,
                            int capacidad, BigDecimal precio) throws SQLException {
         Sector sector = new Sector(0, conciertoId, tipo, nombre, capacidad, precio);
-        validarSector(sector);
-        validarCapacidad(sector);
+        Concierto concierto = controllerConcierto.buscarPorId(conciertoId);
+        validarSector(sector, concierto);
+        validarCapacidad(sector, concierto);
         sector.setTipo(tipo.trim());
         sector.setNombre(nombre.trim());
         return controllerSector.crear(sector);
@@ -34,8 +35,9 @@ public class SectorService {
         if (sector.getId() <= 0) {
             throw new IllegalArgumentException("El id de sector debe ser mayor a cero.");
         }
-        validarSector(sector);
-        validarCapacidad(sector);
+        Concierto concierto = controllerConcierto.buscarPorId(sector.getConciertoId());
+        validarSector(sector, concierto);
+        validarCapacidad(sector, concierto);
         sector.setTipo(sector.getTipo().trim());
         sector.setNombre(sector.getNombre().trim());
         return controllerSector.modificar(sector);
@@ -66,7 +68,7 @@ public class SectorService {
         return controllerSector.listar();
     }
 
-    private void validarSector(Sector sector) throws SQLException {
+    private void validarSector(Sector sector, Concierto concierto) {
         if (sector.getConciertoId() <= 0) {
             throw new IllegalArgumentException("El concierto del sector es obligatorio.");
         }
@@ -81,13 +83,12 @@ public class SectorService {
         if (sector.getPrecio() == null || sector.getPrecio().compareTo(BigDecimal.ZERO) < 0) {
             throw new IllegalArgumentException("El precio del sector no puede ser negativo.");
         }
-        if (controllerConcierto.buscarPorId(sector.getConciertoId()) == null) {
+        if (concierto == null) {
             throw new IllegalArgumentException("No existe el concierto indicado para el sector.");
         }
     }
 
-    private void validarCapacidad(Sector sector) throws SQLException {
-        Concierto concierto = controllerConcierto.buscarPorId(sector.getConciertoId());
+    private void validarCapacidad(Sector sector, Concierto concierto) throws SQLException {
         int capacidadOtrosSectores = controllerSector.sumarCapacidadPorConcierto(
                 sector.getConciertoId(), sector.getId());
         if (capacidadOtrosSectores + sector.getCapacidad() > concierto.getCapacidadTotal()) {

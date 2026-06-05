@@ -31,8 +31,8 @@ public class ConciertoService {
                 capacidadTotal, organizadorId, "Activo");
         validarConcierto(concierto);
         validarOrganizador(concierto.getOrganizadorId());
-        if (controllerConcierto.existeMismoDiaYLugar(fecha, lugar.trim(), 0)) {
-            throw new IllegalArgumentException("Ya existe un concierto en la misma fecha y lugar.");
+        if (controllerConcierto.existeMismoDiaYLugar(fecha, hora, lugar.trim(), 0)) {
+            throw new IllegalArgumentException("Ya existe un concierto en la misma fecha, hora y lugar.");
         }
         concierto.setArtista(artista.trim());
         concierto.setLugar(lugar.trim());
@@ -52,9 +52,9 @@ public class ConciertoService {
         if ("Cancelado".equals(existente.getEstado())) {
             throw new IllegalArgumentException("No se puede modificar un concierto cancelado.");
         }
-        if (controllerConcierto.existeMismoDiaYLugar(concierto.getFecha(), concierto.getLugar().trim(),
-                concierto.getId())) {
-            throw new IllegalArgumentException("Ya existe otro concierto en la misma fecha y lugar.");
+        if (controllerConcierto.existeMismoDiaYLugar(concierto.getFecha(), concierto.getHora(),
+                concierto.getLugar().trim(), concierto.getId())) {
+            throw new IllegalArgumentException("Ya existe otro concierto en la misma fecha, hora y lugar.");
         }
         concierto.setArtista(concierto.getArtista().trim());
         concierto.setLugar(concierto.getLugar().trim());
@@ -75,7 +75,7 @@ public class ConciertoService {
         return controllerConcierto.buscarPorId(id);
     }
 
-    public LinkedList<Concierto> listarActivos() {
+    public LinkedList<Concierto> listarActivos() throws SQLException {
         return controllerConcierto.mostrarActivos();
     }
 
