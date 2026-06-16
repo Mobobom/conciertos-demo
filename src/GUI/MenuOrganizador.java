@@ -94,7 +94,14 @@ public class MenuOrganizador extends JFrame {
     }
 
     private void mostrarConciertosActivos() {
-        mostrarTablaConciertos("Conciertos activos", () -> conciertoService.listarActivos());
+        mostrarTablaConciertos("Conciertos activos", () -> {
+            try {
+                return conciertoService.listarActivos();
+            } catch (SQLException e) {
+                mostrarError("No se pudieron listar los conciertos", e);
+                return new LinkedList<Concierto>();
+            }
+        });
     }
 
     private void crearConcierto() {
@@ -289,8 +296,8 @@ public class MenuOrganizador extends JFrame {
         String[] opciones = new String[conciertos.size()];
         for (int i = 0; i < conciertos.size(); i++) {
             Concierto concierto = conciertos.get(i);
-            String etiqueta = String.format("%s - %s %s - %s - disponibles: %d",
-                    concierto.getArtista(), concierto.getFecha(), concierto.getHora(),
+            String etiqueta = String.format("#%d - %s - %s %s - %s - disponibles: %d",
+                    concierto.getId(), concierto.getArtista(), concierto.getFecha(), concierto.getHora(),
                     concierto.getLugar(), concierto.getDisponibles());
             opciones[i] = etiqueta;
             conciertosPorEtiqueta.put(etiqueta, concierto);

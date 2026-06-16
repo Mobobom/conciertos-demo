@@ -2,7 +2,7 @@
 
 Aplicación de escritorio Java/Swing que gestiona y vende entradas para conciertos. Roles previstos: **Administrador**, **Organizador**, **Comprador** y **Personal de acceso**.
 
-Basado en la especificación de requisitos `Especificacion_de_requisitos_-_Version_2_1.pdf`, sigue el estilo de código de `Style_example` (capas BLL/DLL/GUI/repository).
+Basado en la especificación de requisitos `Especificacion_de_requisitos_-_Version_2_1.pdf`, sigue el estilo de código de `Style_example` (capas BLL/DLL/GUI).
 
 ## Estructura del proyecto
 
@@ -14,16 +14,15 @@ conciertos-demo-main/
 │   └── populate_ticketing.sql      Carga datos de prueba
 ├── lib/
 ├── src/
-│   ├── BLL/    Entidades
-│   ├── DLL/    Conexión JDBC y controladores
-│   ├── GUI/    Pantallas
-│   └── repository/
+│   ├── BLL/    Entidades y servicios (lógica de negocio)
+│   ├── DLL/    Conexión JDBC y controladores (acceso a datos)
+│   └── GUI/    Pantallas Swing (login, menús por rol, tablas)
 └── README.md
 ```
 
 ## Requisitos
 
-- **Java**
+- **Java** 11 o superior
 - **MySQL** 8.x
 
 ## Configuración de la base de datos
@@ -75,10 +74,10 @@ javac --release 11 -d bin -cp "lib/*" $(find src -name "*.java")
 
 # Ejecutar en macOS / Linux
 java -cp "bin:lib/*" GUI.Main
-
-# Harness de desarrollo sin abrir Swing
-java -cp "bin:lib/*" GUI.DevHarness smoke
 ```
+
+> El conector JDBC (`lib/mysql-connector-j-8.4.0.jar`) debe estar en el classpath
+> tanto al compilar como al ejecutar; por eso ambos comandos incluyen `lib/*`.
 
 Al iniciar, se abrirá la pantalla de **Login**. Se puede probar con:
 
@@ -87,15 +86,26 @@ admin@ticket.com / admin123
 juan@mail.com / 1234
 ```
 
-Luego se abrirá una pantalla base según el rol del usuario. Desde ahí se puede abrir la tabla de conciertos disponibles.
-
 En consola se verá:
 
 ```
-Conexion: conectado a jdbc:mysql://localhost:3306/ticketing?useSSL=false&serverTimezone=UTC
+Conexion: conectado a jdbc:mysql://localhost:3306/ticketing?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
 ```
 
-La ventana **"Conciertos disponibles"** muestra dos filas: *Coldplay* (15/06/2026, Estadio Monumental) y *Taylor Swift* (20/08/2026, Estadio Velez), ambas con 60 entradas disponibles.
+La ventana **"Conciertos disponibles"** muestra las columnas *ID, Artista, Fecha, Hora, Lugar, Capacidad, Disponibles* con dos filas de prueba: *Coldplay* (15/06/2026, Estadio Monumental) y *Taylor Swift* (20/08/2026, Estadio Velez), ambas con 60 entradas disponibles. Bajo la tabla hay una barra de botones (**Subir / Bajar / Actualizar / Cerrar**, y **Comprar seleccionado** cuando se abre desde el menú del comprador).
+
+## Flujo de la aplicación y roles
+
+Tras autenticarse se abre una pantalla principal según el rol:
+
+- **Administrador** → `MenuAdministrador`: alta, modificación y cancelación de conciertos; gestión de sectores y generación de tickets; bloqueo/liberación de tickets.
+- **Organizador** → `MenuOrganizador`: creación y modificación de conciertos y consulta de la información del evento.
+- **Comprador** → `MenuComprador`: ver conciertos, comprar tickets (sector → cantidad → método de pago) y consultar sus tickets comprados.
+- **Personal de acceso** → `MenuPersonalAcceso`: validación de tickets por código.
+
+Administrador y Organizador acceden directamente a su menú de gestión; Comprador y Personal de acceso ven primero una pantalla base (`RoleHomeFrame`) desde la que abren su menú de rol, la tabla de conciertos o (comprador) sus tickets comprados.
+
+Las tablas de conciertos, sectores y tickets incluyen una barra de botones para operar sobre la **fila seleccionada** (editar, eliminar, cancelar, bloquear/liberar, según la pantalla), además de **Subir/Bajar** para reordenar la vista, **Actualizar** para recargar desde la base de datos y **Cerrar**. El reordenamiento es solo visual y no se persiste.
 
 ## Datos de prueba
 
@@ -134,9 +144,11 @@ pre-generados en estado `Disponible`.
 - `estacionamiento` y `reserva_estacionamiento`
 - `transporte` y `reserva_transporte`
 
-Ver `db/create_ticketing.sql` para el detalle completo, y docs/superpowers/specs/2026-05-26-ticketing-system-design.md` para el diseño general del sistema (incluyendo las funcionalidades diferidas).
+Ver `db/create_ticketing.sql` para el detalle completo, y `docs/Especificacion_de_requisitos_v2_1.md` para la especificación de requisitos del sistema (incluyendo las funcionalidades diferidas).
 
 ## Notas técnicas
 
-- **Driver JDBC**: se usa `mysql-connector-j-8.4.0.jar`, porque  los conectores antiguos no soportan el plugin de autenticación `caching_sha2_password` que MySQL 8 utiliza por defecto.
-- **URL JDBC**: `jdbc:mysql://localhost:3306/ticketing?useSSL=false&serverTimezone=UTC` (definida en `src/DLL/Conexion.java`).
+- **Driver JDBC**: se usa `mysql-connector-j-8.4.0.jar`, porque los conectores antiguos no soportan el plugin de autenticación `caching_sha2_password` que MySQL 8 utiliza por defecto.
+- **URL JDBC**: `jdbc:mysql://localhost:3306/ticketing?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC` (definida en `src/DLL/Conexion.java`).
+- **Autenticación MySQL 8**: el parámetro `allowPublicKeyRetrieval=true` permite el login con `caching_sha2_password` sobre una conexión sin SSL (entorno de desarrollo local).
+- **Contraseñas**: se almacenan como hashes bcrypt (`lib/jbcrypt-0.4.jar`); `UsuarioService` valida con `BCrypt.checkpw`.

@@ -2,6 +2,9 @@ package GUI;
 
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Consumer;
 
 import javax.swing.JButton;
@@ -17,17 +20,13 @@ import DLL.ControllerConcierto;
 
 public class ShowConciertosTable {
 
-    
     public static void showTable() {
         showTable(null);
     }
 
-    /**
-     * Buyer mode when onComprar != null: adds "Comprar seleccionado" which
-     * invokes the callback with the selected concierto. View mode otherwise.
-     */
     public static void showTable(Consumer<Concierto> onComprar) {
         ControllerConcierto controller = new ControllerConcierto();
+        List<Concierto> data = new ArrayList<>();
 
         String[] columns = { "ID", "Artista", "Fecha", "Hora", "Lugar", "Capacidad", "Disponibles" };
         DefaultTableModel model = new DefaultTableModel(columns, 0) {
@@ -37,17 +36,6 @@ public class ShowConciertosTable {
             }
         };
 
-        Runnable recargar = () -> {
-            model.setRowCount(0);
-            for (Concierto c : controller.mostrarActivos()) {
-                model.addRow(new Object[] {
-                        c.getId(), c.getArtista(), c.getFecha(), c.getHora(),
-                        c.getLugar(), c.getCapacidadTotal(), c.getDisponibles()
-                });
-            }
-        };
-        recargar.run();
-
         JTable table = new JTable(model);
         JScrollPane sp = new JScrollPane(table);
 
@@ -55,6 +43,25 @@ public class ShowConciertosTable {
         frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         frame.setLayout(new BorderLayout(5, 5));
         frame.add(sp, BorderLayout.CENTER);
+
+        Runnable recargar = () -> {
+            try {
+                data.clear();
+                data.addAll(controller.mostrarActivos());
+                model.setRowCount(0);
+                for (Concierto c : data) {
+                    model.addRow(new Object[] {
+                            c.getId(), c.getArtista(), c.getFecha(), c.getHora(),
+                            c.getLugar(), c.getCapacidadTotal(), c.getDisponibles()
+                    });
+                }
+            } catch (SQLException e) {
+                JOptionPane.showMessageDialog(frame,
+                        "Error de base de datos: " + e.getMessage(),
+                        "Conciertos disponibles", JOptionPane.ERROR_MESSAGE);
+            }
+        };
+        recargar.run();
 
         JPanel bar = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 6));
         if (onComprar != null) {
@@ -67,7 +74,13 @@ public class ShowConciertosTable {
                     return;
                 }
                 int id = Integer.parseInt(table.getModel().getValueAt(row, 0).toString());
-                Concierto seleccionado = buscarPorId(controller, id);
+                Concierto seleccionado = null;
+                for (Concierto c : data) {
+                    if (c.getId() == id) {
+                        seleccionado = c;
+                        break;
+                    }
+                }
                 if (seleccionado == null) {
                     JOptionPane.showMessageDialog(frame, "No se encontro el concierto.",
                             "Comprar", JOptionPane.WARNING_MESSAGE);
@@ -96,15 +109,6 @@ public class ShowConciertosTable {
         frame.setSize(720, 440);
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
-    }
-
-    private static Concierto buscarPorId(ControllerConcierto controller, int id) {
-        for (Concierto c : controller.mostrarActivos()) {
-            if (c.getId() == id) {
-                return c;
-            }
-        }
-        return null;
     }
 
     private static void moverFila(JFrame frame, JTable table, int delta) {
