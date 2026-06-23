@@ -181,35 +181,7 @@ public class MenuAdministrador extends JFrame {
     private void modificarConcierto() {
         try {
             Concierto concierto = seleccionarConcierto();
-            if (concierto == null) {
-                return;
-            }
-            if (!puedeModificarConcierto(concierto)) {
-                return;
-            }
-
-            String artista = pedirTexto("Artista", concierto.getArtista());
-            LocalDate fecha = pedirFecha("Fecha (yyyy-MM-dd)", concierto.getFecha().toString());
-            LocalTime hora = pedirHora("Hora (HH:mm)", concierto.getHora().toString());
-            String lugar = pedirTexto("Lugar", concierto.getLugar());
-            int capacidadTotal = pedirEntero("Capacidad total", String.valueOf(concierto.getCapacidadTotal()));
-            Integer organizadorId = seleccionarOrganizador(concierto.getOrganizadorId());
-            if (organizadorId == null) {
-                return;
-            }
-
-            concierto.setArtista(artista);
-            concierto.setFecha(fecha);
-            concierto.setHora(hora);
-            concierto.setLugar(lugar);
-            concierto.setCapacidadTotal(capacidadTotal);
-            concierto.setOrganizadorId(organizadorId);
-
-            if (conciertoService.modificarConcierto(concierto)) {
-                mostrarInfo("Concierto modificado", "Se actualizo el concierto " + concierto.getArtista() + ".");
-            } else {
-                mostrarInfo("Sin cambios", "No se pudo modificar el concierto.");
-            }
+            modificarConcierto(concierto);
         } catch (IllegalArgumentException e) {
             mostrarInfo("Datos invalidos", e.getMessage());
         } catch (SQLException e) {
@@ -224,32 +196,7 @@ public class MenuAdministrador extends JFrame {
                 mostrarInfo("Sin concierto", "No se encontro el concierto indicado.");
                 return;
             }
-            if (!puedeModificarConcierto(concierto)) {
-                return;
-            }
-
-            String artista = pedirTexto("Artista", concierto.getArtista());
-            LocalDate fecha = pedirFecha("Fecha (yyyy-MM-dd)", concierto.getFecha().toString());
-            LocalTime hora = pedirHora("Hora (HH:mm)", concierto.getHora().toString());
-            String lugar = pedirTexto("Lugar", concierto.getLugar());
-            int capacidadTotal = pedirEntero("Capacidad total", String.valueOf(concierto.getCapacidadTotal()));
-            Integer organizadorId = seleccionarOrganizador(concierto.getOrganizadorId());
-            if (organizadorId == null) {
-                return;
-            }
-
-            concierto.setArtista(artista);
-            concierto.setFecha(fecha);
-            concierto.setHora(hora);
-            concierto.setLugar(lugar);
-            concierto.setCapacidadTotal(capacidadTotal);
-            concierto.setOrganizadorId(organizadorId);
-
-            if (conciertoService.modificarConcierto(concierto)) {
-                mostrarInfo("Concierto modificado", "Se actualizo el concierto " + concierto.getArtista() + ".");
-            } else {
-                mostrarInfo("Sin cambios", "No se pudo modificar el concierto.");
-            }
+            modificarConcierto(concierto);
         } catch (IllegalArgumentException e) {
             mostrarInfo("Datos invalidos", e.getMessage());
         } catch (SQLException e) {
@@ -257,21 +204,39 @@ public class MenuAdministrador extends JFrame {
         }
     }
 
+    private void modificarConcierto(Concierto concierto) throws SQLException {
+        if (concierto == null || !puedeModificarConcierto(concierto)) {
+            return;
+        }
+
+        String artista = pedirTexto("Artista", concierto.getArtista());
+        LocalDate fecha = pedirFecha("Fecha (yyyy-MM-dd)", concierto.getFecha().toString());
+        LocalTime hora = pedirHora("Hora (HH:mm)", concierto.getHora().toString());
+        String lugar = pedirTexto("Lugar", concierto.getLugar());
+        int capacidadTotal = pedirEntero("Capacidad total", String.valueOf(concierto.getCapacidadTotal()));
+        Integer organizadorId = seleccionarOrganizador(concierto.getOrganizadorId());
+        if (organizadorId == null) {
+            return;
+        }
+
+        concierto.setArtista(artista);
+        concierto.setFecha(fecha);
+        concierto.setHora(hora);
+        concierto.setLugar(lugar);
+        concierto.setCapacidadTotal(capacidadTotal);
+        concierto.setOrganizadorId(organizadorId);
+
+        if (conciertoService.modificarConcierto(concierto)) {
+            mostrarInfo("Concierto modificado", "Se actualizo el concierto " + concierto.getArtista() + ".");
+        } else {
+            mostrarInfo("Sin cambios", "No se pudo modificar el concierto.");
+        }
+    }
+
     private void cancelarConcierto() {
         try {
             Concierto concierto = seleccionarConcierto();
-            if (concierto == null) {
-                return;
-            }
-            if (!confirmarAccion("Cancelar concierto",
-                    "Desea cancelar el concierto \"" + concierto.getArtista() + "\"?")) {
-                return;
-            }
-
-            boolean cancelado = conciertoService.cancelarConcierto(concierto.getId());
-            mostrarInfo("Cancelar concierto", cancelado
-                    ? "El concierto fue cancelado."
-                    : "No se encontro el concierto indicado.");
+            cancelarConcierto(concierto);
         } catch (IllegalArgumentException e) {
             mostrarInfo("Datos invalidos", e.getMessage());
         } catch (SQLException e) {
@@ -286,20 +251,27 @@ public class MenuAdministrador extends JFrame {
                 mostrarInfo("Cancelar concierto", "No se encontro el concierto indicado.");
                 return;
             }
-            if (!confirmarAccion("Cancelar concierto",
-                    "Desea cancelar el concierto \"" + concierto.getArtista() + "\"?")) {
-                return;
-            }
-
-            boolean cancelado = conciertoService.cancelarConcierto(conciertoId);
-            mostrarInfo("Cancelar concierto", cancelado
-                    ? "El concierto fue cancelado."
-                    : "No se encontro el concierto indicado.");
+            cancelarConcierto(concierto);
         } catch (IllegalArgumentException e) {
             mostrarInfo("Datos invalidos", e.getMessage());
         } catch (SQLException e) {
             mostrarError("No se pudo cancelar el concierto", e);
         }
+    }
+
+    private void cancelarConcierto(Concierto concierto) throws SQLException {
+        if (concierto == null) {
+            return;
+        }
+        if (!confirmarAccion("Cancelar concierto",
+                "Desea cancelar el concierto \"" + concierto.getArtista() + "\"?")) {
+            return;
+        }
+
+        boolean cancelado = conciertoService.cancelarConcierto(concierto.getId());
+        mostrarInfo("Cancelar concierto", cancelado
+                ? "El concierto fue cancelado."
+                : "No se encontro el concierto indicado.");
     }
 
     private boolean puedeModificarConcierto(Concierto concierto) {
@@ -363,22 +335,7 @@ public class MenuAdministrador extends JFrame {
             if (concierto == null) {
                 return;
             }
-            String tipo = seleccionarTipoSector();
-            if (tipo == null) {
-                return;
-            }
-            String nombre = pedirTexto("Nombre del sector", "Principal");
-            int capacidad = pedirEntero("Capacidad del sector", "10");
-            String precioStr = pedirTexto("Precio (ej. 100.00)", "100.00");
-            BigDecimal precio;
-            try {
-                precio = new BigDecimal(precioStr.trim());
-            } catch (NumberFormatException ex) {
-                throw new IllegalArgumentException("Precio invalido.");
-            }
-
-            int id = sectorService.crearSector(concierto.getId(), tipo, nombre, capacidad, precio);
-            mostrarInfo("Sector creado", "Se creo el sector con ID " + id + ".");
+            crearSector(concierto.getId());
         } catch (IllegalArgumentException e) {
             mostrarInfo("Datos invalidos", e.getMessage());
         } catch (SQLException e) {
@@ -713,15 +670,7 @@ public class MenuAdministrador extends JFrame {
             if (ticket == null) {
                 return;
             }
-            if (!confirmarAccion("Bloquear ticket",
-                    "Desea bloquear el ticket " + ticket.getCodigo() + "?")) {
-                return;
-            }
-
-            boolean bloqueado = ticketService.bloquearTicket(ticket.getId());
-            mostrarInfo("Bloquear ticket", bloqueado
-                    ? "El ticket fue bloqueado."
-                    : "No se pudo bloquear el ticket.");
+            bloquearTicket(ticket.getId(), "Desea bloquear el ticket " + ticket.getCodigo() + "?");
         } catch (IllegalArgumentException e) {
             mostrarInfo("Datos invalidos", e.getMessage());
         } catch (SQLException e) {
@@ -740,15 +689,7 @@ public class MenuAdministrador extends JFrame {
             if (ticket == null) {
                 return;
             }
-            if (!confirmarAccion("Liberar ticket",
-                    "Desea liberar el ticket " + ticket.getCodigo() + "?")) {
-                return;
-            }
-
-            boolean liberado = ticketService.liberarTicket(ticket.getId());
-            mostrarInfo("Liberar ticket", liberado
-                    ? "El ticket fue liberado."
-                    : "No se pudo liberar el ticket.");
+            liberarTicket(ticket.getId(), "Desea liberar el ticket " + ticket.getCodigo() + "?");
         } catch (IllegalArgumentException e) {
             mostrarInfo("Datos invalidos", e.getMessage());
         } catch (SQLException e) {
@@ -758,14 +699,7 @@ public class MenuAdministrador extends JFrame {
 
     private void bloquearTicket(int ticketId) {
         try {
-            if (!confirmarAccion("Bloquear ticket", "Desea bloquear el ticket seleccionado?")) {
-                return;
-            }
-
-            boolean bloqueado = ticketService.bloquearTicket(ticketId);
-            mostrarInfo("Bloquear ticket", bloqueado
-                    ? "El ticket fue bloqueado."
-                    : "No se pudo bloquear el ticket.");
+            bloquearTicket(ticketId, "Desea bloquear el ticket seleccionado?");
         } catch (IllegalArgumentException e) {
             mostrarInfo("Datos invalidos", e.getMessage());
         } catch (SQLException e) {
@@ -775,19 +709,34 @@ public class MenuAdministrador extends JFrame {
 
     private void liberarTicket(int ticketId) {
         try {
-            if (!confirmarAccion("Liberar ticket", "Desea liberar el ticket seleccionado?")) {
-                return;
-            }
-
-            boolean liberado = ticketService.liberarTicket(ticketId);
-            mostrarInfo("Liberar ticket", liberado
-                    ? "El ticket fue liberado."
-                    : "No se pudo liberar el ticket.");
+            liberarTicket(ticketId, "Desea liberar el ticket seleccionado?");
         } catch (IllegalArgumentException e) {
             mostrarInfo("Datos invalidos", e.getMessage());
         } catch (SQLException e) {
             mostrarError("No se pudo liberar el ticket", e);
         }
+    }
+
+    private void bloquearTicket(int ticketId, String mensajeConfirmacion) throws SQLException {
+        if (!confirmarAccion("Bloquear ticket", mensajeConfirmacion)) {
+            return;
+        }
+
+        boolean bloqueado = ticketService.bloquearTicket(ticketId);
+        mostrarInfo("Bloquear ticket", bloqueado
+                ? "El ticket fue bloqueado."
+                : "No se pudo bloquear el ticket.");
+    }
+
+    private void liberarTicket(int ticketId, String mensajeConfirmacion) throws SQLException {
+        if (!confirmarAccion("Liberar ticket", mensajeConfirmacion)) {
+            return;
+        }
+
+        boolean liberado = ticketService.liberarTicket(ticketId);
+        mostrarInfo("Liberar ticket", liberado
+                ? "El ticket fue liberado."
+                : "No se pudo liberar el ticket.");
     }
 
     private void mostrarTabla(String titulo, String[] columns, Object[][] rows) {
