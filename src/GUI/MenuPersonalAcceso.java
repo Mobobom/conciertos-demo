@@ -71,6 +71,9 @@ public class MenuPersonalAcceso extends JFrame {
         JButton validateButton = new JButton("Validar codigo de ticket");
         validateButton.addActionListener(e -> validarTicket());
 
+        JButton passwordButton = new JButton("Cambiar password");
+        passwordButton.addActionListener(e -> PasswordDialogs.cambiarPassword(this, usuario));
+
         JButton closeButton = new JButton("Cerrar");
         closeButton.addActionListener(e -> dispose());
 
@@ -78,6 +81,7 @@ public class MenuPersonalAcceso extends JFrame {
         exitButton.addActionListener(e -> System.exit(0));
 
         panel.add(validateButton);
+        panel.add(passwordButton);
         panel.add(closeButton);
         panel.add(exitButton);
         return panel;

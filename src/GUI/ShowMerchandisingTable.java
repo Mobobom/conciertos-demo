@@ -5,6 +5,7 @@ import BLL.Merchandising;
 import BLL.MerchandisingService;
 
 import java.awt.BorderLayout;
+import java.awt.Component;
 import java.awt.FlowLayout;
 import java.awt.Frame;
 import java.awt.event.WindowAdapter;
@@ -25,11 +26,15 @@ public class ShowMerchandisingTable {
 
     private static JFrame activeFrame;
 
-    public static void showTable(Concierto concierto, Consumer<Merchandising> onComprar) {
+    public static JFrame showTable(Concierto concierto, Consumer<Merchandising> onComprar) {
+        return showTable(null, concierto, onComprar);
+    }
+
+    public static JFrame showTable(Component parent, Concierto concierto, Consumer<Merchandising> onComprar) {
         if (concierto == null) {
-            JOptionPane.showMessageDialog(null, "Seleccione un concierto.",
+            JOptionPane.showMessageDialog(parent, "Seleccione un concierto.",
                     "Catalogo de merchandising", JOptionPane.WARNING_MESSAGE);
-            return;
+            return null;
         }
 
         if (activeFrame != null) {
@@ -37,7 +42,7 @@ public class ShowMerchandisingTable {
                 activeFrame.setState(Frame.NORMAL);
                 activeFrame.toFront();
                 activeFrame.requestFocus();
-                return;
+                return activeFrame;
             }
             activeFrame = null;
         }
@@ -115,8 +120,9 @@ public class ShowMerchandisingTable {
         frame.add(bar, BorderLayout.SOUTH);
 
         frame.setSize(720, 420);
-        frame.setLocationRelativeTo(null);
+        frame.setLocationRelativeTo(parent);
         frame.setVisible(true);
+        return frame;
     }
 
     private static Merchandising obtenerSeleccionado(JFrame frame, JTable table, List<Merchandising> data) {

@@ -8,16 +8,19 @@ import BLL.Usuario;
 import BLL.UsuarioService;
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
+import java.awt.Frame;
 import java.awt.GridLayout;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
-import java.util.Map;
-import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
@@ -43,12 +46,14 @@ public class MenuOrganizador extends JFrame {
     private final ConciertoService conciertoService;
     private final SectorService sectorService;
     private final UsuarioService usuarioService;
+    private final Map<String, JFrame> openTableFrames;
 
     public MenuOrganizador(Usuario usuario) {
         this.usuario = usuario;
         this.conciertoService = new ConciertoService();
         this.sectorService = new SectorService();
         this.usuarioService = new UsuarioService();
+        this.openTableFrames = new HashMap<>();
         initialize();
     }
 
@@ -87,6 +92,7 @@ public class MenuOrganizador extends JFrame {
         addButton(panel, "Crear concierto", e -> crearConcierto());
         addButton(panel, "Modificar concierto", e -> modificarConcierto());
         addButton(panel, "Ver informacion del evento", e -> verInformacionEvento());
+        addButton(panel, "Cambiar password", e -> PasswordDialogs.cambiarPassword(this, usuario));
         addButton(panel, "Cerrar sesion", e -> cerrarSesion());
         addButton(panel, "Cerrar menu", e -> dispose());
 
@@ -97,6 +103,12 @@ public class MenuOrganizador extends JFrame {
         JButton button = new JButton(label);
         button.addActionListener(action);
         panel.add(button);
+    }
+
+    @Override
+    public void dispose() {
+        cerrarTablasAbiertas();
+        super.dispose();
     }
 
     private void mostrarConciertosActivos() {
@@ -367,9 +379,29 @@ public class MenuOrganizador extends JFrame {
         new LoginFrame().setVisible(true);
     }
 
+    private void cerrarTablasAbiertas() {
+        for (JFrame frame : openTableFrames.values().toArray(new JFrame[0])) {
+            if (frame != null && frame.isDisplayable()) {
+                frame.dispose();
+            }
+        }
+        openTableFrames.clear();
+    }
+
     private void mostrarTablaConBotones(String titulo, String[] columns,
             Supplier<Object[][]> rowsSupplier,
             BiFunction<JTable, Runnable, List<JButton>> extraButtons) {
+        JFrame openFrame = openTableFrames.get(titulo);
+        if (openFrame != null) {
+            if (openFrame.isDisplayable()) {
+                openFrame.setState(Frame.NORMAL);
+                openFrame.toFront();
+                openFrame.requestFocus();
+                return;
+            }
+            openTableFrames.remove(titulo);
+        }
+
         DefaultTableModel model = new DefaultTableModel(rowsSupplier.get(), columns) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -384,7 +416,16 @@ public class MenuOrganizador extends JFrame {
         JScrollPane scrollPane = new JScrollPane(table);
 
         JFrame frame = new JFrame(titulo);
+        openTableFrames.put(titulo, frame);
         frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        frame.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosed(WindowEvent e) {
+                if (openTableFrames.get(titulo) == frame) {
+                    openTableFrames.remove(titulo);
+                }
+            }
+        });
         frame.setLayout(new BorderLayout(5, 5));
         JTextField buscar = new JTextField();
         configurarBusqueda(buscar, sorter);

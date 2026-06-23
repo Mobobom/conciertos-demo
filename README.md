@@ -124,12 +124,14 @@ La ventana **"Conciertos disponibles"** muestra las columnas *ID, Artista, Fecha
 
 Tras autenticarse se abre una pantalla principal según el rol:
 
-- **Administrador** → `MenuAdministrador`: alta, modificación y cancelación de conciertos; gestión de sectores y generación de tickets; bloqueo/liberación de tickets.
+- **Administrador** → `MenuAdministrador`: alta, modificación y cancelación de conciertos; gestión de sectores y generación de tickets; bloqueo/liberación de tickets; gestión de usuarios y cambio/restablecimiento de passwords.
 - **Organizador** → `MenuOrganizador`: creación y modificación de conciertos y consulta de la información del evento.
 - **Comprador** → `MenuComprador`: ver conciertos, comprar tickets (sector → cantidad → método de pago) y consultar sus tickets comprados.
 - **Personal de acceso** → `MenuPersonalAcceso`: validación de tickets por código.
 
 Administrador y Organizador acceden directamente a su menú de gestión; Comprador y Personal de acceso ven primero una pantalla base (`RoleHomeFrame`) desde la que abren su menú de rol, la tabla de conciertos o (comprador) sus tickets comprados.
+
+Todos los roles pueden cambiar su propio password desde su menú. El administrador además puede listar, crear, editar, eliminar usuarios y restablecer passwords desde **Gestionar usuarios**; el campo `Documento/DNI` es opcional y representa el número de documento del usuario.
 
 Las tablas de conciertos, sectores y tickets incluyen una barra de botones para operar sobre la **fila seleccionada** (editar, eliminar, cancelar, bloquear/liberar, según la pantalla), además de **Subir/Bajar** para reordenar la vista, **Actualizar** para recargar desde la base de datos y **Cerrar**. El reordenamiento es solo visual y no se persiste.
 

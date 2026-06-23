@@ -110,6 +110,8 @@ public class MenuAdministrador extends JFrame {
         addButton(panel, "Bloquear ticket", e -> bloquearTicket());
         addButton(panel, "Liberar ticket", e -> liberarTicket());
         addButton(panel, "Gestionar merchandising", e -> gestionarMerchandising());
+        addButton(panel, "Gestionar usuarios", e -> gestionarUsuarios());
+        addButton(panel, "Cambiar password", e -> PasswordDialogs.cambiarPassword(this, usuario));
         addButton(panel, "Cerrar sesion", e -> cerrarSesion());
         addButton(panel, "Cerrar menu", e -> dispose());
 
@@ -120,6 +122,12 @@ public class MenuAdministrador extends JFrame {
         JButton button = new JButton(label);
         button.addActionListener(action);
         panel.add(button);
+    }
+
+    @Override
+    public void dispose() {
+        cerrarTablasAbiertas();
+        super.dispose();
     }
 
     private void mostrarConciertosActivos() {
@@ -652,6 +660,15 @@ public class MenuAdministrador extends JFrame {
         new LoginFrame().setVisible(true);
     }
 
+    private void cerrarTablasAbiertas() {
+        for (JFrame frame : openTableFrames.values().toArray(new JFrame[0])) {
+            if (frame != null && frame.isDisplayable()) {
+                frame.dispose();
+            }
+        }
+        openTableFrames.clear();
+    }
+
     private void verTicketsDeConcierto() {
         try {
             Concierto concierto = seleccionarConcierto();
@@ -899,6 +916,161 @@ public class MenuAdministrador extends JFrame {
             });
             return Arrays.asList(crear, editar, stock, eliminar);
         });
+    }
+
+    private void gestionarUsuarios() {
+        String[] columns = {"ID", "Nombre", "Apellido", "Email", "Documento/DNI", "Rol"};
+        Supplier<Object[][]> rows = () -> {
+            try {
+                LinkedList<Usuario> usuarios = usuarioService.listarUsuarios();
+                Object[][] data = new Object[usuarios.size()][columns.length];
+                for (int i = 0; i < usuarios.size(); i++) {
+                    Usuario usuarioListado = usuarios.get(i);
+                    data[i][0] = usuarioListado.getId();
+                    data[i][1] = usuarioListado.getNombre();
+                    data[i][2] = usuarioListado.getApellido();
+                    data[i][3] = usuarioListado.getEmail();
+                    data[i][4] = usuarioListado.getDocumento();
+                    data[i][5] = usuarioListado.getRol();
+                }
+                return data;
+            } catch (SQLException e) {
+                mostrarError("No se pudieron listar los usuarios", e);
+                return new Object[0][columns.length];
+            }
+        };
+        mostrarTablaConBotones("Gestion de usuarios", columns, rows, (table, refrescar) -> {
+            JButton crear = new JButton("Crear usuario");
+            crear.addActionListener(e -> { crearUsuario(); refrescar.run(); });
+            JButton editar = new JButton("Editar");
+            editar.addActionListener(e -> {
+                Integer id = idSeleccionado(table);
+                if (id != null) { modificarUsuario(id); refrescar.run(); }
+            });
+            JButton password = new JButton("Cambiar password");
+            password.addActionListener(e -> {
+                Integer id = idSeleccionado(table);
+                if (id != null) { cambiarPasswordUsuario(id); refrescar.run(); }
+            });
+            JButton eliminar = new JButton("Eliminar");
+            eliminar.addActionListener(e -> {
+                Integer id = idSeleccionado(table);
+                if (id != null) { eliminarUsuario(id); refrescar.run(); }
+            });
+            return Arrays.asList(crear, editar, password, eliminar);
+        }, "Buscar por nombre, email o rol:", 1, 2, 3, 5);
+    }
+
+    private void crearUsuario() {
+        try {
+            String nombre = pedirTexto("Nombre", "Nombre");
+            String apellido = pedirTexto("Apellido", "Apellido");
+            String email = pedirTexto("Email", "usuario@mail.com");
+            String documento = pedirTextoOpcional("Documento/DNI (opcional)", "");
+            String rol = seleccionarRol("Comprador");
+            if (rol == null) {
+                return;
+            }
+            String password = PasswordDialogs.pedirNuevoPassword(this, "Password inicial");
+            if (password == null) {
+                return;
+            }
+
+            int id = usuarioService.crearUsuario(nombre, apellido, email, documento, password, rol);
+            mostrarInfo("Usuario creado", "Se creo el usuario con ID " + id + ".");
+        } catch (IllegalArgumentException e) {
+            mostrarInfo("Datos invalidos", e.getMessage());
+        } catch (SQLException e) {
+            mostrarError("No se pudo crear el usuario", e);
+        }
+    }
+
+    private void modificarUsuario(int id) {
+        try {
+            Usuario usuarioEditado = usuarioService.buscarPorId(id);
+            if (usuarioEditado == null) {
+                mostrarInfo("Sin usuario", "No se encontro el usuario indicado.");
+                return;
+            }
+
+            String nombre = pedirTexto("Nombre", usuarioEditado.getNombre());
+            String apellido = pedirTexto("Apellido", usuarioEditado.getApellido());
+            String email = pedirTexto("Email", usuarioEditado.getEmail());
+            String documento = pedirTextoOpcional("Documento/DNI (opcional)", usuarioEditado.getDocumento());
+            String rol = seleccionarRol(usuarioEditado.getRol());
+            if (rol == null) {
+                return;
+            }
+
+            usuarioEditado.setNombre(nombre);
+            usuarioEditado.setApellido(apellido);
+            usuarioEditado.setEmail(email);
+            usuarioEditado.setDocumento(documento);
+            usuarioEditado.setRol(rol);
+
+            boolean modificado = usuarioService.modificarUsuario(usuarioEditado);
+            mostrarInfo("Modificar usuario", modificado
+                    ? "El usuario fue modificado."
+                    : "No se pudo modificar el usuario.");
+        } catch (IllegalArgumentException e) {
+            mostrarInfo("Datos invalidos", e.getMessage());
+        } catch (SQLException e) {
+            mostrarError("No se pudo modificar el usuario", e);
+        }
+    }
+
+    private void cambiarPasswordUsuario(int id) {
+        try {
+            Usuario usuarioCambio = usuarioService.buscarPorId(id);
+            if (usuarioCambio == null) {
+                mostrarInfo("Sin usuario", "No se encontro el usuario indicado.");
+                return;
+            }
+            String password = PasswordDialogs.pedirNuevoPassword(this, "Cambiar password de " + usuarioCambio.getEmail());
+            if (password == null) {
+                return;
+            }
+            if (!confirmarAccion("Cambiar password",
+                    "Desea cambiar el password de " + usuarioCambio.getEmail() + "?")) {
+                return;
+            }
+
+            boolean actualizado = usuarioService.actualizarPassword(id, password, password);
+            mostrarInfo("Cambiar password", actualizado
+                    ? "El password fue actualizado."
+                    : "No se pudo actualizar el password.");
+        } catch (IllegalArgumentException e) {
+            mostrarInfo("Datos invalidos", e.getMessage());
+        } catch (SQLException e) {
+            mostrarError("No se pudo actualizar el password", e);
+        }
+    }
+
+    private void eliminarUsuario(int id) {
+        try {
+            if (id == usuario.getId()) {
+                mostrarInfo("Eliminar usuario", "No se puede eliminar el usuario actual.");
+                return;
+            }
+            Usuario usuarioEliminar = usuarioService.buscarPorId(id);
+            if (usuarioEliminar == null) {
+                mostrarInfo("Sin usuario", "No se encontro el usuario indicado.");
+                return;
+            }
+            if (!confirmarAccion("Eliminar usuario",
+                    "Desea eliminar el usuario " + usuarioEliminar.getEmail() + "?")) {
+                return;
+            }
+
+            boolean eliminado = usuarioService.eliminarUsuario(id);
+            mostrarInfo("Eliminar usuario", eliminado
+                    ? "El usuario fue eliminado."
+                    : "No se encontro el usuario indicado.");
+        } catch (IllegalArgumentException e) {
+            mostrarInfo("Datos invalidos", e.getMessage());
+        } catch (SQLException e) {
+            mostrarError("No se pudo eliminar el usuario", e);
+        }
     }
 
     private void crearMerchandising() {
@@ -1190,6 +1362,18 @@ public class MenuAdministrador extends JFrame {
         return confirmacion == JOptionPane.YES_OPTION;
     }
 
+    private String seleccionarRol(String seleccionInicial) {
+        String[] roles = {"Administrador", "Organizador", "Comprador", "PersonalAcceso"};
+        return (String) JOptionPane.showInputDialog(
+                this,
+                "Seleccione el rol:",
+                "Rol de usuario",
+                JOptionPane.PLAIN_MESSAGE,
+                null,
+                roles,
+                seleccionInicial == null ? "Comprador" : seleccionInicial);
+    }
+
     private String pedirTexto(String campo, String valorInicial) {
         String valor = (String) JOptionPane.showInputDialog(this,
                 "Ingrese " + campo,
@@ -1203,6 +1387,23 @@ public class MenuAdministrador extends JFrame {
         }
         if (valor.trim().isEmpty()) {
             throw new IllegalArgumentException("El campo " + campo + " es obligatorio.");
+        }
+        return valor.trim();
+    }
+
+    private String pedirTextoOpcional(String campo, String valorInicial) {
+        String valor = (String) JOptionPane.showInputDialog(this,
+                "Ingrese " + campo,
+                campo,
+                JOptionPane.PLAIN_MESSAGE,
+                null,
+                null,
+                valorInicial == null ? "" : valorInicial);
+        if (valor == null) {
+            throw new IllegalArgumentException("Operacion cancelada.");
+        }
+        if (valor.trim().isEmpty()) {
+            return null;
         }
         return valor.trim();
     }

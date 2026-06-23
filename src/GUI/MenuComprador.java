@@ -20,6 +20,8 @@ import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 import java.awt.BorderLayout;
 import java.awt.GridLayout;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -32,6 +34,7 @@ public class MenuComprador extends JFrame {
     private final SectorService sectorService;
     private final CompraService compraService;
     private final MerchandisingService merchandisingService;
+    private final LinkedList<JFrame> openTableFrames;
 
     public MenuComprador(Usuario usuario) {
         this.usuario = usuario;
@@ -39,6 +42,7 @@ public class MenuComprador extends JFrame {
         this.sectorService = new SectorService();
         this.compraService = new CompraService();
         this.merchandisingService = new MerchandisingService();
+        this.openTableFrames = new LinkedList<>();
         initialize();
     }
 
@@ -72,11 +76,13 @@ public class MenuComprador extends JFrame {
         JPanel panel = new JPanel(new GridLayout(0, 2, 10, 10));
         panel.setBorder(BorderFactory.createEmptyBorder(10, 20, 20, 20));
 
-        addButton(panel, "Ver conciertos disponibles", e -> ShowConciertosTable.showTable(this::iniciarCompra));
+        addButton(panel, "Ver conciertos disponibles",
+                e -> registrarVentana(ShowConciertosTable.showTable(this, this::iniciarCompra)));
         addButton(panel, "Comprar tickets", e -> comprarTickets());
-        addButton(panel, "Tickets comprados", e -> TicketsCompradosTable.showTable(usuario));
+        addButton(panel, "Tickets comprados", e -> registrarVentana(TicketsCompradosTable.showTable(this, usuario)));
         addButton(panel, "Ver catalogo merchandising", e -> verCatalogoMerchandising());
         addButton(panel, "Comprar merchandising", e -> comprarMerchandising());
+        addButton(panel, "Cambiar password", e -> PasswordDialogs.cambiarPassword(this, usuario));
         addButton(panel, "Cerrar sesion", e -> cerrarSesion());
         return panel;
     }
@@ -85,6 +91,34 @@ public class MenuComprador extends JFrame {
         JButton button = new JButton(label);
         button.addActionListener(action);
         panel.add(button);
+    }
+
+    @Override
+    public void dispose() {
+        cerrarTablasAbiertas();
+        super.dispose();
+    }
+
+    private void registrarVentana(JFrame frame) {
+        if (frame == null || openTableFrames.contains(frame)) {
+            return;
+        }
+        openTableFrames.add(frame);
+        frame.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosed(WindowEvent e) {
+                openTableFrames.remove(frame);
+            }
+        });
+    }
+
+    private void cerrarTablasAbiertas() {
+        for (JFrame frame : openTableFrames.toArray(new JFrame[0])) {
+            if (frame != null && frame.isDisplayable()) {
+                frame.dispose();
+            }
+        }
+        openTableFrames.clear();
     }
 
     private void cerrarSesion() {
@@ -130,7 +164,7 @@ public class MenuComprador extends JFrame {
             if (concierto == null) {
                 return;
             }
-            ShowMerchandisingTable.showTable(concierto, this::iniciarCompraMerchandising);
+            registrarVentana(ShowMerchandisingTable.showTable(this, concierto, this::iniciarCompraMerchandising));
         } catch (SQLException e) {
             mostrarError("Error de base de datos: " + e.getMessage());
         }
