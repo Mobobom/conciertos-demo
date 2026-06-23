@@ -76,10 +76,69 @@ class UsuarioServiceTest {
         assertEquals(0, controller.crearCalls);
     }
 
+    @Test
+    void cambiarPasswordActualizaHashConPasswordActualCorrecto() throws SQLException {
+        FakeControllerUsuario controller = new FakeControllerUsuario();
+        UsuarioService service = new UsuarioService(controller);
+        service.crearUsuario("Ana", "Lopez", "ana@test.com", null, "secreto", "Comprador");
+
+        boolean actualizado = service.cambiarPassword(10, "secreto", "nuevo123", "nuevo123");
+
+        assertTrue(actualizado);
+        assertEquals(1, controller.actualizarPasswordCalls);
+        assertNotEquals("nuevo123", controller.usuario.getPassword());
+        assertNotNull(service.autenticar("ana@test.com", "nuevo123"));
+        assertNull(service.autenticar("ana@test.com", "secreto"));
+    }
+
+    @Test
+    void cambiarPasswordRechazaPasswordActualIncorrectoSinActualizar() throws SQLException {
+        FakeControllerUsuario controller = new FakeControllerUsuario();
+        UsuarioService service = new UsuarioService(controller);
+        service.crearUsuario("Ana", "Lopez", "ana@test.com", null, "secreto", "Comprador");
+
+        assertThrows(IllegalArgumentException.class,
+                () -> service.cambiarPassword(10, "incorrecto", "nuevo123", "nuevo123"));
+        assertEquals(0, controller.actualizarPasswordCalls);
+    }
+
+    @Test
+    void actualizarPasswordActualizaHashSinPasswordActual() throws SQLException {
+        FakeControllerUsuario controller = new FakeControllerUsuario();
+        controller.usuario = new Usuario(10, "Ana", "Lopez", "ana@test.com", null, "hash-antiguo", "Comprador");
+        UsuarioService service = new UsuarioService(controller);
+
+        boolean actualizado = service.actualizarPassword(10, "reset123", "reset123");
+
+        assertTrue(actualizado);
+        assertEquals(1, controller.actualizarPasswordCalls);
+        assertNotEquals("reset123", controller.usuario.getPassword());
+        assertNotNull(service.autenticar("ana@test.com", "reset123"));
+    }
+
+    @Test
+    void actualizarPasswordRechazaConfirmacionDistintaSinActualizar() {
+        FakeControllerUsuario controller = new FakeControllerUsuario();
+        UsuarioService service = new UsuarioService(controller);
+
+        assertThrows(IllegalArgumentException.class,
+                () -> service.actualizarPassword(10, "nuevo123", "otro123"));
+        assertEquals(0, controller.actualizarPasswordCalls);
+    }
+
     private static class FakeControllerUsuario extends ControllerUsuario {
         private Usuario usuario;
         private Usuario created;
         private int crearCalls;
+        private int actualizarPasswordCalls;
+
+        @Override
+        public Usuario buscarPorId(int id) {
+            if (usuario != null && usuario.getId() == id) {
+                return usuario;
+            }
+            return null;
+        }
 
         @Override
         public Usuario buscarPorEmail(String email) {
@@ -96,6 +155,16 @@ class UsuarioServiceTest {
             usuario.setId(10);
             this.usuario = usuario;
             return 10;
+        }
+
+        @Override
+        public boolean actualizarPassword(int id, String passwordHash) {
+            actualizarPasswordCalls++;
+            if (usuario != null && usuario.getId() == id) {
+                usuario.setPassword(passwordHash);
+                return true;
+            }
+            return false;
         }
     }
 }

@@ -46,8 +46,15 @@ public class UsuarioService {
     }
 
     public boolean modificarUsuario(Usuario usuario) throws SQLException {
+        if (usuario == null || usuario.getId() <= 0) {
+            throw new IllegalArgumentException("El id de usuario debe ser mayor a cero.");
+        }
         validarUsuario(usuario.getNombre(), usuario.getApellido(), usuario.getEmail(),
                 usuario.getPassword(), usuario.getRol());
+        Usuario existente = controllerUsuario.buscarPorEmail(usuario.getEmail().trim());
+        if (existente != null && existente.getId() != usuario.getId()) {
+            throw new IllegalArgumentException("Ya existe un usuario con ese email.");
+        }
         usuario.setNombre(usuario.getNombre().trim());
         usuario.setApellido(usuario.getApellido().trim());
         usuario.setEmail(usuario.getEmail().trim());
@@ -56,14 +63,35 @@ public class UsuarioService {
         return controllerUsuario.modificar(usuario);
     }
 
+    public boolean cambiarPassword(int usuarioId, String passwordActual,
+                                   String passwordNuevo, String confirmacionPasswordNuevo) throws SQLException {
+        validarId(usuarioId);
+        validarNuevoPassword(passwordNuevo, confirmacionPasswordNuevo);
+        validarTexto(passwordActual, "password actual");
+
+        Usuario usuario = controllerUsuario.buscarPorId(usuarioId);
+        if (usuario == null) {
+            throw new IllegalArgumentException("No se encontro el usuario indicado.");
+        }
+        if (!passwordMatches(passwordActual, usuario.getPassword())) {
+            throw new IllegalArgumentException("El password actual no es correcto.");
+        }
+        return controllerUsuario.actualizarPassword(usuarioId, hashPassword(passwordNuevo));
+    }
+
+    public boolean actualizarPassword(int usuarioId, String passwordNuevo,
+                                      String confirmacionPasswordNuevo) throws SQLException {
+        validarId(usuarioId);
+        validarNuevoPassword(passwordNuevo, confirmacionPasswordNuevo);
+        return controllerUsuario.actualizarPassword(usuarioId, hashPassword(passwordNuevo));
+    }
+
     public LinkedList<Usuario> listarUsuarios() throws SQLException {
         return controllerUsuario.listar();
     }
 
     public Usuario buscarPorId(int id) throws SQLException {
-        if (id <= 0) {
-            throw new IllegalArgumentException("El id de usuario debe ser mayor a cero.");
-        }
+        validarId(id);
         return controllerUsuario.buscarPorId(id);
     }
 
@@ -73,9 +101,7 @@ public class UsuarioService {
     }
 
     public boolean eliminarUsuario(int id) throws SQLException {
-        if (id <= 0) {
-            throw new IllegalArgumentException("El id de usuario debe ser mayor a cero.");
-        }
+        validarId(id);
         return controllerUsuario.eliminar(id);
     }
 
@@ -89,8 +115,30 @@ public class UsuarioService {
         if (!email.contains("@")) {
             throw new IllegalArgumentException("El email debe contener @.");
         }
+        validarPasswordMinimo(password);
         if (!esRolValido(rol)) {
             throw new IllegalArgumentException("Rol invalido: " + rol);
+        }
+    }
+
+    private void validarNuevoPassword(String passwordNuevo, String confirmacionPasswordNuevo) {
+        validarTexto(passwordNuevo, "password nuevo");
+        validarTexto(confirmacionPasswordNuevo, "confirmacion de password");
+        if (!passwordNuevo.equals(confirmacionPasswordNuevo)) {
+            throw new IllegalArgumentException("Los passwords no coinciden.");
+        }
+        validarPasswordMinimo(passwordNuevo);
+    }
+
+    private void validarPasswordMinimo(String password) {
+        if (password == null || password.trim().length() < 4) {
+            throw new IllegalArgumentException("El password debe tener al menos 4 caracteres.");
+        }
+    }
+
+    private void validarId(int id) {
+        if (id <= 0) {
+            throw new IllegalArgumentException("El id de usuario debe ser mayor a cero.");
         }
     }
 
@@ -128,7 +176,7 @@ public class UsuarioService {
         try {
             Class<?> bcryptClass = Class.forName("org.mindrot.jbcrypt.BCrypt");
             Method checkpw = bcryptClass.getMethod("checkpw", String.class, String.class);
-            return ((Boolean) checkpw.invoke(null, passwordPlano, storedHash)).booleanValue();
+            return (Boolean) checkpw.invoke(null, passwordPlano, storedHash);
         } catch (Exception e) {
             return passwordPlano.equals(storedHash);
         }

@@ -1,6 +1,7 @@
 package GUI;
 
 import java.awt.BorderLayout;
+import java.awt.Component;
 import java.awt.FlowLayout;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -28,11 +29,15 @@ import DLL.ControllerConcierto;
 
 public class ShowConciertosTable {
 
-    public static void showTable() {
-        showTable(null);
+    public static JFrame showTable() {
+        return showTable(null, null);
     }
 
-    public static void showTable(Consumer<Concierto> onComprar) {
+    public static JFrame showTable(Consumer<Concierto> onComprar) {
+        return showTable(null, onComprar);
+    }
+
+    public static JFrame showTable(Component parent, Consumer<Concierto> onComprar) {
         ControllerConcierto controller = new ControllerConcierto();
         List<Concierto> data = new ArrayList<>();
 
@@ -131,8 +136,9 @@ public class ShowConciertosTable {
         frame.add(bar, BorderLayout.SOUTH);
 
         frame.setSize(720, 440);
-        frame.setLocationRelativeTo(null);
+        frame.setLocationRelativeTo(parent);
         frame.setVisible(true);
+        return frame;
     }
 
     private static void configurarBusqueda(JTextField buscar, TableRowSorter<DefaultTableModel> sorter,
