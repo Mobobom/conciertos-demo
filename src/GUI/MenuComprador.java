@@ -190,6 +190,9 @@ public class MenuComprador extends JFrame {
             if (metodoPago == null) {
                 return;
             }
+            if (!confirmarCompraTickets(concierto, sector, cantidad, metodoPago)) {
+                return;
+            }
 
             CompraResultado resultado = compraService.comprarTickets(
                     usuario.getId(), concierto.getId(), sector.getId(), cantidad, metodoPago);
@@ -334,6 +337,19 @@ public class MenuComprador extends JFrame {
                 mostrarError("Cantidad invalida. Ingrese un numero entero.");
             }
         }
+    }
+
+    private boolean confirmarCompraTickets(Concierto concierto, Sector sector, int cantidad, String metodoPago) {
+        String mensaje = "Concierto: " + concierto.getArtista() + "\n"
+                + "Sector: " + sector.getTipo() + " - " + sector.getNombre() + "\n"
+                + "Cantidad: " + cantidad + "\n"
+                + "Precio unitario: " + sector.getPrecio() + "\n"
+                + "Total: " + sector.getPrecio().multiply(java.math.BigDecimal.valueOf(cantidad)) + "\n"
+                + "Metodo de pago: " + metodoPago + "\n\n"
+                + "Desea confirmar la compra?";
+        int opcion = JOptionPane.showConfirmDialog(this, mensaje,
+                "Confirmar compra de tickets", JOptionPane.YES_NO_OPTION);
+        return opcion == JOptionPane.YES_OPTION;
     }
 
     private boolean confirmarCompraMerchandising(Merchandising merchandising, int cantidad, String metodoPago) {

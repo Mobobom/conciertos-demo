@@ -250,6 +250,10 @@ public class MenuAdministrador extends JFrame {
             if (concierto == null) {
                 return;
             }
+            if (!confirmarAccion("Cancelar concierto",
+                    "Desea cancelar el concierto \"" + concierto.getArtista() + "\"?")) {
+                return;
+            }
 
             boolean cancelado = conciertoService.cancelarConcierto(concierto.getId());
             mostrarInfo("Cancelar concierto", cancelado
@@ -264,6 +268,16 @@ public class MenuAdministrador extends JFrame {
 
     private void cancelarConcierto(int conciertoId) {
         try {
+            Concierto concierto = conciertoService.buscarPorId(conciertoId);
+            if (concierto == null) {
+                mostrarInfo("Cancelar concierto", "No se encontro el concierto indicado.");
+                return;
+            }
+            if (!confirmarAccion("Cancelar concierto",
+                    "Desea cancelar el concierto \"" + concierto.getArtista() + "\"?")) {
+                return;
+            }
+
             boolean cancelado = conciertoService.cancelarConcierto(conciertoId);
             mostrarInfo("Cancelar concierto", cancelado
                     ? "El concierto fue cancelado."
@@ -455,12 +469,7 @@ public class MenuAdministrador extends JFrame {
 
     private void eliminarSector(int sectorId) {
         try {
-            int confirmacion = JOptionPane.showConfirmDialog(
-                    this,
-                    "Desea eliminar el sector seleccionado?",
-                    "Eliminar sector",
-                    JOptionPane.YES_NO_OPTION);
-            if (confirmacion != JOptionPane.YES_OPTION) {
+            if (!confirmarAccion("Eliminar sector", "Desea eliminar el sector seleccionado?")) {
                 return;
             }
 
@@ -682,6 +691,10 @@ public class MenuAdministrador extends JFrame {
             if (ticket == null) {
                 return;
             }
+            if (!confirmarAccion("Bloquear ticket",
+                    "Desea bloquear el ticket " + ticket.getCodigo() + "?")) {
+                return;
+            }
 
             boolean bloqueado = ticketService.bloquearTicket(ticket.getId());
             mostrarInfo("Bloquear ticket", bloqueado
@@ -705,6 +718,10 @@ public class MenuAdministrador extends JFrame {
             if (ticket == null) {
                 return;
             }
+            if (!confirmarAccion("Liberar ticket",
+                    "Desea liberar el ticket " + ticket.getCodigo() + "?")) {
+                return;
+            }
 
             boolean liberado = ticketService.liberarTicket(ticket.getId());
             mostrarInfo("Liberar ticket", liberado
@@ -719,6 +736,10 @@ public class MenuAdministrador extends JFrame {
 
     private void bloquearTicket(int ticketId) {
         try {
+            if (!confirmarAccion("Bloquear ticket", "Desea bloquear el ticket seleccionado?")) {
+                return;
+            }
+
             boolean bloqueado = ticketService.bloquearTicket(ticketId);
             mostrarInfo("Bloquear ticket", bloqueado
                     ? "El ticket fue bloqueado."
@@ -732,6 +753,10 @@ public class MenuAdministrador extends JFrame {
 
     private void liberarTicket(int ticketId) {
         try {
+            if (!confirmarAccion("Liberar ticket", "Desea liberar el ticket seleccionado?")) {
+                return;
+            }
+
             boolean liberado = ticketService.liberarTicket(ticketId);
             mostrarInfo("Liberar ticket", liberado
                     ? "El ticket fue liberado."
@@ -926,6 +951,11 @@ public class MenuAdministrador extends JFrame {
                 return;
             }
             int stock = pedirEntero("Stock", String.valueOf(producto.getStock()));
+            if (!confirmarAccion("Actualizar stock",
+                    "Desea cambiar el stock de \"" + producto.getNombre() + "\" de "
+                            + producto.getStock() + " a " + stock + "?")) {
+                return;
+            }
             boolean actualizado = merchandisingService.actualizarStock(id, stock);
             mostrarInfo("Actualizar stock", actualizado
                     ? "El stock fue actualizado."
@@ -939,12 +969,7 @@ public class MenuAdministrador extends JFrame {
 
     private void eliminarMerchandising(int id) {
         try {
-            int confirmacion = JOptionPane.showConfirmDialog(
-                    this,
-                    "Desea eliminar el producto seleccionado?",
-                    "Eliminar producto",
-                    JOptionPane.YES_NO_OPTION);
-            if (confirmacion != JOptionPane.YES_OPTION) {
+            if (!confirmarAccion("Eliminar producto", "Desea eliminar el producto seleccionado?")) {
                 return;
             }
             boolean eliminado = merchandisingService.eliminarProducto(id);
@@ -1153,6 +1178,16 @@ public class MenuAdministrador extends JFrame {
         int modelRow = table.convertRowIndexToModel(row);
         Object value = table.getModel().getValueAt(modelRow, 0);
         return Integer.valueOf(value.toString());
+    }
+
+    private boolean confirmarAccion(String titulo, String mensaje) {
+        int confirmacion = JOptionPane.showConfirmDialog(
+                this,
+                mensaje,
+                titulo,
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.WARNING_MESSAGE);
+        return confirmacion == JOptionPane.YES_OPTION;
     }
 
     private String pedirTexto(String campo, String valorInicial) {
