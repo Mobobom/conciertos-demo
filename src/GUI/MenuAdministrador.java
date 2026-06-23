@@ -11,7 +11,6 @@ import BLL.TicketService;
 import BLL.Usuario;
 import BLL.UsuarioService;
 import java.awt.BorderLayout;
-import java.awt.FlowLayout;
 import java.awt.Frame;
 import java.awt.GridLayout;
 import java.awt.event.WindowAdapter;
@@ -28,7 +27,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Supplier;
-import java.util.regex.Pattern;
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
@@ -37,14 +35,8 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JTextField;
 import javax.swing.JTable;
-import javax.swing.RowFilter;
 import javax.swing.SwingConstants;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableRowSorter;
 
 public class MenuAdministrador extends JFrame {
 
@@ -1168,25 +1160,11 @@ public class MenuAdministrador extends JFrame {
             openTableFrames.remove(titulo);
         }
 
-        DefaultTableModel model = new DefaultTableModel(rowsSupplier.get(), columns) {
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return false;
-            }
-        };
-
-        JTable table = new JTable(model);
-        boolean tieneBusqueda = etiquetaBusqueda != null && columnasBusqueda != null && columnasBusqueda.length > 0;
-        final TableRowSorter<DefaultTableModel> sorter = tieneBusqueda ? new TableRowSorter<>(model) : null;
-        if (sorter != null) {
-            deshabilitarOrdenamiento(sorter, columns.length);
-            table.setRowSorter(sorter);
-        }
-        JScrollPane scrollPane = new JScrollPane(table);
-
-        JFrame frame = new JFrame(titulo);
+        TablaConBotones.Busqueda busqueda = etiquetaBusqueda == null
+                ? null
+                : new TablaConBotones.Busqueda(etiquetaBusqueda, columnasBusqueda);
+        JFrame frame = TablaConBotones.mostrar(this, titulo, columns, rowsSupplier, extraButtons, busqueda);
         openTableFrames.put(titulo, frame);
-        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         frame.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosed(WindowEvent e) {
@@ -1195,90 +1173,11 @@ public class MenuAdministrador extends JFrame {
                 }
             }
         });
-        frame.setLayout(new BorderLayout(5, 5));
-        if (sorter != null) {
-            JTextField buscar = new JTextField();
-            configurarBusqueda(buscar, sorter, columnasBusqueda);
-
-            JPanel filtros = new JPanel(new BorderLayout(6, 6));
-            filtros.setBorder(BorderFactory.createEmptyBorder(6, 6, 0, 6));
-            filtros.add(new JLabel(etiquetaBusqueda), BorderLayout.WEST);
-            filtros.add(buscar, BorderLayout.CENTER);
-            frame.add(filtros, BorderLayout.NORTH);
-        }
-        frame.add(scrollPane, BorderLayout.CENTER);
-
-        Runnable refrescar = () -> {
-            model.setDataVector(rowsSupplier.get(), columns);
-            if (sorter != null) {
-                deshabilitarOrdenamiento(sorter, columns.length);
-            }
-        };
-
-        JPanel bar = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 6));
-        if (extraButtons != null) {
-            for (JButton button : extraButtons.apply(table, refrescar)) {
-                bar.add(button);
-            }
-        }
-
-        JButton actualizar = new JButton("Actualizar");
-        actualizar.addActionListener(e -> refrescar.run());
-        JButton cerrar = new JButton("Cerrar");
-        cerrar.addActionListener(e -> frame.dispose());
-        bar.add(actualizar);
-        bar.add(cerrar);
-
-        frame.add(bar, BorderLayout.SOUTH);
-        frame.setSize(960, 460);
-        frame.setLocationRelativeTo(this);
-        frame.setVisible(true);
-    }
-
-    private void configurarBusqueda(JTextField buscar, TableRowSorter<DefaultTableModel> sorter, int... columnas) {
-        buscar.getDocument().addDocumentListener(new DocumentListener() {
-            @Override
-            public void insertUpdate(DocumentEvent e) {
-                aplicarFiltro();
-            }
-
-            @Override
-            public void removeUpdate(DocumentEvent e) {
-                aplicarFiltro();
-            }
-
-            @Override
-            public void changedUpdate(DocumentEvent e) {
-                aplicarFiltro();
-            }
-
-            private void aplicarFiltro() {
-                String texto = buscar.getText().trim();
-                if (texto.isEmpty()) {
-                    sorter.setRowFilter(null);
-                    return;
-                }
-                sorter.setRowFilter(RowFilter.regexFilter("(?i)" + Pattern.quote(texto), columnas));
-            }
-        });
-    }
-
-    private void deshabilitarOrdenamiento(TableRowSorter<DefaultTableModel> sorter, int columnCount) {
-        for (int i = 0; i < columnCount; i++) {
-            sorter.setSortable(i, false);
-        }
     }
 
 
     private Integer idSeleccionado(JTable table) {
-        int row = table.getSelectedRow();
-        if (row < 0) {
-            mostrarInfo("Accion", "Seleccione una fila.");
-            return null;
-        }
-        int modelRow = table.convertRowIndexToModel(row);
-        Object value = table.getModel().getValueAt(modelRow, 0);
-        return Integer.valueOf(value.toString());
+        return TablaConBotones.idSeleccionado(this, table);
     }
 
     private boolean confirmarAccion(String titulo, String mensaje) {
