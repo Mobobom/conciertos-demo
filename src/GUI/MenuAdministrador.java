@@ -2,6 +2,8 @@ package GUI;
 
 import BLL.Concierto;
 import BLL.ConciertoService;
+import BLL.Merchandising;
+import BLL.MerchandisingService;
 import BLL.Sector;
 import BLL.SectorService;
 import BLL.Ticket;
@@ -41,6 +43,7 @@ public class MenuAdministrador extends JFrame {
     private final SectorService sectorService;
     private final UsuarioService usuarioService;
     private final TicketService ticketService;
+    private final MerchandisingService merchandisingService;
 
     public MenuAdministrador(Usuario usuario) {
         this.usuario = usuario;
@@ -48,6 +51,7 @@ public class MenuAdministrador extends JFrame {
         this.sectorService = new SectorService();
         this.usuarioService = new UsuarioService();
         this.ticketService = new TicketService();
+        this.merchandisingService = new MerchandisingService();
         initialize();
     }
 
@@ -94,6 +98,7 @@ public class MenuAdministrador extends JFrame {
         addButton(panel, "Ver tickets", e -> verTicketsDeConcierto());
         addButton(panel, "Bloquear ticket", e -> bloquearTicket());
         addButton(panel, "Liberar ticket", e -> liberarTicket());
+        addButton(panel, "Gestionar merchandising", e -> gestionarMerchandising());
         addButton(panel, "Cerrar sesion", e -> cerrarSesion());
         addButton(panel, "Cerrar menu", e -> dispose());
 
@@ -817,6 +822,131 @@ public class MenuAdministrador extends JFrame {
         });
     }
 
+    private void gestionarMerchandising() {
+        String[] columns = {"ID", "Concierto", "Producto", "Precio", "Stock"};
+        Supplier<Object[][]> rows = () -> {
+            try {
+                LinkedList<Merchandising> productos = merchandisingService.listarTodos();
+                Object[][] data = new Object[productos.size()][columns.length];
+                for (int i = 0; i < productos.size(); i++) {
+                    Merchandising producto = productos.get(i);
+                    Concierto concierto = conciertoService.buscarPorId(producto.getConciertoId());
+                    data[i][0] = producto.getId();
+                    data[i][1] = concierto == null ? producto.getConciertoId() : concierto.getArtista();
+                    data[i][2] = producto.getNombre();
+                    data[i][3] = producto.getPrecio();
+                    data[i][4] = producto.getStock();
+                }
+                return data;
+            } catch (SQLException e) {
+                mostrarError("No se pudo listar el merchandising", e);
+                return new Object[0][columns.length];
+            }
+        };
+        mostrarTablaConBotones("Gestion de merchandising", columns, rows, (table, refrescar) -> {
+            JButton crear = new JButton("Crear producto");
+            crear.addActionListener(e -> { crearMerchandising(); refrescar.run(); });
+            JButton editar = new JButton("Editar");
+            editar.addActionListener(e -> {
+                Integer id = idSeleccionado(table);
+                if (id != null) { modificarMerchandising(id); refrescar.run(); }
+            });
+            JButton stock = new JButton("Ajustar stock");
+            stock.addActionListener(e -> {
+                Integer id = idSeleccionado(table);
+                if (id != null) { ajustarStockMerchandising(id); refrescar.run(); }
+            });
+            JButton eliminar = new JButton("Eliminar");
+            eliminar.addActionListener(e -> {
+                Integer id = idSeleccionado(table);
+                if (id != null) { eliminarMerchandising(id); refrescar.run(); }
+            });
+            return Arrays.asList(crear, editar, stock, eliminar);
+        });
+    }
+
+    private void crearMerchandising() {
+        try {
+            Concierto concierto = seleccionarConcierto();
+            if (concierto == null) {
+                return;
+            }
+            String nombre = pedirTexto("Nombre del producto", "Remera");
+            BigDecimal precio = pedirPrecio("35.00");
+            int stock = pedirEntero("Stock", "100");
+            int id = merchandisingService.crearProducto(concierto.getId(), nombre, precio, stock);
+            mostrarInfo("Producto creado", "Se creo el producto con ID " + id + ".");
+        } catch (IllegalArgumentException e) {
+            mostrarInfo("Datos invalidos", e.getMessage());
+        } catch (SQLException e) {
+            mostrarError("No se pudo crear el producto", e);
+        }
+    }
+
+    private void modificarMerchandising(int id) {
+        try {
+            Merchandising producto = merchandisingService.buscarPorId(id);
+            if (producto == null) {
+                mostrarInfo("Sin producto", "No se encontro el producto indicado.");
+                return;
+            }
+            String nombre = pedirTexto("Nombre del producto", producto.getNombre());
+            BigDecimal precio = pedirPrecio(producto.getPrecio().toString());
+            int stock = pedirEntero("Stock", String.valueOf(producto.getStock()));
+            producto.setNombre(nombre);
+            producto.setPrecio(precio);
+            producto.setStock(stock);
+            boolean modificado = merchandisingService.modificarProducto(producto);
+            mostrarInfo("Modificar producto", modificado
+                    ? "El producto fue modificado."
+                    : "No se pudo modificar el producto.");
+        } catch (IllegalArgumentException e) {
+            mostrarInfo("Datos invalidos", e.getMessage());
+        } catch (SQLException e) {
+            mostrarError("No se pudo modificar el producto", e);
+        }
+    }
+
+    private void ajustarStockMerchandising(int id) {
+        try {
+            Merchandising producto = merchandisingService.buscarPorId(id);
+            if (producto == null) {
+                mostrarInfo("Sin producto", "No se encontro el producto indicado.");
+                return;
+            }
+            int stock = pedirEntero("Stock", String.valueOf(producto.getStock()));
+            boolean actualizado = merchandisingService.actualizarStock(id, stock);
+            mostrarInfo("Actualizar stock", actualizado
+                    ? "El stock fue actualizado."
+                    : "No se pudo actualizar el stock.");
+        } catch (IllegalArgumentException e) {
+            mostrarInfo("Datos invalidos", e.getMessage());
+        } catch (SQLException e) {
+            mostrarError("No se pudo actualizar el stock", e);
+        }
+    }
+
+    private void eliminarMerchandising(int id) {
+        try {
+            int confirmacion = JOptionPane.showConfirmDialog(
+                    this,
+                    "Desea eliminar el producto seleccionado?",
+                    "Eliminar producto",
+                    JOptionPane.YES_NO_OPTION);
+            if (confirmacion != JOptionPane.YES_OPTION) {
+                return;
+            }
+            boolean eliminado = merchandisingService.eliminarProducto(id);
+            mostrarInfo("Eliminar producto", eliminado
+                    ? "El producto fue eliminado."
+                    : "No se encontro el producto indicado.");
+        } catch (IllegalArgumentException e) {
+            mostrarInfo("Datos invalidos", e.getMessage());
+        } catch (SQLException e) {
+            mostrarError("No se pudo eliminar el producto", e);
+        }
+    }
+
     private void verTicketsDeConcierto(int conciertoId) {
         String[] columns = {"ID", "Concierto", "Sector", "Codigo", "Precio", "Estado", "Compra"};
         Supplier<Object[][]> rows = () -> {
@@ -954,6 +1084,15 @@ public class MenuAdministrador extends JFrame {
             throw new IllegalArgumentException("Operacion cancelada.");
         }
         return Integer.parseInt(valor.trim());
+    }
+
+    private BigDecimal pedirPrecio(String valorInicial) {
+        String valor = pedirTexto("Precio (ej. 100.00)", valorInicial);
+        try {
+            return new BigDecimal(valor.trim());
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Precio invalido.");
+        }
     }
 
     private LocalDate pedirFecha(String campo, String valorInicial) {
