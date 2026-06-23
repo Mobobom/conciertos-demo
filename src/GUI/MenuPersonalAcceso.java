@@ -39,10 +39,11 @@ public class MenuPersonalAcceso extends JFrame {
 
     private void initialize() {
         setTitle("Menu Personal de Acceso - " + usuario.getNombre());
-        setSize(520, 280);
+        EstiloGUI.aplicarTamanioMenuRol(this);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout(10, 10));
+        EstiloGUI.aplicarVentana(this);
 
         add(buildHeader(), BorderLayout.NORTH);
         add(buildButtons(), BorderLayout.CENTER);
@@ -50,32 +51,38 @@ public class MenuPersonalAcceso extends JFrame {
 
     private JPanel buildHeader() {
         JPanel panel = new JPanel(new BorderLayout());
-        panel.setBorder(BorderFactory.createEmptyBorder(15, 15, 5, 15));
+        EstiloGUI.aplicarPanelCabecera(panel);
 
         JTextArea header = new JTextArea(
                 "Bienvenido " + usuario.getNombre() + " " + usuario.getApellido() + "\n"
                         + "Rol: " + usuario.getRol() + "\n"
                         + "Valide tickets seleccionando concierto y ticket.");
-        header.setEditable(false);
-        header.setOpaque(false);
-        header.setFocusable(false);
-        header.setFont(header.getFont().deriveFont(14f));
+        EstiloGUI.aplicarAreaTexto(header);
         panel.add(header, BorderLayout.CENTER);
         return panel;
     }
 
     private JPanel buildButtons() {
-        JPanel panel = new JPanel(new GridLayout(0, 1, 10, 10));
-        panel.setBorder(BorderFactory.createEmptyBorder(15, 80, 25, 80));
+        JPanel panel = new JPanel(new BorderLayout());
+        EstiloGUI.aplicarPanelContenido(panel);
+
+        JPanel grid = new JPanel(new GridLayout(0, 2, EstiloGUI.ESPACIADO, EstiloGUI.ESPACIADO));
+        EstiloGUI.aplicarPanel(grid);
 
         JButton validateButton = BotonHelper.crearBoton("Validar codigo de ticket", "validate", e -> validarTicket());
-        JButton closeButton = BotonHelper.crearBoton("Cerrar", "exit", e -> dispose());
-        JButton exitButton = BotonHelper.crearBoton("Salir", "logout", e -> System.exit(0));
+        JButton closeButton = BotonHelper.crearBoton("Volver al login", "logout", e -> cerrarSesion());
+        JButton exitButton = BotonHelper.crearBoton("Cerrar sistema", "exit", e -> System.exit(0));
 
-        panel.add(validateButton);
-        panel.add(closeButton);
-        panel.add(exitButton);
+        grid.add(validateButton);
+        grid.add(closeButton);
+        grid.add(exitButton);
+        panel.add(grid, BorderLayout.NORTH);
         return panel;
+    }
+
+    private void cerrarSesion() {
+        dispose();
+        new LoginFrame().setVisible(true);
     }
 
     private void validarTicket() {

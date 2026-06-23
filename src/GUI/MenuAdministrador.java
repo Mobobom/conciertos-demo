@@ -68,10 +68,11 @@ public class MenuAdministrador extends JFrame {
 
     private void initialize() {
         setTitle("Menu Administrador");
-        setSize(820, 520);
+        EstiloGUI.aplicarTamanioMenuRol(this);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout(10, 10));
+        EstiloGUI.aplicarVentana(this);
 
         add(buildHeader(), BorderLayout.NORTH);
         add(buildButtons(), BorderLayout.CENTER);
@@ -79,39 +80,40 @@ public class MenuAdministrador extends JFrame {
 
     private JPanel buildHeader() {
         JPanel panel = new JPanel(new BorderLayout());
-        panel.setBorder(BorderFactory.createEmptyBorder(15, 15, 5, 15));
+        EstiloGUI.aplicarPanelCabecera(panel);
 
         JLabel title = new JLabel("Panel de Administrador", SwingConstants.CENTER);
-        title.setFont(title.getFont().deriveFont(18f));
+        EstiloGUI.aplicarTitulo(title);
         panel.add(title, BorderLayout.NORTH);
 
         JLabel subtitle = new JLabel(
                 usuario.getNombre() + " " + usuario.getApellido() + " | " + usuario.getEmail(),
                 SwingConstants.CENTER);
+        EstiloGUI.aplicarTextoSecundario(subtitle);
         panel.add(subtitle, BorderLayout.CENTER);
 
         return panel;
     }
 
     private JPanel buildButtons() {
-        JPanel panel = new JPanel(new GridLayout(0, 2, 10, 10));
-        panel.setBorder(BorderFactory.createEmptyBorder(10, 20, 20, 20));
+        JPanel panel = new JPanel(new GridLayout(0, 2, EstiloGUI.ESPACIADO, EstiloGUI.ESPACIADO));
+        EstiloGUI.aplicarPanelContenido(panel);
 
         addButton(panel, "Listar conciertos activos", "search", e -> mostrarConciertosActivos());
         addButton(panel, "Listar todos los conciertos", "report", e -> mostrarTodosLosConciertos());
         addButton(panel, "Crear concierto", "add", e -> crearConcierto());
         addButton(panel, "Modificar concierto", "edit", e -> modificarConcierto());
-        addButton(panel, "Cancelar concierto", "delete", e -> cancelarConcierto());
+        addButton(panel, "Cancelar concierto", "exit", e -> cancelarConcierto());
         addButton(panel, "Ver disponibilidad", "search", e -> verDisponibilidadConcierto());
         addButton(panel, "Ver sectores", "concert", e -> verSectoresDeConcierto());
         addButton(panel, "Crear sector", "add", e -> crearSector());
         addButton(panel, "Crear tickets de sector", "ticket", e -> crearTicketsDeSector());
         addButton(panel, "Ver tickets", "ticket", e -> verTicketsDeConcierto());
-        addButton(panel, "Bloquear ticket", "delete", e -> bloquearTicket());
+        addButton(panel, "Bloquear ticket", "exit", e -> bloquearTicket());
         addButton(panel, "Liberar ticket", "validate", e -> liberarTicket());
         addButton(panel, "Gestionar merchandising", "merchandising", e -> gestionarMerchandising());
-        addButton(panel, "Cerrar sesion", "logout", e -> cerrarSesion());
-        addButton(panel, "Cerrar menu", "exit", e -> dispose());
+        addButton(panel, "Volver al login", "logout", e -> cerrarSesion());
+        addButton(panel, "Cerrar sistema", "exit", e -> System.exit(0));
 
         return panel;
     }

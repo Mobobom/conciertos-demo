@@ -20,6 +20,7 @@ public final class BotonHelper {
         boton.setHorizontalAlignment(SwingConstants.CENTER);
         boton.setHorizontalTextPosition(SwingConstants.RIGHT);
         boton.setIconTextGap(8);
+        EstiloGUI.aplicarBoton(boton);
 
         ImageIcon imageIcon = cargarIcono(icono);
         if (imageIcon != null) {

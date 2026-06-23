@@ -44,10 +44,11 @@ public class MenuComprador extends JFrame {
 
     private void initialize() {
         setTitle("Menu Comprador");
-        setSize(820, 520);
+        EstiloGUI.aplicarTamanioMenuRol(this);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout(10, 10));
+        EstiloGUI.aplicarVentana(this);
 
         add(buildHeader(), BorderLayout.NORTH);
         add(buildButtons(), BorderLayout.CENTER);
@@ -55,29 +56,34 @@ public class MenuComprador extends JFrame {
 
     private JPanel buildHeader() {
         JPanel panel = new JPanel(new BorderLayout());
-        panel.setBorder(BorderFactory.createEmptyBorder(15, 15, 5, 15));
+        EstiloGUI.aplicarPanelCabecera(panel);
 
         JLabel title = new JLabel("Panel de Comprador", SwingConstants.CENTER);
-        title.setFont(title.getFont().deriveFont(18f));
+        EstiloGUI.aplicarTitulo(title);
         panel.add(title, BorderLayout.NORTH);
 
         JLabel subtitle = new JLabel(
                 usuario.getNombre() + " " + usuario.getApellido() + " | " + usuario.getEmail(),
                 SwingConstants.CENTER);
+        EstiloGUI.aplicarTextoSecundario(subtitle);
         panel.add(subtitle, BorderLayout.CENTER);
         return panel;
     }
 
     private JPanel buildButtons() {
-        JPanel panel = new JPanel(new GridLayout(0, 2, 10, 10));
-        panel.setBorder(BorderFactory.createEmptyBorder(10, 20, 20, 20));
+        JPanel panel = new JPanel(new BorderLayout());
+        EstiloGUI.aplicarPanelContenido(panel);
 
-        addButton(panel, "Ver conciertos disponibles", "search", e -> ShowConciertosTable.showTable(this::iniciarCompra));
-        addButton(panel, "Comprar tickets", "buy", e -> comprarTickets());
-        addButton(panel, "Tickets comprados", "ticket", e -> TicketsCompradosTable.showTable(usuario));
-        addButton(panel, "Ver catalogo merchandising", "merchandising", e -> verCatalogoMerchandising());
-        addButton(panel, "Comprar merchandising", "buy", e -> comprarMerchandising());
-        addButton(panel, "Cerrar sesion", "logout", e -> cerrarSesion());
+        JPanel grid = new JPanel(new GridLayout(0, 2, EstiloGUI.ESPACIADO, EstiloGUI.ESPACIADO));
+        EstiloGUI.aplicarPanel(grid);
+
+        addButton(grid, "Ver conciertos disponibles", "search", e -> ShowConciertosTable.showTable(this::iniciarCompra));
+        addButton(grid, "Comprar tickets", "buy", e -> comprarTickets());
+        addButton(grid, "Tickets comprados", "ticket", e -> TicketsCompradosTable.showTable(usuario));
+        addButton(grid, "Ver catalogo merchandising", "merchandising", e -> verCatalogoMerchandising());
+        addButton(grid, "Comprar merchandising", "buy", e -> comprarMerchandising());
+        addButton(grid, "Volver al login", "logout", e -> cerrarSesion());
+        panel.add(grid, BorderLayout.NORTH);
         return panel;
     }
 
