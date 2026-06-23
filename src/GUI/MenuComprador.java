@@ -14,9 +14,10 @@ import BLL.Usuario;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JTextArea;
+import javax.swing.SwingConstants;
 import java.awt.BorderLayout;
 import java.awt.GridLayout;
 import java.sql.SQLException;
@@ -42,8 +43,8 @@ public class MenuComprador extends JFrame {
     }
 
     private void initialize() {
-        setTitle("Menu Comprador - " + usuario.getNombre());
-        setSize(520, 300);
+        setTitle("Menu Comprador");
+        setSize(820, 520);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout(10, 10));
@@ -56,47 +57,39 @@ public class MenuComprador extends JFrame {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBorder(BorderFactory.createEmptyBorder(15, 15, 5, 15));
 
-        JTextArea header = new JTextArea(
-                "Bienvenido " + usuario.getNombre() + " " + usuario.getApellido() + "\n"
-                        + "Rol: " + usuario.getRol() + "\n"
-                        + "Use las opciones para comprar tickets y merchandising.");
-        header.setEditable(false);
-        header.setOpaque(false);
-        header.setFocusable(false);
-        header.setFont(header.getFont().deriveFont(14f));
-        panel.add(header, BorderLayout.CENTER);
+        JLabel title = new JLabel("Panel de Comprador", SwingConstants.CENTER);
+        title.setFont(title.getFont().deriveFont(18f));
+        panel.add(title, BorderLayout.NORTH);
+
+        JLabel subtitle = new JLabel(
+                usuario.getNombre() + " " + usuario.getApellido() + " | " + usuario.getEmail(),
+                SwingConstants.CENTER);
+        panel.add(subtitle, BorderLayout.CENTER);
         return panel;
     }
 
     private JPanel buildButtons() {
-        JPanel panel = new JPanel(new GridLayout(0, 1, 10, 10));
-        panel.setBorder(BorderFactory.createEmptyBorder(15, 80, 25, 80));
+        JPanel panel = new JPanel(new GridLayout(0, 2, 10, 10));
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 20, 20, 20));
 
-        JButton showButton = new JButton("Ver conciertos disponibles");
-        showButton.addActionListener(e -> ShowConciertosTable.showTable(this::iniciarCompra));
-
-        JButton buyButton = new JButton("Comprar tickets");
-        buyButton.addActionListener(e -> comprarTickets());
-
-        JButton purchasedTicketsButton = new JButton("Tickets comprados");
-        purchasedTicketsButton.addActionListener(e -> TicketsCompradosTable.showTable(usuario));
-
-        JButton merchButton = new JButton("Comprar merchandising");
-        merchButton.addActionListener(e -> comprarMerchandising());
-
-        JButton closeButton = new JButton("Cerrar");
-        closeButton.addActionListener(e -> dispose());
-
-        JButton exitButton = new JButton("Salir");
-        exitButton.addActionListener(e -> System.exit(0));
-
-        panel.add(showButton);
-        panel.add(buyButton);
-        panel.add(purchasedTicketsButton);
-        panel.add(merchButton);
-        panel.add(closeButton);
-        panel.add(exitButton);
+        addButton(panel, "Ver conciertos disponibles", e -> ShowConciertosTable.showTable(this::iniciarCompra));
+        addButton(panel, "Comprar tickets", e -> comprarTickets());
+        addButton(panel, "Tickets comprados", e -> TicketsCompradosTable.showTable(usuario));
+        addButton(panel, "Ver catalogo merchandising", e -> verCatalogoMerchandising());
+        addButton(panel, "Comprar merchandising", e -> comprarMerchandising());
+        addButton(panel, "Cerrar sesion", e -> cerrarSesion());
         return panel;
+    }
+
+    private void addButton(JPanel panel, String label, java.awt.event.ActionListener action) {
+        JButton button = new JButton(label);
+        button.addActionListener(action);
+        panel.add(button);
+    }
+
+    private void cerrarSesion() {
+        dispose();
+        new LoginFrame().setVisible(true);
     }
 
     private void comprarTickets() {
@@ -123,6 +116,31 @@ public class MenuComprador extends JFrame {
                 return;
             }
 
+            iniciarCompraMerchandising(merchandising);
+        } catch (IllegalArgumentException e) {
+            mostrarError(e.getMessage());
+        } catch (SQLException e) {
+            mostrarError("Error de base de datos: " + e.getMessage());
+        }
+    }
+
+    private void verCatalogoMerchandising() {
+        try {
+            Concierto concierto = seleccionarConcierto();
+            if (concierto == null) {
+                return;
+            }
+            ShowMerchandisingTable.showTable(concierto, this::iniciarCompraMerchandising);
+        } catch (SQLException e) {
+            mostrarError("Error de base de datos: " + e.getMessage());
+        }
+    }
+
+    private void iniciarCompraMerchandising(Merchandising merchandising) {
+        if (merchandising == null) {
+            return;
+        }
+        try {
             int cantidad = solicitarCantidadMerchandising(merchandising.getStock());
             if (cantidad <= 0) {
                 return;
@@ -331,15 +349,14 @@ public class MenuComprador extends JFrame {
     }
 
     private void mostrarResultadoMerchandising(CompraMerchandisingResultado resultado) {
-        StringBuilder mensaje = new StringBuilder();
-        mensaje.append("Compra de merchandising exitosa:\n");
-        mensaje.append("Compra ID: ").append(resultado.getCompraId()).append("\n");
-        mensaje.append("Pago ID: ").append(resultado.getPagoId()).append("\n");
-        mensaje.append("Detalle ID: ").append(resultado.getCompraMerchandisingId()).append("\n");
-        mensaje.append("Producto: ").append(resultado.getMerchandising().getNombre()).append("\n");
-        mensaje.append("Cantidad: ").append(resultado.getCantidad()).append("\n");
-        mensaje.append("Total: ").append(resultado.getTotal()).append("\n");
-        JOptionPane.showMessageDialog(this, mensaje.toString(), "Compra completada",
+        String mensaje = "Compra de merchandising exitosa:\n"
+                + "Compra ID: " + resultado.getCompraId() + "\n"
+                + "Pago ID: " + resultado.getPagoId() + "\n"
+                + "Detalle ID: " + resultado.getCompraMerchandisingId() + "\n"
+                + "Producto: " + resultado.getMerchandising().getNombre() + "\n"
+                + "Cantidad: " + resultado.getCantidad() + "\n"
+                + "Total: " + resultado.getTotal() + "\n";
+        JOptionPane.showMessageDialog(this, mensaje, "Compra completada",
                 JOptionPane.INFORMATION_MESSAGE);
     }
 
