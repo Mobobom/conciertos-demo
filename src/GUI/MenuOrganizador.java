@@ -15,7 +15,6 @@ import java.awt.event.WindowEvent;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.time.format.DateTimeParseException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -26,6 +25,7 @@ import java.util.function.Supplier;
 import java.util.regex.Pattern;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
+import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -40,53 +40,29 @@ import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableRowSorter;
 
-public class MenuOrganizador extends JFrame {
+public class MenuOrganizador extends MenuBase {
 
-    private final Usuario usuario;
     private final ConciertoService conciertoService;
     private final SectorService sectorService;
     private final UsuarioService usuarioService;
     private final Map<String, JFrame> openTableFrames;
 
     public MenuOrganizador(Usuario usuario) {
-        this.usuario = usuario;
+        super(usuario);
         this.conciertoService = new ConciertoService();
         this.sectorService = new SectorService();
         this.usuarioService = new UsuarioService();
         this.openTableFrames = new HashMap<>();
-        initialize();
+        inicializarMenu("Menu Organizador");
     }
 
-    private void initialize() {
-        setTitle("Menu Organizador");
-        EstiloGUI.aplicarTamanioMenuRol(this);
-        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setLocationRelativeTo(null);
-        setLayout(new BorderLayout(10, 10));
-        EstiloGUI.aplicarVentana(this);
-
-        add(buildHeader(), BorderLayout.NORTH);
-        add(buildButtons(), BorderLayout.CENTER);
+    @Override
+    protected String getTituloPanel() {
+        return "Panel de Organizador";
     }
 
-    private JPanel buildHeader() {
-        JPanel panel = new JPanel(new BorderLayout());
-        EstiloGUI.aplicarPanelCabecera(panel);
-
-        JLabel title = new JLabel("Panel de Organizador", SwingConstants.CENTER);
-        EstiloGUI.aplicarTitulo(title);
-        panel.add(title, BorderLayout.NORTH);
-
-        JLabel subtitle = new JLabel(
-                usuario.getNombre() + " " + usuario.getApellido() + " | " + usuario.getEmail(),
-                SwingConstants.CENTER);
-        EstiloGUI.aplicarTextoSecundario(subtitle);
-        panel.add(subtitle, BorderLayout.CENTER);
-
-        return panel;
-    }
-
-    private JPanel buildButtons() {
+    @Override
+    protected JComponent crearContenido() {
         JPanel panel = new JPanel(new BorderLayout());
         EstiloGUI.aplicarPanelContenido(panel);
 
@@ -98,15 +74,11 @@ public class MenuOrganizador extends JFrame {
         addButton(grid, "Modificar concierto", "edit", e -> modificarConcierto());
         addButton(grid, "Ver informacion del evento", "report", e -> verInformacionEvento());
         addButton(grid, "Cambiar password", "edit", e -> PasswordDialogs.cambiarPassword(this, usuario));
-        addButton(grid, "Volver al login", "logout", e -> cerrarSesion());
-        addButton(grid, "Cerrar sistema", "exit", e -> System.exit(0));
+        grid.add(crearBotonVolverLogin());
+        grid.add(crearBotonCerrarSistema());
         panel.add(grid, BorderLayout.NORTH);
 
         return panel;
-    }
-
-    private void addButton(JPanel panel, String label, String icon, java.awt.event.ActionListener action) {
-        panel.add(BotonHelper.crearBoton(label, icon, action));
     }
 
     @Override
@@ -128,11 +100,11 @@ public class MenuOrganizador extends JFrame {
 
     private void crearConcierto() {
         try {
-            String artista = pedirTexto("Artista", "Ingrese el nombre del artista");
-            LocalDate fecha = pedirFecha("Fecha (yyyy-MM-dd)", "2026-06-15");
-            LocalTime hora = pedirHora("Hora (HH:mm)", "21:00");
-            String lugar = pedirTexto("Lugar", "Ingrese el lugar del concierto");
-            int capacidadTotal = pedirEntero("Capacidad total", "60");
+            String artista = DialogosUtil.pedirTexto(this, "Artista", "Ingrese el nombre del artista");
+            LocalDate fecha = DialogosUtil.pedirFecha(this, "Fecha (yyyy-MM-dd)", "2026-06-15");
+            LocalTime hora = DialogosUtil.pedirHora(this, "Hora (HH:mm)", "21:00");
+            String lugar = DialogosUtil.pedirTexto(this, "Lugar", "Ingrese el lugar del concierto");
+            int capacidadTotal = DialogosUtil.pedirEntero(this, "Capacidad total", "60");
             Integer organizadorId = seleccionarOrganizador();
             if (organizadorId == null) {
                 return;
@@ -157,11 +129,11 @@ public class MenuOrganizador extends JFrame {
                 return;
             }
 
-            String artista = pedirTexto("Artista", concierto.getArtista());
-            LocalDate fecha = pedirFecha("Fecha (yyyy-MM-dd)", concierto.getFecha().toString());
-            LocalTime hora = pedirHora("Hora (HH:mm)", concierto.getHora().toString());
-            String lugar = pedirTexto("Lugar", concierto.getLugar());
-            int capacidadTotal = pedirEntero("Capacidad total", String.valueOf(concierto.getCapacidadTotal()));
+            String artista = DialogosUtil.pedirTexto(this, "Artista", concierto.getArtista());
+            LocalDate fecha = DialogosUtil.pedirFecha(this, "Fecha (yyyy-MM-dd)", concierto.getFecha().toString());
+            LocalTime hora = DialogosUtil.pedirHora(this, "Hora (HH:mm)", concierto.getHora().toString());
+            String lugar = DialogosUtil.pedirTexto(this, "Lugar", concierto.getLugar());
+            int capacidadTotal = DialogosUtil.pedirEntero(this, "Capacidad total", String.valueOf(concierto.getCapacidadTotal()));
             Integer organizadorId = seleccionarOrganizador(concierto.getOrganizadorId());
             if (organizadorId == null) {
                 return;
@@ -197,11 +169,11 @@ public class MenuOrganizador extends JFrame {
                 return;
             }
 
-            String artista = pedirTexto("Artista", concierto.getArtista());
-            LocalDate fecha = pedirFecha("Fecha (yyyy-MM-dd)", concierto.getFecha().toString());
-            LocalTime hora = pedirHora("Hora (HH:mm)", concierto.getHora().toString());
-            String lugar = pedirTexto("Lugar", concierto.getLugar());
-            int capacidadTotal = pedirEntero("Capacidad total", String.valueOf(concierto.getCapacidadTotal()));
+            String artista = DialogosUtil.pedirTexto(this, "Artista", concierto.getArtista());
+            LocalDate fecha = DialogosUtil.pedirFecha(this, "Fecha (yyyy-MM-dd)", concierto.getFecha().toString());
+            LocalTime hora = DialogosUtil.pedirHora(this, "Hora (HH:mm)", concierto.getHora().toString());
+            String lugar = DialogosUtil.pedirTexto(this, "Lugar", concierto.getLugar());
+            int capacidadTotal = DialogosUtil.pedirEntero(this, "Capacidad total", String.valueOf(concierto.getCapacidadTotal()));
             Integer organizadorId = seleccionarOrganizador(concierto.getOrganizadorId());
             if (organizadorId == null) {
                 return;
@@ -378,11 +350,6 @@ public class MenuOrganizador extends JFrame {
         return seleccionado == null ? null : opcionesPorEtiqueta.get(seleccionado);
     }
 
-    private void cerrarSesion() {
-        dispose();
-        new LoginFrame().setVisible(true);
-    }
-
     private void cerrarTablasAbiertas() {
         for (JFrame frame : openTableFrames.values().toArray(new JFrame[0])) {
             if (frame != null && frame.isDisplayable()) {
@@ -545,72 +512,6 @@ public class MenuOrganizador extends JFrame {
             });
             return Arrays.asList(crear, editar, verInfo);
         });
-    }
-
-    private String pedirTexto(String campo, String valorInicial) {
-        String valor = (String) JOptionPane.showInputDialog(this,
-                "Ingrese " + campo,
-                campo,
-                JOptionPane.PLAIN_MESSAGE,
-                null,
-                null,
-                valorInicial);
-        if (valor == null) {
-            throw new IllegalArgumentException("Operacion cancelada.");
-        }
-        if (valor.trim().isEmpty()) {
-            throw new IllegalArgumentException("El campo " + campo + " es obligatorio.");
-        }
-        return valor.trim();
-    }
-
-    private int pedirEntero(String campo, String valorInicial) {
-        String valor = (String) JOptionPane.showInputDialog(this,
-                "Ingrese " + campo,
-                campo,
-                JOptionPane.PLAIN_MESSAGE,
-                null,
-                null,
-                valorInicial);
-        if (valor == null) {
-            throw new IllegalArgumentException("Operacion cancelada.");
-        }
-        return Integer.parseInt(valor.trim());
-    }
-
-    private LocalDate pedirFecha(String campo, String valorInicial) {
-        String valor = pedirTextoConDefault(campo, valorInicial);
-        try {
-            return LocalDate.parse(valor);
-        } catch (DateTimeParseException e) {
-            throw new IllegalArgumentException("Formato de fecha invalido. Use yyyy-MM-dd.");
-        }
-    }
-
-    private LocalTime pedirHora(String campo, String valorInicial) {
-        String valor = pedirTextoConDefault(campo, valorInicial);
-        try {
-            return LocalTime.parse(valor);
-        } catch (DateTimeParseException e) {
-            throw new IllegalArgumentException("Formato de hora invalido. Use HH:mm.");
-        }
-    }
-
-    private String pedirTextoConDefault(String campo, String valorInicial) {
-        String valor = (String) JOptionPane.showInputDialog(this,
-                "Ingrese " + campo,
-                campo,
-                JOptionPane.PLAIN_MESSAGE,
-                null,
-                null,
-                valorInicial);
-        if (valor == null) {
-            throw new IllegalArgumentException("Operacion cancelada.");
-        }
-        if (valor.trim().isEmpty()) {
-            throw new IllegalArgumentException("El campo " + campo + " es obligatorio.");
-        }
-        return valor.trim();
     }
 
     private void mostrarInfo(String titulo, String mensaje) {

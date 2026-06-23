@@ -11,7 +11,6 @@ import BLL.TicketService;
 import BLL.Usuario;
 import BLL.UsuarioService;
 import java.awt.BorderLayout;
-import java.awt.FlowLayout;
 import java.awt.Frame;
 import java.awt.GridLayout;
 import java.awt.event.WindowAdapter;
@@ -20,7 +19,6 @@ import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.time.format.DateTimeParseException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -28,26 +26,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Supplier;
-import java.util.regex.Pattern;
 import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
 import javax.swing.JButton;
+import javax.swing.JComponent;
 import javax.swing.JFrame;
-import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JTextField;
 import javax.swing.JTable;
-import javax.swing.RowFilter;
-import javax.swing.SwingConstants;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableRowSorter;
 
-public class MenuAdministrador extends JFrame {
+public class MenuAdministrador extends MenuBase {
 
-    private final Usuario usuario;
     private final ConciertoService conciertoService;
     private final SectorService sectorService;
     private final UsuarioService usuarioService;
@@ -56,72 +46,53 @@ public class MenuAdministrador extends JFrame {
     private final Map<String, JFrame> openTableFrames;
 
     public MenuAdministrador(Usuario usuario) {
-        this.usuario = usuario;
+        super(usuario);
         this.conciertoService = new ConciertoService();
         this.sectorService = new SectorService();
         this.usuarioService = new UsuarioService();
         this.ticketService = new TicketService();
         this.merchandisingService = new MerchandisingService();
         this.openTableFrames = new HashMap<>();
-        initialize();
+        inicializarMenu("Menu Administrador");
     }
 
-    private void initialize() {
-        setTitle("Menu Administrador");
-        EstiloGUI.aplicarTamanioMenuRol(this);
-        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setLocationRelativeTo(null);
-        setLayout(new BorderLayout(10, 10));
-        EstiloGUI.aplicarVentana(this);
-
-        add(buildHeader(), BorderLayout.NORTH);
-        add(buildButtons(), BorderLayout.CENTER);
+    @Override
+    protected String getTituloPanel() {
+        return "Panel de Administrador";
     }
 
-    private JPanel buildHeader() {
-        JPanel panel = new JPanel(new BorderLayout());
-        EstiloGUI.aplicarPanelCabecera(panel);
-
-        JLabel title = new JLabel("Panel de Administrador", SwingConstants.CENTER);
-        EstiloGUI.aplicarTitulo(title);
-        panel.add(title, BorderLayout.NORTH);
-
-        JLabel subtitle = new JLabel(
-                usuario.getNombre() + " " + usuario.getApellido() + " | " + usuario.getEmail(),
-                SwingConstants.CENTER);
-        EstiloGUI.aplicarTextoSecundario(subtitle);
-        panel.add(subtitle, BorderLayout.CENTER);
-
-        return panel;
-    }
-
-    private JPanel buildButtons() {
-        JPanel panel = new JPanel(new GridLayout(0, 2, EstiloGUI.ESPACIADO, EstiloGUI.ESPACIADO));
+    @Override
+    protected JComponent crearContenido() {
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         EstiloGUI.aplicarPanelContenido(panel);
 
-        addButton(panel, "Listar conciertos activos", "search", e -> mostrarConciertosActivos());
-        addButton(panel, "Listar todos los conciertos", "report", e -> mostrarTodosLosConciertos());
-        addButton(panel, "Crear concierto", "add", e -> crearConcierto());
-        addButton(panel, "Modificar concierto", "edit", e -> modificarConcierto());
-        addButton(panel, "Cancelar concierto", "exit", e -> cancelarConcierto());
-        addButton(panel, "Ver disponibilidad", "search", e -> verDisponibilidadConcierto());
-        addButton(panel, "Ver sectores", "concert", e -> verSectoresDeConcierto());
-        addButton(panel, "Crear sector", "add", e -> crearSector());
-        addButton(panel, "Crear tickets de sector", "ticket", e -> crearTicketsDeSector());
-        addButton(panel, "Ver tickets", "ticket", e -> verTicketsDeConcierto());
-        addButton(panel, "Bloquear ticket", "exit", e -> bloquearTicket());
-        addButton(panel, "Liberar ticket", "validate", e -> liberarTicket());
-        addButton(panel, "Gestionar merchandising", "merchandising", e -> gestionarMerchandising());
-        addButton(panel, "Gestionar usuarios", "user", e -> gestionarUsuarios());
-        addButton(panel, "Cambiar password", "edit", e -> PasswordDialogs.cambiarPassword(this, usuario));
-        addButton(panel, "Volver al login", "logout", e -> cerrarSesion());
-        addButton(panel, "Cerrar sistema", "exit", e -> System.exit(0));
+        panel.add(new AdminConciertosPanel(
+                e -> mostrarConciertosActivos(),
+                e -> mostrarTodosLosConciertos(),
+                e -> crearConcierto(),
+                e -> modificarConcierto(),
+                e -> cancelarConcierto(),
+                e -> verDisponibilidadConcierto()));
+        panel.add(new AdminSectoresPanel(
+                e -> verSectoresDeConcierto(),
+                e -> crearSector(),
+                e -> crearTicketsDeSector()));
+        panel.add(new AdminTicketsPanel(
+                e -> verTicketsDeConcierto(),
+                e -> bloquearTicket(),
+                e -> liberarTicket()));
+        panel.add(new AdminOtrosPanel(
+                e -> gestionarMerchandising(),
+                e -> gestionarUsuarios(),
+                e -> PasswordDialogs.cambiarPassword(this, usuario),
+                crearBotonVolverLogin(),
+                crearBotonCerrarSistema()));
 
-        return panel;
-    }
-
-    private void addButton(JPanel panel, String label, String icon, java.awt.event.ActionListener action) {
-        panel.add(BotonHelper.crearBoton(label, icon, action));
+        JScrollPane scrollPane = new JScrollPane(panel);
+        scrollPane.setBorder(BorderFactory.createEmptyBorder());
+        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
+        return scrollPane;
     }
 
     @Override
@@ -154,11 +125,11 @@ public class MenuAdministrador extends JFrame {
 
     private void crearConcierto() {
         try {
-            String artista = pedirTexto("Artista", "Ingrese el nombre del artista");
-            LocalDate fecha = pedirFecha("Fecha (yyyy-MM-dd)", "2026-06-15");
-            LocalTime hora = pedirHora("Hora (HH:mm)", "21:00");
-            String lugar = pedirTexto("Lugar", "Ingrese el lugar del concierto");
-            int capacidadTotal = pedirEntero("Capacidad total", "60");
+            String artista = DialogosUtil.pedirTexto(this, "Artista", "Ingrese el nombre del artista");
+            LocalDate fecha = DialogosUtil.pedirFecha(this, "Fecha (yyyy-MM-dd)", "2026-06-15");
+            LocalTime hora = DialogosUtil.pedirHora(this, "Hora (HH:mm)", "21:00");
+            String lugar = DialogosUtil.pedirTexto(this, "Lugar", "Ingrese el lugar del concierto");
+            int capacidadTotal = DialogosUtil.pedirEntero(this, "Capacidad total", "60");
             Integer organizadorId = seleccionarOrganizador();
             if (organizadorId == null) {
                 return;
@@ -176,35 +147,7 @@ public class MenuAdministrador extends JFrame {
     private void modificarConcierto() {
         try {
             Concierto concierto = seleccionarConcierto();
-            if (concierto == null) {
-                return;
-            }
-            if (!puedeModificarConcierto(concierto)) {
-                return;
-            }
-
-            String artista = pedirTexto("Artista", concierto.getArtista());
-            LocalDate fecha = pedirFecha("Fecha (yyyy-MM-dd)", concierto.getFecha().toString());
-            LocalTime hora = pedirHora("Hora (HH:mm)", concierto.getHora().toString());
-            String lugar = pedirTexto("Lugar", concierto.getLugar());
-            int capacidadTotal = pedirEntero("Capacidad total", String.valueOf(concierto.getCapacidadTotal()));
-            Integer organizadorId = seleccionarOrganizador(concierto.getOrganizadorId());
-            if (organizadorId == null) {
-                return;
-            }
-
-            concierto.setArtista(artista);
-            concierto.setFecha(fecha);
-            concierto.setHora(hora);
-            concierto.setLugar(lugar);
-            concierto.setCapacidadTotal(capacidadTotal);
-            concierto.setOrganizadorId(organizadorId);
-
-            if (conciertoService.modificarConcierto(concierto)) {
-                mostrarInfo("Concierto modificado", "Se actualizo el concierto " + concierto.getArtista() + ".");
-            } else {
-                mostrarInfo("Sin cambios", "No se pudo modificar el concierto.");
-            }
+            modificarConcierto(concierto);
         } catch (IllegalArgumentException e) {
             mostrarInfo("Datos invalidos", e.getMessage());
         } catch (SQLException e) {
@@ -219,32 +162,7 @@ public class MenuAdministrador extends JFrame {
                 mostrarInfo("Sin concierto", "No se encontro el concierto indicado.");
                 return;
             }
-            if (!puedeModificarConcierto(concierto)) {
-                return;
-            }
-
-            String artista = pedirTexto("Artista", concierto.getArtista());
-            LocalDate fecha = pedirFecha("Fecha (yyyy-MM-dd)", concierto.getFecha().toString());
-            LocalTime hora = pedirHora("Hora (HH:mm)", concierto.getHora().toString());
-            String lugar = pedirTexto("Lugar", concierto.getLugar());
-            int capacidadTotal = pedirEntero("Capacidad total", String.valueOf(concierto.getCapacidadTotal()));
-            Integer organizadorId = seleccionarOrganizador(concierto.getOrganizadorId());
-            if (organizadorId == null) {
-                return;
-            }
-
-            concierto.setArtista(artista);
-            concierto.setFecha(fecha);
-            concierto.setHora(hora);
-            concierto.setLugar(lugar);
-            concierto.setCapacidadTotal(capacidadTotal);
-            concierto.setOrganizadorId(organizadorId);
-
-            if (conciertoService.modificarConcierto(concierto)) {
-                mostrarInfo("Concierto modificado", "Se actualizo el concierto " + concierto.getArtista() + ".");
-            } else {
-                mostrarInfo("Sin cambios", "No se pudo modificar el concierto.");
-            }
+            modificarConcierto(concierto);
         } catch (IllegalArgumentException e) {
             mostrarInfo("Datos invalidos", e.getMessage());
         } catch (SQLException e) {
@@ -252,21 +170,39 @@ public class MenuAdministrador extends JFrame {
         }
     }
 
+    private void modificarConcierto(Concierto concierto) throws SQLException {
+        if (concierto == null || !puedeModificarConcierto(concierto)) {
+            return;
+        }
+
+        String artista = DialogosUtil.pedirTexto(this, "Artista", concierto.getArtista());
+        LocalDate fecha = DialogosUtil.pedirFecha(this, "Fecha (yyyy-MM-dd)", concierto.getFecha().toString());
+        LocalTime hora = DialogosUtil.pedirHora(this, "Hora (HH:mm)", concierto.getHora().toString());
+        String lugar = DialogosUtil.pedirTexto(this, "Lugar", concierto.getLugar());
+        int capacidadTotal = DialogosUtil.pedirEntero(this, "Capacidad total", String.valueOf(concierto.getCapacidadTotal()));
+        Integer organizadorId = seleccionarOrganizador(concierto.getOrganizadorId());
+        if (organizadorId == null) {
+            return;
+        }
+
+        concierto.setArtista(artista);
+        concierto.setFecha(fecha);
+        concierto.setHora(hora);
+        concierto.setLugar(lugar);
+        concierto.setCapacidadTotal(capacidadTotal);
+        concierto.setOrganizadorId(organizadorId);
+
+        if (conciertoService.modificarConcierto(concierto)) {
+            mostrarInfo("Concierto modificado", "Se actualizo el concierto " + concierto.getArtista() + ".");
+        } else {
+            mostrarInfo("Sin cambios", "No se pudo modificar el concierto.");
+        }
+    }
+
     private void cancelarConcierto() {
         try {
             Concierto concierto = seleccionarConcierto();
-            if (concierto == null) {
-                return;
-            }
-            if (!confirmarAccion("Cancelar concierto",
-                    "Desea cancelar el concierto \"" + concierto.getArtista() + "\"?")) {
-                return;
-            }
-
-            boolean cancelado = conciertoService.cancelarConcierto(concierto.getId());
-            mostrarInfo("Cancelar concierto", cancelado
-                    ? "El concierto fue cancelado."
-                    : "No se encontro el concierto indicado.");
+            cancelarConcierto(concierto);
         } catch (IllegalArgumentException e) {
             mostrarInfo("Datos invalidos", e.getMessage());
         } catch (SQLException e) {
@@ -281,20 +217,27 @@ public class MenuAdministrador extends JFrame {
                 mostrarInfo("Cancelar concierto", "No se encontro el concierto indicado.");
                 return;
             }
-            if (!confirmarAccion("Cancelar concierto",
-                    "Desea cancelar el concierto \"" + concierto.getArtista() + "\"?")) {
-                return;
-            }
-
-            boolean cancelado = conciertoService.cancelarConcierto(conciertoId);
-            mostrarInfo("Cancelar concierto", cancelado
-                    ? "El concierto fue cancelado."
-                    : "No se encontro el concierto indicado.");
+            cancelarConcierto(concierto);
         } catch (IllegalArgumentException e) {
             mostrarInfo("Datos invalidos", e.getMessage());
         } catch (SQLException e) {
             mostrarError("No se pudo cancelar el concierto", e);
         }
+    }
+
+    private void cancelarConcierto(Concierto concierto) throws SQLException {
+        if (concierto == null) {
+            return;
+        }
+        if (!confirmarAccion("Cancelar concierto",
+                "Desea cancelar el concierto \"" + concierto.getArtista() + "\"?")) {
+            return;
+        }
+
+        boolean cancelado = conciertoService.cancelarConcierto(concierto.getId());
+        mostrarInfo("Cancelar concierto", cancelado
+                ? "El concierto fue cancelado."
+                : "No se encontro el concierto indicado.");
     }
 
     private boolean puedeModificarConcierto(Concierto concierto) {
@@ -358,22 +301,7 @@ public class MenuAdministrador extends JFrame {
             if (concierto == null) {
                 return;
             }
-            String tipo = seleccionarTipoSector();
-            if (tipo == null) {
-                return;
-            }
-            String nombre = pedirTexto("Nombre del sector", "Principal");
-            int capacidad = pedirEntero("Capacidad del sector", "10");
-            String precioStr = pedirTexto("Precio (ej. 100.00)", "100.00");
-            BigDecimal precio;
-            try {
-                precio = new BigDecimal(precioStr.trim());
-            } catch (NumberFormatException ex) {
-                throw new IllegalArgumentException("Precio invalido.");
-            }
-
-            int id = sectorService.crearSector(concierto.getId(), tipo, nombre, capacidad, precio);
-            mostrarInfo("Sector creado", "Se creo el sector con ID " + id + ".");
+            crearSector(concierto.getId());
         } catch (IllegalArgumentException e) {
             mostrarInfo("Datos invalidos", e.getMessage());
         } catch (SQLException e) {
@@ -387,9 +315,9 @@ public class MenuAdministrador extends JFrame {
             if (tipo == null) {
                 return;
             }
-            String nombre = pedirTexto("Nombre del sector", "Principal");
-            int capacidad = pedirEntero("Capacidad del sector", "10");
-            String precioStr = pedirTexto("Precio (ej. 100.00)", "100.00");
+            String nombre = DialogosUtil.pedirTexto(this, "Nombre del sector", "Principal");
+            int capacidad = DialogosUtil.pedirEntero(this, "Capacidad del sector", "10");
+            String precioStr = DialogosUtil.pedirTexto(this, "Precio (ej. 100.00)", "100.00");
             BigDecimal precio;
             try {
                 precio = new BigDecimal(precioStr.trim());
@@ -449,9 +377,9 @@ public class MenuAdministrador extends JFrame {
             if (tipo == null) {
                 return;
             }
-            String nombre = pedirTexto("Nombre del sector", sector.getNombre());
-            int capacidad = pedirEntero("Capacidad del sector", String.valueOf(sector.getCapacidad()));
-            String precioStr = pedirTexto("Precio (ej. 100.00)", sector.getPrecio().toString());
+            String nombre = DialogosUtil.pedirTexto(this, "Nombre del sector", sector.getNombre());
+            int capacidad = DialogosUtil.pedirEntero(this, "Capacidad del sector", String.valueOf(sector.getCapacidad()));
+            String precioStr = DialogosUtil.pedirTexto(this, "Precio (ej. 100.00)", sector.getPrecio().toString());
             BigDecimal precio;
             try {
                 precio = new BigDecimal(precioStr.trim());
@@ -655,11 +583,6 @@ public class MenuAdministrador extends JFrame {
         return conciertosPorId;
     }
 
-    private void cerrarSesion() {
-        dispose();
-        new LoginFrame().setVisible(true);
-    }
-
     private void cerrarTablasAbiertas() {
         for (JFrame frame : openTableFrames.values().toArray(new JFrame[0])) {
             if (frame != null && frame.isDisplayable()) {
@@ -708,15 +631,7 @@ public class MenuAdministrador extends JFrame {
             if (ticket == null) {
                 return;
             }
-            if (!confirmarAccion("Bloquear ticket",
-                    "Desea bloquear el ticket " + ticket.getCodigo() + "?")) {
-                return;
-            }
-
-            boolean bloqueado = ticketService.bloquearTicket(ticket.getId());
-            mostrarInfo("Bloquear ticket", bloqueado
-                    ? "El ticket fue bloqueado."
-                    : "No se pudo bloquear el ticket.");
+            bloquearTicket(ticket.getId(), "Desea bloquear el ticket " + ticket.getCodigo() + "?");
         } catch (IllegalArgumentException e) {
             mostrarInfo("Datos invalidos", e.getMessage());
         } catch (SQLException e) {
@@ -735,15 +650,7 @@ public class MenuAdministrador extends JFrame {
             if (ticket == null) {
                 return;
             }
-            if (!confirmarAccion("Liberar ticket",
-                    "Desea liberar el ticket " + ticket.getCodigo() + "?")) {
-                return;
-            }
-
-            boolean liberado = ticketService.liberarTicket(ticket.getId());
-            mostrarInfo("Liberar ticket", liberado
-                    ? "El ticket fue liberado."
-                    : "No se pudo liberar el ticket.");
+            liberarTicket(ticket.getId(), "Desea liberar el ticket " + ticket.getCodigo() + "?");
         } catch (IllegalArgumentException e) {
             mostrarInfo("Datos invalidos", e.getMessage());
         } catch (SQLException e) {
@@ -753,14 +660,7 @@ public class MenuAdministrador extends JFrame {
 
     private void bloquearTicket(int ticketId) {
         try {
-            if (!confirmarAccion("Bloquear ticket", "Desea bloquear el ticket seleccionado?")) {
-                return;
-            }
-
-            boolean bloqueado = ticketService.bloquearTicket(ticketId);
-            mostrarInfo("Bloquear ticket", bloqueado
-                    ? "El ticket fue bloqueado."
-                    : "No se pudo bloquear el ticket.");
+            bloquearTicket(ticketId, "Desea bloquear el ticket seleccionado?");
         } catch (IllegalArgumentException e) {
             mostrarInfo("Datos invalidos", e.getMessage());
         } catch (SQLException e) {
@@ -770,19 +670,34 @@ public class MenuAdministrador extends JFrame {
 
     private void liberarTicket(int ticketId) {
         try {
-            if (!confirmarAccion("Liberar ticket", "Desea liberar el ticket seleccionado?")) {
-                return;
-            }
-
-            boolean liberado = ticketService.liberarTicket(ticketId);
-            mostrarInfo("Liberar ticket", liberado
-                    ? "El ticket fue liberado."
-                    : "No se pudo liberar el ticket.");
+            liberarTicket(ticketId, "Desea liberar el ticket seleccionado?");
         } catch (IllegalArgumentException e) {
             mostrarInfo("Datos invalidos", e.getMessage());
         } catch (SQLException e) {
             mostrarError("No se pudo liberar el ticket", e);
         }
+    }
+
+    private void bloquearTicket(int ticketId, String mensajeConfirmacion) throws SQLException {
+        if (!confirmarAccion("Bloquear ticket", mensajeConfirmacion)) {
+            return;
+        }
+
+        boolean bloqueado = ticketService.bloquearTicket(ticketId);
+        mostrarInfo("Bloquear ticket", bloqueado
+                ? "El ticket fue bloqueado."
+                : "No se pudo bloquear el ticket.");
+    }
+
+    private void liberarTicket(int ticketId, String mensajeConfirmacion) throws SQLException {
+        if (!confirmarAccion("Liberar ticket", mensajeConfirmacion)) {
+            return;
+        }
+
+        boolean liberado = ticketService.liberarTicket(ticketId);
+        mostrarInfo("Liberar ticket", liberado
+                ? "El ticket fue liberado."
+                : "No se pudo liberar el ticket.");
     }
 
     private void mostrarTabla(String titulo, String[] columns, Object[][] rows) {
@@ -963,10 +878,10 @@ public class MenuAdministrador extends JFrame {
 
     private void crearUsuario() {
         try {
-            String nombre = pedirTexto("Nombre", "Nombre");
-            String apellido = pedirTexto("Apellido", "Apellido");
-            String email = pedirTexto("Email", "usuario@mail.com");
-            String documento = pedirTextoOpcional("Documento/DNI (opcional)", "");
+            String nombre = DialogosUtil.pedirTexto(this, "Nombre", "Nombre");
+            String apellido = DialogosUtil.pedirTexto(this, "Apellido", "Apellido");
+            String email = DialogosUtil.pedirTexto(this, "Email", "usuario@mail.com");
+            String documento = DialogosUtil.pedirTextoOpcional(this, "Documento/DNI (opcional)", "");
             String rol = seleccionarRol("Comprador");
             if (rol == null) {
                 return;
@@ -993,10 +908,10 @@ public class MenuAdministrador extends JFrame {
                 return;
             }
 
-            String nombre = pedirTexto("Nombre", usuarioEditado.getNombre());
-            String apellido = pedirTexto("Apellido", usuarioEditado.getApellido());
-            String email = pedirTexto("Email", usuarioEditado.getEmail());
-            String documento = pedirTextoOpcional("Documento/DNI (opcional)", usuarioEditado.getDocumento());
+            String nombre = DialogosUtil.pedirTexto(this, "Nombre", usuarioEditado.getNombre());
+            String apellido = DialogosUtil.pedirTexto(this, "Apellido", usuarioEditado.getApellido());
+            String email = DialogosUtil.pedirTexto(this, "Email", usuarioEditado.getEmail());
+            String documento = DialogosUtil.pedirTextoOpcional(this, "Documento/DNI (opcional)", usuarioEditado.getDocumento());
             String rol = seleccionarRol(usuarioEditado.getRol());
             if (rol == null) {
                 return;
@@ -1079,9 +994,9 @@ public class MenuAdministrador extends JFrame {
             if (concierto == null) {
                 return;
             }
-            String nombre = pedirTexto("Nombre del producto", "Remera");
-            BigDecimal precio = pedirPrecio("35.00");
-            int stock = pedirEntero("Stock", "100");
+            String nombre = DialogosUtil.pedirTexto(this, "Nombre del producto", "Remera");
+            BigDecimal precio = DialogosUtil.pedirPrecio(this, "35.00");
+            int stock = DialogosUtil.pedirEntero(this, "Stock", "100");
             int id = merchandisingService.crearProducto(concierto.getId(), nombre, precio, stock);
             mostrarInfo("Producto creado", "Se creo el producto con ID " + id + ".");
         } catch (IllegalArgumentException e) {
@@ -1098,9 +1013,9 @@ public class MenuAdministrador extends JFrame {
                 mostrarInfo("Sin producto", "No se encontro el producto indicado.");
                 return;
             }
-            String nombre = pedirTexto("Nombre del producto", producto.getNombre());
-            BigDecimal precio = pedirPrecio(producto.getPrecio().toString());
-            int stock = pedirEntero("Stock", String.valueOf(producto.getStock()));
+            String nombre = DialogosUtil.pedirTexto(this, "Nombre del producto", producto.getNombre());
+            BigDecimal precio = DialogosUtil.pedirPrecio(this, producto.getPrecio().toString());
+            int stock = DialogosUtil.pedirEntero(this, "Stock", String.valueOf(producto.getStock()));
             producto.setNombre(nombre);
             producto.setPrecio(precio);
             producto.setStock(stock);
@@ -1122,7 +1037,7 @@ public class MenuAdministrador extends JFrame {
                 mostrarInfo("Sin producto", "No se encontro el producto indicado.");
                 return;
             }
-            int stock = pedirEntero("Stock", String.valueOf(producto.getStock()));
+            int stock = DialogosUtil.pedirEntero(this, "Stock", String.valueOf(producto.getStock()));
             if (!confirmarAccion("Actualizar stock",
                     "Desea cambiar el stock de \"" + producto.getNombre() + "\" de "
                             + producto.getStock() + " a " + stock + "?")) {
@@ -1214,25 +1129,11 @@ public class MenuAdministrador extends JFrame {
             openTableFrames.remove(titulo);
         }
 
-        DefaultTableModel model = new DefaultTableModel(rowsSupplier.get(), columns) {
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return false;
-            }
-        };
-
-        JTable table = new JTable(model);
-        boolean tieneBusqueda = etiquetaBusqueda != null && columnasBusqueda != null && columnasBusqueda.length > 0;
-        final TableRowSorter<DefaultTableModel> sorter = tieneBusqueda ? new TableRowSorter<>(model) : null;
-        if (sorter != null) {
-            deshabilitarOrdenamiento(sorter, columns.length);
-            table.setRowSorter(sorter);
-        }
-        JScrollPane scrollPane = new JScrollPane(table);
-
-        JFrame frame = new JFrame(titulo);
+        TablaConBotones.Busqueda busqueda = etiquetaBusqueda == null
+                ? null
+                : new TablaConBotones.Busqueda(etiquetaBusqueda, columnasBusqueda);
+        JFrame frame = TablaConBotones.mostrar(this, titulo, columns, rowsSupplier, extraButtons, busqueda);
         openTableFrames.put(titulo, frame);
-        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         frame.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosed(WindowEvent e) {
@@ -1241,90 +1142,11 @@ public class MenuAdministrador extends JFrame {
                 }
             }
         });
-        frame.setLayout(new BorderLayout(5, 5));
-        if (sorter != null) {
-            JTextField buscar = new JTextField();
-            configurarBusqueda(buscar, sorter, columnasBusqueda);
-
-            JPanel filtros = new JPanel(new BorderLayout(6, 6));
-            filtros.setBorder(BorderFactory.createEmptyBorder(6, 6, 0, 6));
-            filtros.add(new JLabel(etiquetaBusqueda), BorderLayout.WEST);
-            filtros.add(buscar, BorderLayout.CENTER);
-            frame.add(filtros, BorderLayout.NORTH);
-        }
-        frame.add(scrollPane, BorderLayout.CENTER);
-
-        Runnable refrescar = () -> {
-            model.setDataVector(rowsSupplier.get(), columns);
-            if (sorter != null) {
-                deshabilitarOrdenamiento(sorter, columns.length);
-            }
-        };
-
-        JPanel bar = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 6));
-        if (extraButtons != null) {
-            for (JButton button : extraButtons.apply(table, refrescar)) {
-                bar.add(button);
-            }
-        }
-
-        JButton actualizar = new JButton("Actualizar");
-        actualizar.addActionListener(e -> refrescar.run());
-        JButton cerrar = new JButton("Cerrar");
-        cerrar.addActionListener(e -> frame.dispose());
-        bar.add(actualizar);
-        bar.add(cerrar);
-
-        frame.add(bar, BorderLayout.SOUTH);
-        frame.setSize(960, 460);
-        frame.setLocationRelativeTo(this);
-        frame.setVisible(true);
-    }
-
-    private void configurarBusqueda(JTextField buscar, TableRowSorter<DefaultTableModel> sorter, int... columnas) {
-        buscar.getDocument().addDocumentListener(new DocumentListener() {
-            @Override
-            public void insertUpdate(DocumentEvent e) {
-                aplicarFiltro();
-            }
-
-            @Override
-            public void removeUpdate(DocumentEvent e) {
-                aplicarFiltro();
-            }
-
-            @Override
-            public void changedUpdate(DocumentEvent e) {
-                aplicarFiltro();
-            }
-
-            private void aplicarFiltro() {
-                String texto = buscar.getText().trim();
-                if (texto.isEmpty()) {
-                    sorter.setRowFilter(null);
-                    return;
-                }
-                sorter.setRowFilter(RowFilter.regexFilter("(?i)" + Pattern.quote(texto), columnas));
-            }
-        });
-    }
-
-    private void deshabilitarOrdenamiento(TableRowSorter<DefaultTableModel> sorter, int columnCount) {
-        for (int i = 0; i < columnCount; i++) {
-            sorter.setSortable(i, false);
-        }
     }
 
 
     private Integer idSeleccionado(JTable table) {
-        int row = table.getSelectedRow();
-        if (row < 0) {
-            mostrarInfo("Accion", "Seleccione una fila.");
-            return null;
-        }
-        int modelRow = table.convertRowIndexToModel(row);
-        Object value = table.getModel().getValueAt(modelRow, 0);
-        return Integer.valueOf(value.toString());
+        return TablaConBotones.idSeleccionado(this, table);
     }
 
     private boolean confirmarAccion(String titulo, String mensaje) {
@@ -1347,98 +1169,6 @@ public class MenuAdministrador extends JFrame {
                 null,
                 roles,
                 seleccionInicial == null ? "Comprador" : seleccionInicial);
-    }
-
-    private String pedirTexto(String campo, String valorInicial) {
-        String valor = (String) JOptionPane.showInputDialog(this,
-                "Ingrese " + campo,
-                campo,
-                JOptionPane.PLAIN_MESSAGE,
-                null,
-                null,
-                valorInicial);
-        if (valor == null) {
-            throw new IllegalArgumentException("Operacion cancelada.");
-        }
-        if (valor.trim().isEmpty()) {
-            throw new IllegalArgumentException("El campo " + campo + " es obligatorio.");
-        }
-        return valor.trim();
-    }
-
-    private String pedirTextoOpcional(String campo, String valorInicial) {
-        String valor = (String) JOptionPane.showInputDialog(this,
-                "Ingrese " + campo,
-                campo,
-                JOptionPane.PLAIN_MESSAGE,
-                null,
-                null,
-                valorInicial == null ? "" : valorInicial);
-        if (valor == null) {
-            throw new IllegalArgumentException("Operacion cancelada.");
-        }
-        if (valor.trim().isEmpty()) {
-            return null;
-        }
-        return valor.trim();
-    }
-
-    private int pedirEntero(String campo, String valorInicial) {
-        String valor = (String) JOptionPane.showInputDialog(this,
-                "Ingrese " + campo,
-                campo,
-                JOptionPane.PLAIN_MESSAGE,
-                null,
-                null,
-                valorInicial);
-        if (valor == null) {
-            throw new IllegalArgumentException("Operacion cancelada.");
-        }
-        return Integer.parseInt(valor.trim());
-    }
-
-    private BigDecimal pedirPrecio(String valorInicial) {
-        String valor = pedirTexto("Precio (ej. 100.00)", valorInicial);
-        try {
-            return new BigDecimal(valor.trim());
-        } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("Precio invalido.");
-        }
-    }
-
-    private LocalDate pedirFecha(String campo, String valorInicial) {
-        String valor = pedirTextoConDefault(campo, valorInicial);
-        try {
-            return LocalDate.parse(valor);
-        } catch (DateTimeParseException e) {
-            throw new IllegalArgumentException("Formato de fecha invalido. Use yyyy-MM-dd.");
-        }
-    }
-
-    private LocalTime pedirHora(String campo, String valorInicial) {
-        String valor = pedirTextoConDefault(campo, valorInicial);
-        try {
-            return LocalTime.parse(valor);
-        } catch (DateTimeParseException e) {
-            throw new IllegalArgumentException("Formato de hora invalido. Use HH:mm.");
-        }
-    }
-
-    private String pedirTextoConDefault(String campo, String valorInicial) {
-        String valor = (String) JOptionPane.showInputDialog(this,
-                "Ingrese " + campo,
-                campo,
-                JOptionPane.PLAIN_MESSAGE,
-                null,
-                null,
-                valorInicial);
-        if (valor == null) {
-            throw new IllegalArgumentException("Operacion cancelada.");
-        }
-        if (valor.trim().isEmpty()) {
-            throw new IllegalArgumentException("El campo " + campo + " es obligatorio.");
-        }
-        return valor.trim();
     }
 
     private void mostrarInfo(String titulo, String mensaje) {
