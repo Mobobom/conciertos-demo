@@ -4,6 +4,7 @@ Docs/
 # Java build outputs
 bin/
 out/
+target/
 *.class
 temp/
 

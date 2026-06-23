@@ -23,6 +23,7 @@ conciertos-demo-main/
 ## Requisitos
 
 - **Java** 11 o superior
+- **Maven** 3.8 o superior
 - **MySQL** 8.x
 
 ## Configuración de la base de datos
@@ -67,6 +68,23 @@ Resultado esperado: `5 usuarios, 2 conciertos, 6 sectores, 120 tickets`.
 
 ## Compilar y ejecutar
 
+### Opcion recomendada: Maven
+
+```bash
+# Compilar y empaquetar la aplicacion
+mvn clean package
+
+# Ejecutar desde Maven
+mvn exec:java
+
+# Ejecutar el JAR generado
+java -jar target/conciertos-demo.jar
+```
+
+Maven descarga automaticamente el conector JDBC de MySQL y BCrypt segun lo definido en `pom.xml`.
+
+### Opcion manual con javac
+
 ```bash
 # Compilar (apuntando a JRE 11 por compatibilidad con el JRE instalado)
 mkdir -p bin
@@ -77,7 +95,7 @@ java -cp "bin:lib/*" GUI.Main
 ```
 
 > El conector JDBC (`lib/mysql-connector-j-8.4.0.jar`) debe estar en el classpath
-> tanto al compilar como al ejecutar; por eso ambos comandos incluyen `lib/*`.
+> tanto al compilar como al ejecutar cuando se usa la opcion manual; por eso ambos comandos incluyen `lib/*`.
 
 Al iniciar, se abrirá la pantalla de **Login**. Se puede probar con:
 
@@ -148,7 +166,7 @@ Ver `db/create_ticketing.sql` para el detalle completo, y `docs/Especificacion_d
 
 ## Notas técnicas
 
-- **Driver JDBC**: se usa `mysql-connector-j-8.4.0.jar`, porque los conectores antiguos no soportan el plugin de autenticación `caching_sha2_password` que MySQL 8 utiliza por defecto.
+- **Driver JDBC**: Maven usa `com.mysql:mysql-connector-j:8.4.0`; la opcion manual usa `lib/mysql-connector-j-8.4.0.jar`. Los conectores antiguos no soportan el plugin de autenticación `caching_sha2_password` que MySQL 8 utiliza por defecto.
 - **URL JDBC**: `jdbc:mysql://localhost:3306/ticketing?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC` (definida en `src/DLL/Conexion.java`).
 - **Autenticación MySQL 8**: el parámetro `allowPublicKeyRetrieval=true` permite el login con `caching_sha2_password` sobre una conexión sin SSL (entorno de desarrollo local).
-- **Contraseñas**: se almacenan como hashes bcrypt (`lib/jbcrypt-0.4.jar`); `UsuarioService` valida con `BCrypt.checkpw`.
+- **Contraseñas**: se almacenan como hashes bcrypt (`org.mindrot:jbcrypt:0.4` en Maven o `lib/jbcrypt-0.4.jar` en la opcion manual); `UsuarioService` valida con `BCrypt.checkpw`.
