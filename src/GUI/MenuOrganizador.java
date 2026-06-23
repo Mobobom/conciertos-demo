@@ -15,7 +15,6 @@ import java.awt.event.WindowEvent;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.time.format.DateTimeParseException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -101,11 +100,11 @@ public class MenuOrganizador extends MenuBase {
 
     private void crearConcierto() {
         try {
-            String artista = pedirTexto("Artista", "Ingrese el nombre del artista");
-            LocalDate fecha = pedirFecha("Fecha (yyyy-MM-dd)", "2026-06-15");
-            LocalTime hora = pedirHora("Hora (HH:mm)", "21:00");
-            String lugar = pedirTexto("Lugar", "Ingrese el lugar del concierto");
-            int capacidadTotal = pedirEntero("Capacidad total", "60");
+            String artista = DialogosUtil.pedirTexto(this, "Artista", "Ingrese el nombre del artista");
+            LocalDate fecha = DialogosUtil.pedirFecha(this, "Fecha (yyyy-MM-dd)", "2026-06-15");
+            LocalTime hora = DialogosUtil.pedirHora(this, "Hora (HH:mm)", "21:00");
+            String lugar = DialogosUtil.pedirTexto(this, "Lugar", "Ingrese el lugar del concierto");
+            int capacidadTotal = DialogosUtil.pedirEntero(this, "Capacidad total", "60");
             Integer organizadorId = seleccionarOrganizador();
             if (organizadorId == null) {
                 return;
@@ -130,11 +129,11 @@ public class MenuOrganizador extends MenuBase {
                 return;
             }
 
-            String artista = pedirTexto("Artista", concierto.getArtista());
-            LocalDate fecha = pedirFecha("Fecha (yyyy-MM-dd)", concierto.getFecha().toString());
-            LocalTime hora = pedirHora("Hora (HH:mm)", concierto.getHora().toString());
-            String lugar = pedirTexto("Lugar", concierto.getLugar());
-            int capacidadTotal = pedirEntero("Capacidad total", String.valueOf(concierto.getCapacidadTotal()));
+            String artista = DialogosUtil.pedirTexto(this, "Artista", concierto.getArtista());
+            LocalDate fecha = DialogosUtil.pedirFecha(this, "Fecha (yyyy-MM-dd)", concierto.getFecha().toString());
+            LocalTime hora = DialogosUtil.pedirHora(this, "Hora (HH:mm)", concierto.getHora().toString());
+            String lugar = DialogosUtil.pedirTexto(this, "Lugar", concierto.getLugar());
+            int capacidadTotal = DialogosUtil.pedirEntero(this, "Capacidad total", String.valueOf(concierto.getCapacidadTotal()));
             Integer organizadorId = seleccionarOrganizador(concierto.getOrganizadorId());
             if (organizadorId == null) {
                 return;
@@ -170,11 +169,11 @@ public class MenuOrganizador extends MenuBase {
                 return;
             }
 
-            String artista = pedirTexto("Artista", concierto.getArtista());
-            LocalDate fecha = pedirFecha("Fecha (yyyy-MM-dd)", concierto.getFecha().toString());
-            LocalTime hora = pedirHora("Hora (HH:mm)", concierto.getHora().toString());
-            String lugar = pedirTexto("Lugar", concierto.getLugar());
-            int capacidadTotal = pedirEntero("Capacidad total", String.valueOf(concierto.getCapacidadTotal()));
+            String artista = DialogosUtil.pedirTexto(this, "Artista", concierto.getArtista());
+            LocalDate fecha = DialogosUtil.pedirFecha(this, "Fecha (yyyy-MM-dd)", concierto.getFecha().toString());
+            LocalTime hora = DialogosUtil.pedirHora(this, "Hora (HH:mm)", concierto.getHora().toString());
+            String lugar = DialogosUtil.pedirTexto(this, "Lugar", concierto.getLugar());
+            int capacidadTotal = DialogosUtil.pedirEntero(this, "Capacidad total", String.valueOf(concierto.getCapacidadTotal()));
             Integer organizadorId = seleccionarOrganizador(concierto.getOrganizadorId());
             if (organizadorId == null) {
                 return;
@@ -513,72 +512,6 @@ public class MenuOrganizador extends MenuBase {
             });
             return Arrays.asList(crear, editar, verInfo);
         });
-    }
-
-    private String pedirTexto(String campo, String valorInicial) {
-        String valor = (String) JOptionPane.showInputDialog(this,
-                "Ingrese " + campo,
-                campo,
-                JOptionPane.PLAIN_MESSAGE,
-                null,
-                null,
-                valorInicial);
-        if (valor == null) {
-            throw new IllegalArgumentException("Operacion cancelada.");
-        }
-        if (valor.trim().isEmpty()) {
-            throw new IllegalArgumentException("El campo " + campo + " es obligatorio.");
-        }
-        return valor.trim();
-    }
-
-    private int pedirEntero(String campo, String valorInicial) {
-        String valor = (String) JOptionPane.showInputDialog(this,
-                "Ingrese " + campo,
-                campo,
-                JOptionPane.PLAIN_MESSAGE,
-                null,
-                null,
-                valorInicial);
-        if (valor == null) {
-            throw new IllegalArgumentException("Operacion cancelada.");
-        }
-        return Integer.parseInt(valor.trim());
-    }
-
-    private LocalDate pedirFecha(String campo, String valorInicial) {
-        String valor = pedirTextoConDefault(campo, valorInicial);
-        try {
-            return LocalDate.parse(valor);
-        } catch (DateTimeParseException e) {
-            throw new IllegalArgumentException("Formato de fecha invalido. Use yyyy-MM-dd.");
-        }
-    }
-
-    private LocalTime pedirHora(String campo, String valorInicial) {
-        String valor = pedirTextoConDefault(campo, valorInicial);
-        try {
-            return LocalTime.parse(valor);
-        } catch (DateTimeParseException e) {
-            throw new IllegalArgumentException("Formato de hora invalido. Use HH:mm.");
-        }
-    }
-
-    private String pedirTextoConDefault(String campo, String valorInicial) {
-        String valor = (String) JOptionPane.showInputDialog(this,
-                "Ingrese " + campo,
-                campo,
-                JOptionPane.PLAIN_MESSAGE,
-                null,
-                null,
-                valorInicial);
-        if (valor == null) {
-            throw new IllegalArgumentException("Operacion cancelada.");
-        }
-        if (valor.trim().isEmpty()) {
-            throw new IllegalArgumentException("El campo " + campo + " es obligatorio.");
-        }
-        return valor.trim();
     }
 
     private void mostrarInfo(String titulo, String mensaje) {

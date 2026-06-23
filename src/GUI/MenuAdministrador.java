@@ -19,7 +19,6 @@ import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.time.format.DateTimeParseException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -126,11 +125,11 @@ public class MenuAdministrador extends MenuBase {
 
     private void crearConcierto() {
         try {
-            String artista = pedirTexto("Artista", "Ingrese el nombre del artista");
-            LocalDate fecha = pedirFecha("Fecha (yyyy-MM-dd)", "2026-06-15");
-            LocalTime hora = pedirHora("Hora (HH:mm)", "21:00");
-            String lugar = pedirTexto("Lugar", "Ingrese el lugar del concierto");
-            int capacidadTotal = pedirEntero("Capacidad total", "60");
+            String artista = DialogosUtil.pedirTexto(this, "Artista", "Ingrese el nombre del artista");
+            LocalDate fecha = DialogosUtil.pedirFecha(this, "Fecha (yyyy-MM-dd)", "2026-06-15");
+            LocalTime hora = DialogosUtil.pedirHora(this, "Hora (HH:mm)", "21:00");
+            String lugar = DialogosUtil.pedirTexto(this, "Lugar", "Ingrese el lugar del concierto");
+            int capacidadTotal = DialogosUtil.pedirEntero(this, "Capacidad total", "60");
             Integer organizadorId = seleccionarOrganizador();
             if (organizadorId == null) {
                 return;
@@ -176,11 +175,11 @@ public class MenuAdministrador extends MenuBase {
             return;
         }
 
-        String artista = pedirTexto("Artista", concierto.getArtista());
-        LocalDate fecha = pedirFecha("Fecha (yyyy-MM-dd)", concierto.getFecha().toString());
-        LocalTime hora = pedirHora("Hora (HH:mm)", concierto.getHora().toString());
-        String lugar = pedirTexto("Lugar", concierto.getLugar());
-        int capacidadTotal = pedirEntero("Capacidad total", String.valueOf(concierto.getCapacidadTotal()));
+        String artista = DialogosUtil.pedirTexto(this, "Artista", concierto.getArtista());
+        LocalDate fecha = DialogosUtil.pedirFecha(this, "Fecha (yyyy-MM-dd)", concierto.getFecha().toString());
+        LocalTime hora = DialogosUtil.pedirHora(this, "Hora (HH:mm)", concierto.getHora().toString());
+        String lugar = DialogosUtil.pedirTexto(this, "Lugar", concierto.getLugar());
+        int capacidadTotal = DialogosUtil.pedirEntero(this, "Capacidad total", String.valueOf(concierto.getCapacidadTotal()));
         Integer organizadorId = seleccionarOrganizador(concierto.getOrganizadorId());
         if (organizadorId == null) {
             return;
@@ -316,9 +315,9 @@ public class MenuAdministrador extends MenuBase {
             if (tipo == null) {
                 return;
             }
-            String nombre = pedirTexto("Nombre del sector", "Principal");
-            int capacidad = pedirEntero("Capacidad del sector", "10");
-            String precioStr = pedirTexto("Precio (ej. 100.00)", "100.00");
+            String nombre = DialogosUtil.pedirTexto(this, "Nombre del sector", "Principal");
+            int capacidad = DialogosUtil.pedirEntero(this, "Capacidad del sector", "10");
+            String precioStr = DialogosUtil.pedirTexto(this, "Precio (ej. 100.00)", "100.00");
             BigDecimal precio;
             try {
                 precio = new BigDecimal(precioStr.trim());
@@ -378,9 +377,9 @@ public class MenuAdministrador extends MenuBase {
             if (tipo == null) {
                 return;
             }
-            String nombre = pedirTexto("Nombre del sector", sector.getNombre());
-            int capacidad = pedirEntero("Capacidad del sector", String.valueOf(sector.getCapacidad()));
-            String precioStr = pedirTexto("Precio (ej. 100.00)", sector.getPrecio().toString());
+            String nombre = DialogosUtil.pedirTexto(this, "Nombre del sector", sector.getNombre());
+            int capacidad = DialogosUtil.pedirEntero(this, "Capacidad del sector", String.valueOf(sector.getCapacidad()));
+            String precioStr = DialogosUtil.pedirTexto(this, "Precio (ej. 100.00)", sector.getPrecio().toString());
             BigDecimal precio;
             try {
                 precio = new BigDecimal(precioStr.trim());
@@ -879,10 +878,10 @@ public class MenuAdministrador extends MenuBase {
 
     private void crearUsuario() {
         try {
-            String nombre = pedirTexto("Nombre", "Nombre");
-            String apellido = pedirTexto("Apellido", "Apellido");
-            String email = pedirTexto("Email", "usuario@mail.com");
-            String documento = pedirTextoOpcional("Documento/DNI (opcional)", "");
+            String nombre = DialogosUtil.pedirTexto(this, "Nombre", "Nombre");
+            String apellido = DialogosUtil.pedirTexto(this, "Apellido", "Apellido");
+            String email = DialogosUtil.pedirTexto(this, "Email", "usuario@mail.com");
+            String documento = DialogosUtil.pedirTextoOpcional(this, "Documento/DNI (opcional)", "");
             String rol = seleccionarRol("Comprador");
             if (rol == null) {
                 return;
@@ -909,10 +908,10 @@ public class MenuAdministrador extends MenuBase {
                 return;
             }
 
-            String nombre = pedirTexto("Nombre", usuarioEditado.getNombre());
-            String apellido = pedirTexto("Apellido", usuarioEditado.getApellido());
-            String email = pedirTexto("Email", usuarioEditado.getEmail());
-            String documento = pedirTextoOpcional("Documento/DNI (opcional)", usuarioEditado.getDocumento());
+            String nombre = DialogosUtil.pedirTexto(this, "Nombre", usuarioEditado.getNombre());
+            String apellido = DialogosUtil.pedirTexto(this, "Apellido", usuarioEditado.getApellido());
+            String email = DialogosUtil.pedirTexto(this, "Email", usuarioEditado.getEmail());
+            String documento = DialogosUtil.pedirTextoOpcional(this, "Documento/DNI (opcional)", usuarioEditado.getDocumento());
             String rol = seleccionarRol(usuarioEditado.getRol());
             if (rol == null) {
                 return;
@@ -995,9 +994,9 @@ public class MenuAdministrador extends MenuBase {
             if (concierto == null) {
                 return;
             }
-            String nombre = pedirTexto("Nombre del producto", "Remera");
-            BigDecimal precio = pedirPrecio("35.00");
-            int stock = pedirEntero("Stock", "100");
+            String nombre = DialogosUtil.pedirTexto(this, "Nombre del producto", "Remera");
+            BigDecimal precio = DialogosUtil.pedirPrecio(this, "35.00");
+            int stock = DialogosUtil.pedirEntero(this, "Stock", "100");
             int id = merchandisingService.crearProducto(concierto.getId(), nombre, precio, stock);
             mostrarInfo("Producto creado", "Se creo el producto con ID " + id + ".");
         } catch (IllegalArgumentException e) {
@@ -1014,9 +1013,9 @@ public class MenuAdministrador extends MenuBase {
                 mostrarInfo("Sin producto", "No se encontro el producto indicado.");
                 return;
             }
-            String nombre = pedirTexto("Nombre del producto", producto.getNombre());
-            BigDecimal precio = pedirPrecio(producto.getPrecio().toString());
-            int stock = pedirEntero("Stock", String.valueOf(producto.getStock()));
+            String nombre = DialogosUtil.pedirTexto(this, "Nombre del producto", producto.getNombre());
+            BigDecimal precio = DialogosUtil.pedirPrecio(this, producto.getPrecio().toString());
+            int stock = DialogosUtil.pedirEntero(this, "Stock", String.valueOf(producto.getStock()));
             producto.setNombre(nombre);
             producto.setPrecio(precio);
             producto.setStock(stock);
@@ -1038,7 +1037,7 @@ public class MenuAdministrador extends MenuBase {
                 mostrarInfo("Sin producto", "No se encontro el producto indicado.");
                 return;
             }
-            int stock = pedirEntero("Stock", String.valueOf(producto.getStock()));
+            int stock = DialogosUtil.pedirEntero(this, "Stock", String.valueOf(producto.getStock()));
             if (!confirmarAccion("Actualizar stock",
                     "Desea cambiar el stock de \"" + producto.getNombre() + "\" de "
                             + producto.getStock() + " a " + stock + "?")) {
@@ -1170,98 +1169,6 @@ public class MenuAdministrador extends MenuBase {
                 null,
                 roles,
                 seleccionInicial == null ? "Comprador" : seleccionInicial);
-    }
-
-    private String pedirTexto(String campo, String valorInicial) {
-        String valor = (String) JOptionPane.showInputDialog(this,
-                "Ingrese " + campo,
-                campo,
-                JOptionPane.PLAIN_MESSAGE,
-                null,
-                null,
-                valorInicial);
-        if (valor == null) {
-            throw new IllegalArgumentException("Operacion cancelada.");
-        }
-        if (valor.trim().isEmpty()) {
-            throw new IllegalArgumentException("El campo " + campo + " es obligatorio.");
-        }
-        return valor.trim();
-    }
-
-    private String pedirTextoOpcional(String campo, String valorInicial) {
-        String valor = (String) JOptionPane.showInputDialog(this,
-                "Ingrese " + campo,
-                campo,
-                JOptionPane.PLAIN_MESSAGE,
-                null,
-                null,
-                valorInicial == null ? "" : valorInicial);
-        if (valor == null) {
-            throw new IllegalArgumentException("Operacion cancelada.");
-        }
-        if (valor.trim().isEmpty()) {
-            return null;
-        }
-        return valor.trim();
-    }
-
-    private int pedirEntero(String campo, String valorInicial) {
-        String valor = (String) JOptionPane.showInputDialog(this,
-                "Ingrese " + campo,
-                campo,
-                JOptionPane.PLAIN_MESSAGE,
-                null,
-                null,
-                valorInicial);
-        if (valor == null) {
-            throw new IllegalArgumentException("Operacion cancelada.");
-        }
-        return Integer.parseInt(valor.trim());
-    }
-
-    private BigDecimal pedirPrecio(String valorInicial) {
-        String valor = pedirTexto("Precio (ej. 100.00)", valorInicial);
-        try {
-            return new BigDecimal(valor.trim());
-        } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("Precio invalido.");
-        }
-    }
-
-    private LocalDate pedirFecha(String campo, String valorInicial) {
-        String valor = pedirTextoConDefault(campo, valorInicial);
-        try {
-            return LocalDate.parse(valor);
-        } catch (DateTimeParseException e) {
-            throw new IllegalArgumentException("Formato de fecha invalido. Use yyyy-MM-dd.");
-        }
-    }
-
-    private LocalTime pedirHora(String campo, String valorInicial) {
-        String valor = pedirTextoConDefault(campo, valorInicial);
-        try {
-            return LocalTime.parse(valor);
-        } catch (DateTimeParseException e) {
-            throw new IllegalArgumentException("Formato de hora invalido. Use HH:mm.");
-        }
-    }
-
-    private String pedirTextoConDefault(String campo, String valorInicial) {
-        String valor = (String) JOptionPane.showInputDialog(this,
-                "Ingrese " + campo,
-                campo,
-                JOptionPane.PLAIN_MESSAGE,
-                null,
-                null,
-                valorInicial);
-        if (valor == null) {
-            throw new IllegalArgumentException("Operacion cancelada.");
-        }
-        if (valor.trim().isEmpty()) {
-            throw new IllegalArgumentException("El campo " + campo + " es obligatorio.");
-        }
-        return valor.trim();
     }
 
     private void mostrarInfo(String titulo, String mensaje) {
