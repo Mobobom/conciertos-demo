@@ -48,7 +48,15 @@ public final class DialogosUtil {
         if (valor == null) {
             throw new IllegalArgumentException("Operacion cancelada.");
         }
-        return Integer.parseInt(valor.trim());
+        String texto = valor.trim();
+        if (texto.isEmpty()) {
+            throw new IllegalArgumentException("El campo " + campo + " es obligatorio.");
+        }
+        try {
+            return Integer.parseInt(texto);
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("El campo " + campo + " debe ser un numero entero valido.");
+        }
     }
 
     public static BigDecimal pedirPrecio(Component parent, String valorInicial) {
