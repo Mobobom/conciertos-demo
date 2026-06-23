@@ -1,9 +1,12 @@
 package GUI;
 
+import BLL.CompraMerchandisingResultado;
 import BLL.CompraResultado;
 import BLL.CompraService;
 import BLL.Concierto;
 import BLL.ConciertoService;
+import BLL.Merchandising;
+import BLL.MerchandisingService;
 import BLL.Sector;
 import BLL.SectorService;
 import BLL.Usuario;
@@ -27,12 +30,14 @@ public class MenuComprador extends JFrame {
     private final ConciertoService conciertoService;
     private final SectorService sectorService;
     private final CompraService compraService;
+    private final MerchandisingService merchandisingService;
 
     public MenuComprador(Usuario usuario) {
         this.usuario = usuario;
         this.conciertoService = new ConciertoService();
         this.sectorService = new SectorService();
         this.compraService = new CompraService();
+        this.merchandisingService = new MerchandisingService();
         initialize();
     }
 
@@ -54,7 +59,7 @@ public class MenuComprador extends JFrame {
         JTextArea header = new JTextArea(
                 "Bienvenido " + usuario.getNombre() + " " + usuario.getApellido() + "\n"
                         + "Rol: " + usuario.getRol() + "\n"
-                        + "Use las opciones para comprar tickets.");
+                        + "Use las opciones para comprar tickets y merchandising.");
         header.setEditable(false);
         header.setOpaque(false);
         header.setFocusable(false);
@@ -76,6 +81,9 @@ public class MenuComprador extends JFrame {
         JButton purchasedTicketsButton = new JButton("Tickets comprados");
         purchasedTicketsButton.addActionListener(e -> TicketsCompradosTable.showTable(usuario));
 
+        JButton merchButton = new JButton("Comprar merchandising");
+        merchButton.addActionListener(e -> comprarMerchandising());
+
         JButton closeButton = new JButton("Cerrar");
         closeButton.addActionListener(e -> dispose());
 
@@ -85,6 +93,7 @@ public class MenuComprador extends JFrame {
         panel.add(showButton);
         panel.add(buyButton);
         panel.add(purchasedTicketsButton);
+        panel.add(merchButton);
         panel.add(closeButton);
         panel.add(exitButton);
         return panel;
@@ -97,6 +106,43 @@ public class MenuComprador extends JFrame {
                 return;
             }
             iniciarCompra(concierto);
+        } catch (SQLException e) {
+            mostrarError("Error de base de datos: " + e.getMessage());
+        }
+    }
+
+    private void comprarMerchandising() {
+        try {
+            Concierto concierto = seleccionarConcierto();
+            if (concierto == null) {
+                return;
+            }
+
+            Merchandising merchandising = seleccionarMerchandising(concierto.getId());
+            if (merchandising == null) {
+                return;
+            }
+
+            int cantidad = solicitarCantidadMerchandising(merchandising.getStock());
+            if (cantidad <= 0) {
+                return;
+            }
+
+            String metodoPago = seleccionarMetodoPago();
+            if (metodoPago == null) {
+                return;
+            }
+
+            if (!confirmarCompraMerchandising(merchandising, cantidad, metodoPago)) {
+                return;
+            }
+
+            CompraMerchandisingResultado resultado = merchandisingService.comprarMerchandising(
+                    usuario.getId(), merchandising.getId(), cantidad, metodoPago);
+
+            mostrarResultadoMerchandising(resultado);
+        } catch (IllegalArgumentException e) {
+            mostrarError(e.getMessage());
         } catch (SQLException e) {
             mostrarError("Error de base de datos: " + e.getMessage());
         }
@@ -195,6 +241,29 @@ public class MenuComprador extends JFrame {
         return seleccionado == null ? null : map.get(seleccionado);
     }
 
+    private Merchandising seleccionarMerchandising(int conciertoId) throws SQLException {
+        LinkedList<Merchandising> productos = merchandisingService.listarDisponiblesPorConcierto(conciertoId);
+        if (productos.isEmpty()) {
+            mostrarError("No hay merchandising disponible para el concierto seleccionado.");
+            return null;
+        }
+
+        Map<String, Merchandising> map = new HashMap<>();
+        String[] opciones = new String[productos.size()];
+        for (int i = 0; i < productos.size(); i++) {
+            Merchandising m = productos.get(i);
+            String label = String.format("%d - %s - precio: %s - stock: %d",
+                    m.getId(), m.getNombre(), m.getPrecio(), m.getStock());
+            opciones[i] = label;
+            map.put(label, m);
+        }
+
+        String seleccionado = (String) JOptionPane.showInputDialog(this,
+                "Seleccione merchandising:", "Merchandising disponible",
+                JOptionPane.PLAIN_MESSAGE, null, opciones, opciones[0]);
+        return seleccionado == null ? null : map.get(seleccionado);
+    }
+
     private int solicitarCantidad(int maxDisponibles) {
         while (true) {
             String valor = JOptionPane.showInputDialog(this,
@@ -222,6 +291,56 @@ public class MenuComprador extends JFrame {
                 mostrarError("Cantidad invalida. Ingrese un numero entero.");
             }
         }
+    }
+
+    private int solicitarCantidadMerchandising(int stockDisponible) {
+        while (true) {
+            String valor = JOptionPane.showInputDialog(this,
+                    "Ingrese cantidad de productos (stock " + stockDisponible + "):",
+                    "Cantidad de merchandising", JOptionPane.QUESTION_MESSAGE);
+            if (valor == null) {
+                return 0;
+            }
+            try {
+                int cantidad = Integer.parseInt(valor.trim());
+                if (cantidad <= 0) {
+                    mostrarError("La cantidad debe ser mayor a cero.");
+                    continue;
+                }
+                if (cantidad > stockDisponible) {
+                    mostrarError("No hay stock suficiente para el producto seleccionado.");
+                    continue;
+                }
+                return cantidad;
+            } catch (NumberFormatException e) {
+                mostrarError("Cantidad invalida. Ingrese un numero entero.");
+            }
+        }
+    }
+
+    private boolean confirmarCompraMerchandising(Merchandising merchandising, int cantidad, String metodoPago) {
+        String mensaje = "Producto: " + merchandising.getNombre() + "\n"
+                + "Cantidad: " + cantidad + "\n"
+                + "Precio unitario: " + merchandising.getPrecio() + "\n"
+                + "Total: " + merchandising.getPrecio().multiply(java.math.BigDecimal.valueOf(cantidad)) + "\n"
+                + "Metodo de pago: " + metodoPago + "\n\n"
+                + "Desea confirmar la compra?";
+        int opcion = JOptionPane.showConfirmDialog(this, mensaje,
+                "Confirmar compra de merchandising", JOptionPane.YES_NO_OPTION);
+        return opcion == JOptionPane.YES_OPTION;
+    }
+
+    private void mostrarResultadoMerchandising(CompraMerchandisingResultado resultado) {
+        StringBuilder mensaje = new StringBuilder();
+        mensaje.append("Compra de merchandising exitosa:\n");
+        mensaje.append("Compra ID: ").append(resultado.getCompraId()).append("\n");
+        mensaje.append("Pago ID: ").append(resultado.getPagoId()).append("\n");
+        mensaje.append("Detalle ID: ").append(resultado.getCompraMerchandisingId()).append("\n");
+        mensaje.append("Producto: ").append(resultado.getMerchandising().getNombre()).append("\n");
+        mensaje.append("Cantidad: ").append(resultado.getCantidad()).append("\n");
+        mensaje.append("Total: ").append(resultado.getTotal()).append("\n");
+        JOptionPane.showMessageDialog(this, mensaje.toString(), "Compra completada",
+                JOptionPane.INFORMATION_MESSAGE);
     }
 
     private String seleccionarMetodoPago() {
