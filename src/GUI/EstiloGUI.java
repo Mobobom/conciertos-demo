@@ -29,7 +29,7 @@ public final class EstiloGUI {
     public static final int ESPACIADO = 12;
     public static final Dimension TAMANIO_BOTON = new Dimension(220, 44);
     public static final Dimension TAMANIO_LOGIN = new Dimension(760, 500);
-    public static final Dimension TAMANIO_MENU_ROL = new Dimension(820, 520);
+    public static final Dimension TAMANIO_MENU_ROL = new Dimension(960, 720);
 
     private EstiloGUI() {
     }

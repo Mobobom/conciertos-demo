@@ -30,6 +30,7 @@ import java.util.function.BiFunction;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
 import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -95,33 +96,37 @@ public class MenuAdministrador extends JFrame {
         return panel;
     }
 
-    private JPanel buildButtons() {
-        JPanel panel = new JPanel(new GridLayout(0, 2, EstiloGUI.ESPACIADO, EstiloGUI.ESPACIADO));
+    private JScrollPane buildButtons() {
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         EstiloGUI.aplicarPanelContenido(panel);
 
-        addButton(panel, "Listar conciertos activos", "search", e -> mostrarConciertosActivos());
-        addButton(panel, "Listar todos los conciertos", "report", e -> mostrarTodosLosConciertos());
-        addButton(panel, "Crear concierto", "add", e -> crearConcierto());
-        addButton(panel, "Modificar concierto", "edit", e -> modificarConcierto());
-        addButton(panel, "Cancelar concierto", "exit", e -> cancelarConcierto());
-        addButton(panel, "Ver disponibilidad", "search", e -> verDisponibilidadConcierto());
-        addButton(panel, "Ver sectores", "concert", e -> verSectoresDeConcierto());
-        addButton(panel, "Crear sector", "add", e -> crearSector());
-        addButton(panel, "Crear tickets de sector", "ticket", e -> crearTicketsDeSector());
-        addButton(panel, "Ver tickets", "ticket", e -> verTicketsDeConcierto());
-        addButton(panel, "Bloquear ticket", "exit", e -> bloquearTicket());
-        addButton(panel, "Liberar ticket", "validate", e -> liberarTicket());
-        addButton(panel, "Gestionar merchandising", "merchandising", e -> gestionarMerchandising());
-        addButton(panel, "Gestionar usuarios", "user", e -> gestionarUsuarios());
-        addButton(panel, "Cambiar password", "edit", e -> PasswordDialogs.cambiarPassword(this, usuario));
-        addButton(panel, "Volver al login", "logout", e -> cerrarSesion());
-        addButton(panel, "Cerrar sistema", "exit", e -> System.exit(0));
+        panel.add(new AdminConciertosPanel(
+                e -> mostrarConciertosActivos(),
+                e -> mostrarTodosLosConciertos(),
+                e -> crearConcierto(),
+                e -> modificarConcierto(),
+                e -> cancelarConcierto(),
+                e -> verDisponibilidadConcierto()));
+        panel.add(new AdminSectoresPanel(
+                e -> verSectoresDeConcierto(),
+                e -> crearSector(),
+                e -> crearTicketsDeSector()));
+        panel.add(new AdminTicketsPanel(
+                e -> verTicketsDeConcierto(),
+                e -> bloquearTicket(),
+                e -> liberarTicket()));
+        panel.add(new AdminOtrosPanel(
+                e -> gestionarMerchandising(),
+                e -> gestionarUsuarios(),
+                e -> PasswordDialogs.cambiarPassword(this, usuario),
+                e -> cerrarSesion(),
+                e -> System.exit(0)));
 
-        return panel;
-    }
-
-    private void addButton(JPanel panel, String label, String icon, java.awt.event.ActionListener action) {
-        panel.add(BotonHelper.crearBoton(label, icon, action));
+        JScrollPane scrollPane = new JScrollPane(panel);
+        scrollPane.setBorder(BorderFactory.createEmptyBorder());
+        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
+        return scrollPane;
     }
 
     @Override
