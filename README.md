@@ -104,10 +104,10 @@ admin@ticket.com / admin123
 juan@mail.com / 1234
 ```
 
-En consola se verá:
+En la salida de logs se vera un mensaje similar a:
 
 ```
-Conexion: conectado a jdbc:mysql://localhost:3306/ticketing?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+INFO: Conexion establecida con jdbc:mysql://localhost:3306/ticketing?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
 ```
 
 La ventana **"Conciertos disponibles"** muestra las columnas *ID, Artista, Fecha, Hora, Lugar, Capacidad, Disponibles* con dos filas de prueba: *Coldplay* (15/06/2026, Estadio Monumental) y *Taylor Swift* (20/08/2026, Estadio Velez), ambas con 60 entradas disponibles. Bajo la tabla hay una barra de botones (**Subir / Bajar / Actualizar / Cerrar**, y **Comprar seleccionado** cuando se abre desde el menú del comprador).

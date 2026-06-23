@@ -3,8 +3,12 @@ package DLL;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class Conexion {
+
+    private static final Logger LOGGER = Logger.getLogger(Conexion.class.getName());
 
     private static final String URL =
         "jdbc:mysql://localhost:3306/ticketing?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC";
@@ -18,7 +22,7 @@ public class Conexion {
         try {
             connectOrThrow();
         } catch (SQLException e) {
-            System.out.println("Conexion: error -> " + e.getMessage());
+            LOGGER.log(Level.SEVERE, "No se pudo conectar a la base de datos.", e);
         }
     }
 
@@ -35,7 +39,7 @@ public class Conexion {
                 connectOrThrow();
             }
         } catch (SQLException e) {
-            System.out.println("Conexion: error -> " + e.getMessage());
+            LOGGER.log(Level.SEVERE, "No se pudo obtener la conexion a la base de datos.", e);
         }
         return conect;
     }
@@ -49,6 +53,6 @@ public class Conexion {
 
     private void connectOrThrow() throws SQLException {
         conect = DriverManager.getConnection(URL, USER, PASSWORD);
-        System.out.println("Conexion: conectado a " + URL);
+        LOGGER.log(Level.INFO, "Conexion establecida con {0}", URL);
     }
 }
