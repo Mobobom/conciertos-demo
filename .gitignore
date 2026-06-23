@@ -5,6 +5,7 @@ Docs/
 bin/
 out/
 *.class
+temp/
 
 # IntelliJ IDEA local metadata
 .idea/
