@@ -118,7 +118,7 @@ En la salida de logs se vera un mensaje similar a:
 INFO: Conexion establecida con jdbc:mysql://localhost:3306/ticketing?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
 ```
 
-La ventana **"Conciertos disponibles"** muestra las columnas *ID, Artista, Fecha, Hora, Lugar, Capacidad, Disponibles* con dos filas de prueba: *Coldplay* (15/06/2026, Estadio Monumental) y *Taylor Swift* (20/08/2026, Estadio Velez), ambas con 60 entradas disponibles. Bajo la tabla hay una barra de botones (**Subir / Bajar / Actualizar / Cerrar**, y **Comprar seleccionado** cuando se abre desde el menú del comprador).
+La ventana **"Conciertos disponibles"** muestra las columnas *ID, Artista, Fecha, Hora, Lugar, Capacidad, Disponibles* con dos filas de prueba: *Coldplay* (15/06/2026, Estadio Monumental) y *Taylor Swift* (20/08/2026, Estadio Velez), ambas con 60 entradas disponibles. Bajo la tabla hay una barra de botones (**Actualizar / Cerrar**, y **Comprar seleccionado** cuando se abre desde el menú del comprador).
 
 ## Flujo de la aplicación y roles
 
@@ -133,7 +133,7 @@ Administrador y Organizador acceden directamente a su menú de gestión; Comprad
 
 Todos los roles pueden cambiar su propio password desde su menú. El administrador además puede listar, crear, editar, eliminar usuarios y restablecer passwords desde **Gestionar usuarios**; el campo `Documento/DNI` es opcional y representa el número de documento del usuario.
 
-Las tablas de conciertos, sectores y tickets incluyen una barra de botones para operar sobre la **fila seleccionada** (editar, eliminar, cancelar, bloquear/liberar, según la pantalla), además de **Subir/Bajar** para reordenar la vista, **Actualizar** para recargar desde la base de datos y **Cerrar**. El reordenamiento es solo visual y no se persiste.
+Las tablas de conciertos, sectores y tickets incluyen una barra de botones para operar sobre la **fila seleccionada** (editar, eliminar, cancelar, bloquear/liberar, según la pantalla), además de **Actualizar** para recargar desde la base de datos y **Cerrar**.
 
 ## Datos de prueba
 
