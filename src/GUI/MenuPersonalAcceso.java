@@ -70,10 +70,13 @@ public class MenuPersonalAcceso extends JFrame {
         EstiloGUI.aplicarPanel(grid);
 
         JButton validateButton = BotonHelper.crearBoton("Validar codigo de ticket", "validate", e -> validarTicket());
+        JButton passwordButton = BotonHelper.crearBoton("Cambiar password", "edit",
+                e -> PasswordDialogs.cambiarPassword(this, usuario));
         JButton closeButton = BotonHelper.crearBoton("Volver al login", "logout", e -> cerrarSesion());
         JButton exitButton = BotonHelper.crearBoton("Cerrar sistema", "exit", e -> System.exit(0));
 
         grid.add(validateButton);
+        grid.add(passwordButton);
         grid.add(closeButton);
         grid.add(exitButton);
         panel.add(grid, BorderLayout.NORTH);
