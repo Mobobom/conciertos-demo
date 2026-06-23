@@ -94,6 +94,9 @@ public class MenuPersonalAcceso extends JFrame {
             if (ticket == null) {
                 return;
             }
+            if (!confirmarValidacionTicket(ticket)) {
+                return;
+            }
 
             ValidacionTicketResult resultado = ticketService.validarAcceso(ticket.getCodigo());
             int tipo = resultado.isValido() ? JOptionPane.INFORMATION_MESSAGE : JOptionPane.WARNING_MESSAGE;
@@ -182,5 +185,14 @@ public class MenuPersonalAcceso extends JFrame {
                 opciones[0]);
 
         return seleccionado == null ? null : ticketsPorEtiqueta.get(seleccionado);
+    }
+
+    private boolean confirmarValidacionTicket(Ticket ticket) {
+        String mensaje = "Codigo: " + ticket.getCodigo() + "\n"
+                + "Estado actual: " + ticket.getEstado() + "\n\n"
+                + "Desea validar este ticket?";
+        int opcion = JOptionPane.showConfirmDialog(this, mensaje,
+                "Confirmar validacion", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+        return opcion == JOptionPane.YES_OPTION;
     }
 }
