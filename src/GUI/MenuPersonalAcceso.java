@@ -68,14 +68,9 @@ public class MenuPersonalAcceso extends JFrame {
         JPanel panel = new JPanel(new GridLayout(0, 1, 10, 10));
         panel.setBorder(BorderFactory.createEmptyBorder(15, 80, 25, 80));
 
-        JButton validateButton = new JButton("Validar codigo de ticket");
-        validateButton.addActionListener(e -> validarTicket());
-
-        JButton closeButton = new JButton("Cerrar");
-        closeButton.addActionListener(e -> dispose());
-
-        JButton exitButton = new JButton("Salir");
-        exitButton.addActionListener(e -> System.exit(0));
+        JButton validateButton = BotonHelper.crearBoton("Validar codigo de ticket", "validate", e -> validarTicket());
+        JButton closeButton = BotonHelper.crearBoton("Cerrar", "exit", e -> dispose());
+        JButton exitButton = BotonHelper.crearBoton("Salir", "logout", e -> System.exit(0));
 
         panel.add(validateButton);
         panel.add(closeButton);

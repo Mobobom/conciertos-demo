@@ -72,19 +72,17 @@ public class MenuComprador extends JFrame {
         JPanel panel = new JPanel(new GridLayout(0, 2, 10, 10));
         panel.setBorder(BorderFactory.createEmptyBorder(10, 20, 20, 20));
 
-        addButton(panel, "Ver conciertos disponibles", e -> ShowConciertosTable.showTable(this::iniciarCompra));
-        addButton(panel, "Comprar tickets", e -> comprarTickets());
-        addButton(panel, "Tickets comprados", e -> TicketsCompradosTable.showTable(usuario));
-        addButton(panel, "Ver catalogo merchandising", e -> verCatalogoMerchandising());
-        addButton(panel, "Comprar merchandising", e -> comprarMerchandising());
-        addButton(panel, "Cerrar sesion", e -> cerrarSesion());
+        addButton(panel, "Ver conciertos disponibles", "search", e -> ShowConciertosTable.showTable(this::iniciarCompra));
+        addButton(panel, "Comprar tickets", "buy", e -> comprarTickets());
+        addButton(panel, "Tickets comprados", "ticket", e -> TicketsCompradosTable.showTable(usuario));
+        addButton(panel, "Ver catalogo merchandising", "merchandising", e -> verCatalogoMerchandising());
+        addButton(panel, "Comprar merchandising", "buy", e -> comprarMerchandising());
+        addButton(panel, "Cerrar sesion", "logout", e -> cerrarSesion());
         return panel;
     }
 
-    private void addButton(JPanel panel, String label, java.awt.event.ActionListener action) {
-        JButton button = new JButton(label);
-        button.addActionListener(action);
-        panel.add(button);
+    private void addButton(JPanel panel, String label, String icon, java.awt.event.ActionListener action) {
+        panel.add(BotonHelper.crearBoton(label, icon, action));
     }
 
     private void cerrarSesion() {

@@ -1,6 +1,7 @@
 package GUI;
 
 import java.awt.event.ActionListener;
+import java.io.File;
 import java.net.URL;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -39,6 +40,22 @@ public final class BotonHelper {
 
         String nombreArchivo = icono.endsWith(PNG_EXTENSION) ? icono : icono + PNG_EXTENSION;
         URL iconUrl = BotonHelper.class.getResource(ICONS_PATH + nombreArchivo);
-        return iconUrl == null ? null : new ImageIcon(iconUrl);
+        if (iconUrl != null) {
+            return new ImageIcon(iconUrl);
+        }
+
+        String[] rutasAlternativas = {
+                "src/resources/icons/" + nombreArchivo,
+                "bin/resources/icons/" + nombreArchivo,
+                "target/classes/resources/icons/" + nombreArchivo
+        };
+        for (String ruta : rutasAlternativas) {
+            File archivo = new File(ruta);
+            if (archivo.isFile()) {
+                return new ImageIcon(archivo.getAbsolutePath());
+            }
+        }
+
+        return null;
     }
 }

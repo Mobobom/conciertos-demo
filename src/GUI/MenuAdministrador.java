@@ -97,29 +97,27 @@ public class MenuAdministrador extends JFrame {
         JPanel panel = new JPanel(new GridLayout(0, 2, 10, 10));
         panel.setBorder(BorderFactory.createEmptyBorder(10, 20, 20, 20));
 
-        addButton(panel, "Listar conciertos activos", e -> mostrarConciertosActivos());
-        addButton(panel, "Listar todos los conciertos", e -> mostrarTodosLosConciertos());
-        addButton(panel, "Crear concierto", e -> crearConcierto());
-        addButton(panel, "Modificar concierto", e -> modificarConcierto());
-        addButton(panel, "Cancelar concierto", e -> cancelarConcierto());
-        addButton(panel, "Ver disponibilidad", e -> verDisponibilidadConcierto());
-        addButton(panel, "Ver sectores", e -> verSectoresDeConcierto());
-        addButton(panel, "Crear sector", e -> crearSector());
-        addButton(panel, "Crear tickets de sector", e -> crearTicketsDeSector());
-        addButton(panel, "Ver tickets", e -> verTicketsDeConcierto());
-        addButton(panel, "Bloquear ticket", e -> bloquearTicket());
-        addButton(panel, "Liberar ticket", e -> liberarTicket());
-        addButton(panel, "Gestionar merchandising", e -> gestionarMerchandising());
-        addButton(panel, "Cerrar sesion", e -> cerrarSesion());
-        addButton(panel, "Cerrar menu", e -> dispose());
+        addButton(panel, "Listar conciertos activos", "search", e -> mostrarConciertosActivos());
+        addButton(panel, "Listar todos los conciertos", "report", e -> mostrarTodosLosConciertos());
+        addButton(panel, "Crear concierto", "add", e -> crearConcierto());
+        addButton(panel, "Modificar concierto", "edit", e -> modificarConcierto());
+        addButton(panel, "Cancelar concierto", "delete", e -> cancelarConcierto());
+        addButton(panel, "Ver disponibilidad", "search", e -> verDisponibilidadConcierto());
+        addButton(panel, "Ver sectores", "concert", e -> verSectoresDeConcierto());
+        addButton(panel, "Crear sector", "add", e -> crearSector());
+        addButton(panel, "Crear tickets de sector", "ticket", e -> crearTicketsDeSector());
+        addButton(panel, "Ver tickets", "ticket", e -> verTicketsDeConcierto());
+        addButton(panel, "Bloquear ticket", "delete", e -> bloquearTicket());
+        addButton(panel, "Liberar ticket", "validate", e -> liberarTicket());
+        addButton(panel, "Gestionar merchandising", "merchandising", e -> gestionarMerchandising());
+        addButton(panel, "Cerrar sesion", "logout", e -> cerrarSesion());
+        addButton(panel, "Cerrar menu", "exit", e -> dispose());
 
         return panel;
     }
 
-    private void addButton(JPanel panel, String label, java.awt.event.ActionListener action) {
-        JButton button = new JButton(label);
-        button.addActionListener(action);
-        panel.add(button);
+    private void addButton(JPanel panel, String label, String icon, java.awt.event.ActionListener action) {
+        panel.add(BotonHelper.crearBoton(label, icon, action));
     }
 
     private void mostrarConciertosActivos() {

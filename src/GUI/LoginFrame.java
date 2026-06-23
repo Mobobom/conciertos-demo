@@ -102,14 +102,9 @@ public class LoginFrame extends JFrame {
         JPanel panel = new JPanel();
         panel.setBorder(BorderFactory.createEmptyBorder(5, 15, 15, 15));
 
-        JButton loginButton = new JButton("Ingresar");
-        loginButton.addActionListener(e -> login());
-
-        JButton clearButton = new JButton("Limpiar");
-        clearButton.addActionListener(e -> clearForm());
-
-        JButton exitButton = new JButton("Salir");
-        exitButton.addActionListener(e -> System.exit(0));
+        JButton loginButton = BotonHelper.crearBoton("Ingresar", "login", e -> login());
+        JButton clearButton = BotonHelper.crearBoton("Limpiar", "delete", e -> clearForm());
+        JButton exitButton = BotonHelper.crearBoton("Salir", "exit", e -> System.exit(0));
 
         panel.add(loginButton);
         panel.add(clearButton);
@@ -163,4 +158,3 @@ public class LoginFrame extends JFrame {
         emailField.requestFocusInWindow();
     }
 }
-
