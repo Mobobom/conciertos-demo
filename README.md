@@ -97,6 +97,14 @@ java -cp "bin:lib/*" GUI.Main
 > El conector JDBC (`lib/mysql-connector-j-8.4.0.jar`) debe estar en el classpath
 > tanto al compilar como al ejecutar cuando se usa la opcion manual; por eso ambos comandos incluyen `lib/*`.
 
+### Tests unitarios
+
+```bash
+mvn test
+```
+
+Los tests unitarios cubren validaciones de servicios BLL con controladores falsos, por lo que no requieren una base de datos MySQL activa.
+
 Al iniciar, se abrirá la pantalla de **Login**. Se puede probar con:
 
 ```text
