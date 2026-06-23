@@ -9,9 +9,8 @@ import BLL.TicketService;
 import BLL.Usuario;
 import BLL.ValidacionTicketResult;
 
-import javax.swing.BorderFactory;
 import javax.swing.JButton;
-import javax.swing.JFrame;
+import javax.swing.JComponent;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
@@ -22,34 +21,27 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
 
-public class MenuPersonalAcceso extends JFrame {
+public class MenuPersonalAcceso extends MenuBase {
 
-    private final Usuario usuario;
     private final ConciertoService conciertoService;
     private final SectorService sectorService;
     private final TicketService ticketService;
 
     public MenuPersonalAcceso(Usuario usuario) {
-        this.usuario = usuario;
+        super(usuario);
         this.conciertoService = new ConciertoService();
         this.sectorService = new SectorService();
         this.ticketService = new TicketService();
-        initialize();
+        inicializarMenu("Menu Personal de Acceso - " + usuario.getNombre());
     }
 
-    private void initialize() {
-        setTitle("Menu Personal de Acceso - " + usuario.getNombre());
-        EstiloGUI.aplicarTamanioMenuRol(this);
-        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setLocationRelativeTo(null);
-        setLayout(new BorderLayout(10, 10));
-        EstiloGUI.aplicarVentana(this);
-
-        add(buildHeader(), BorderLayout.NORTH);
-        add(buildButtons(), BorderLayout.CENTER);
+    @Override
+    protected String getTituloPanel() {
+        return "Panel de Personal de Acceso";
     }
 
-    private JPanel buildHeader() {
+    @Override
+    protected JComponent crearCabecera() {
         JPanel panel = new JPanel(new BorderLayout());
         EstiloGUI.aplicarPanelCabecera(panel);
 
@@ -62,7 +54,8 @@ public class MenuPersonalAcceso extends JFrame {
         return panel;
     }
 
-    private JPanel buildButtons() {
+    @Override
+    protected JComponent crearContenido() {
         JPanel panel = new JPanel(new BorderLayout());
         EstiloGUI.aplicarPanelContenido(panel);
 
@@ -72,20 +65,13 @@ public class MenuPersonalAcceso extends JFrame {
         JButton validateButton = BotonHelper.crearBoton("Validar codigo de ticket", "validate", e -> validarTicket());
         JButton passwordButton = BotonHelper.crearBoton("Cambiar password", "edit",
                 e -> PasswordDialogs.cambiarPassword(this, usuario));
-        JButton closeButton = BotonHelper.crearBoton("Volver al login", "logout", e -> cerrarSesion());
-        JButton exitButton = BotonHelper.crearBoton("Cerrar sistema", "exit", e -> System.exit(0));
 
         grid.add(validateButton);
         grid.add(passwordButton);
-        grid.add(closeButton);
-        grid.add(exitButton);
+        grid.add(crearBotonVolverLogin());
+        grid.add(crearBotonCerrarSistema());
         panel.add(grid, BorderLayout.NORTH);
         return panel;
-    }
-
-    private void cerrarSesion() {
-        dispose();
-        new LoginFrame().setVisible(true);
     }
 
     private void validarTicket() {

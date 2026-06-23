@@ -3,6 +3,7 @@ package GUI;
 import java.awt.GridLayout;
 import java.awt.event.ActionListener;
 import javax.swing.BorderFactory;
+import javax.swing.JButton;
 import javax.swing.JPanel;
 
 public class AdminOtrosPanel extends JPanel {
@@ -11,8 +12,8 @@ public class AdminOtrosPanel extends JPanel {
             ActionListener gestionarMerchandising,
             ActionListener gestionarUsuarios,
             ActionListener cambiarPassword,
-            ActionListener volverLogin,
-            ActionListener cerrarSistema) {
+            JButton volverLogin,
+            JButton cerrarSistema) {
         setLayout(new GridLayout(0, 2, EstiloGUI.ESPACIADO, EstiloGUI.ESPACIADO));
         EstiloGUI.aplicarPanel(this);
         setBorder(BorderFactory.createTitledBorder("Administracion"));
@@ -20,7 +21,7 @@ public class AdminOtrosPanel extends JPanel {
         add(BotonHelper.crearBoton("Gestionar merchandising", "merchandising", gestionarMerchandising));
         add(BotonHelper.crearBoton("Gestionar usuarios", "user", gestionarUsuarios));
         add(BotonHelper.crearBoton("Cambiar password", "edit", cambiarPassword));
-        add(BotonHelper.crearBoton("Volver al login", "logout", volverLogin));
-        add(BotonHelper.crearBoton("Cerrar sistema", "exit", cerrarSistema));
+        add(volverLogin);
+        add(cerrarSistema);
     }
 }

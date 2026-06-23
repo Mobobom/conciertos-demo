@@ -11,13 +11,11 @@ import BLL.Sector;
 import BLL.SectorService;
 import BLL.Usuario;
 
-import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JFrame;
-import javax.swing.JLabel;
+import javax.swing.JComponent;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.SwingConstants;
 import java.awt.BorderLayout;
 import java.awt.GridLayout;
 import java.awt.event.WindowAdapter;
@@ -27,9 +25,8 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
 
-public class MenuComprador extends JFrame {
+public class MenuComprador extends MenuBase {
 
-    private final Usuario usuario;
     private final ConciertoService conciertoService;
     private final SectorService sectorService;
     private final CompraService compraService;
@@ -37,44 +34,22 @@ public class MenuComprador extends JFrame {
     private final LinkedList<JFrame> openTableFrames;
 
     public MenuComprador(Usuario usuario) {
-        this.usuario = usuario;
+        super(usuario);
         this.conciertoService = new ConciertoService();
         this.sectorService = new SectorService();
         this.compraService = new CompraService();
         this.merchandisingService = new MerchandisingService();
         this.openTableFrames = new LinkedList<>();
-        initialize();
+        inicializarMenu("Menu Comprador");
     }
 
-    private void initialize() {
-        setTitle("Menu Comprador");
-        EstiloGUI.aplicarTamanioMenuRol(this);
-        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setLocationRelativeTo(null);
-        setLayout(new BorderLayout(10, 10));
-        EstiloGUI.aplicarVentana(this);
-
-        add(buildHeader(), BorderLayout.NORTH);
-        add(buildButtons(), BorderLayout.CENTER);
+    @Override
+    protected String getTituloPanel() {
+        return "Panel de Comprador";
     }
 
-    private JPanel buildHeader() {
-        JPanel panel = new JPanel(new BorderLayout());
-        EstiloGUI.aplicarPanelCabecera(panel);
-
-        JLabel title = new JLabel("Panel de Comprador", SwingConstants.CENTER);
-        EstiloGUI.aplicarTitulo(title);
-        panel.add(title, BorderLayout.NORTH);
-
-        JLabel subtitle = new JLabel(
-                usuario.getNombre() + " " + usuario.getApellido() + " | " + usuario.getEmail(),
-                SwingConstants.CENTER);
-        EstiloGUI.aplicarTextoSecundario(subtitle);
-        panel.add(subtitle, BorderLayout.CENTER);
-        return panel;
-    }
-
-    private JPanel buildButtons() {
+    @Override
+    protected JComponent crearContenido() {
         JPanel panel = new JPanel(new BorderLayout());
         EstiloGUI.aplicarPanelContenido(panel);
 
@@ -89,13 +64,9 @@ public class MenuComprador extends JFrame {
         addButton(grid, "Ver catalogo merchandising", "merchandising", e -> verCatalogoMerchandising());
         addButton(grid, "Comprar merchandising", "buy", e -> comprarMerchandising());
         addButton(grid, "Cambiar password", "edit", e -> PasswordDialogs.cambiarPassword(this, usuario));
-        addButton(grid, "Volver al login", "logout", e -> cerrarSesion());
+        grid.add(crearBotonVolverLogin());
         panel.add(grid, BorderLayout.NORTH);
         return panel;
-    }
-
-    private void addButton(JPanel panel, String label, String icon, java.awt.event.ActionListener action) {
-        panel.add(BotonHelper.crearBoton(label, icon, action));
     }
 
     @Override
@@ -124,11 +95,6 @@ public class MenuComprador extends JFrame {
             }
         }
         openTableFrames.clear();
-    }
-
-    private void cerrarSesion() {
-        dispose();
-        new LoginFrame().setVisible(true);
     }
 
     private void comprarTickets() {

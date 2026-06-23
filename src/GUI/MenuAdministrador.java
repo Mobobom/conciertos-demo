@@ -30,17 +30,15 @@ import java.util.function.Supplier;
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
+import javax.swing.JComponent;
 import javax.swing.JFrame;
-import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
-import javax.swing.SwingConstants;
 
-public class MenuAdministrador extends JFrame {
+public class MenuAdministrador extends MenuBase {
 
-    private final Usuario usuario;
     private final ConciertoService conciertoService;
     private final SectorService sectorService;
     private final UsuarioService usuarioService;
@@ -49,46 +47,23 @@ public class MenuAdministrador extends JFrame {
     private final Map<String, JFrame> openTableFrames;
 
     public MenuAdministrador(Usuario usuario) {
-        this.usuario = usuario;
+        super(usuario);
         this.conciertoService = new ConciertoService();
         this.sectorService = new SectorService();
         this.usuarioService = new UsuarioService();
         this.ticketService = new TicketService();
         this.merchandisingService = new MerchandisingService();
         this.openTableFrames = new HashMap<>();
-        initialize();
+        inicializarMenu("Menu Administrador");
     }
 
-    private void initialize() {
-        setTitle("Menu Administrador");
-        EstiloGUI.aplicarTamanioMenuRol(this);
-        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setLocationRelativeTo(null);
-        setLayout(new BorderLayout(10, 10));
-        EstiloGUI.aplicarVentana(this);
-
-        add(buildHeader(), BorderLayout.NORTH);
-        add(buildButtons(), BorderLayout.CENTER);
+    @Override
+    protected String getTituloPanel() {
+        return "Panel de Administrador";
     }
 
-    private JPanel buildHeader() {
-        JPanel panel = new JPanel(new BorderLayout());
-        EstiloGUI.aplicarPanelCabecera(panel);
-
-        JLabel title = new JLabel("Panel de Administrador", SwingConstants.CENTER);
-        EstiloGUI.aplicarTitulo(title);
-        panel.add(title, BorderLayout.NORTH);
-
-        JLabel subtitle = new JLabel(
-                usuario.getNombre() + " " + usuario.getApellido() + " | " + usuario.getEmail(),
-                SwingConstants.CENTER);
-        EstiloGUI.aplicarTextoSecundario(subtitle);
-        panel.add(subtitle, BorderLayout.CENTER);
-
-        return panel;
-    }
-
-    private JScrollPane buildButtons() {
+    @Override
+    protected JComponent crearContenido() {
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         EstiloGUI.aplicarPanelContenido(panel);
@@ -112,8 +87,8 @@ public class MenuAdministrador extends JFrame {
                 e -> gestionarMerchandising(),
                 e -> gestionarUsuarios(),
                 e -> PasswordDialogs.cambiarPassword(this, usuario),
-                e -> cerrarSesion(),
-                e -> System.exit(0)));
+                crearBotonVolverLogin(),
+                crearBotonCerrarSistema()));
 
         JScrollPane scrollPane = new JScrollPane(panel);
         scrollPane.setBorder(BorderFactory.createEmptyBorder());
@@ -607,11 +582,6 @@ public class MenuAdministrador extends JFrame {
             conciertosPorId.put(concierto.getId(), concierto);
         }
         return conciertosPorId;
-    }
-
-    private void cerrarSesion() {
-        dispose();
-        new LoginFrame().setVisible(true);
     }
 
     private void cerrarTablasAbiertas() {

@@ -26,6 +26,7 @@ import java.util.function.Supplier;
 import java.util.regex.Pattern;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
+import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -40,53 +41,29 @@ import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableRowSorter;
 
-public class MenuOrganizador extends JFrame {
+public class MenuOrganizador extends MenuBase {
 
-    private final Usuario usuario;
     private final ConciertoService conciertoService;
     private final SectorService sectorService;
     private final UsuarioService usuarioService;
     private final Map<String, JFrame> openTableFrames;
 
     public MenuOrganizador(Usuario usuario) {
-        this.usuario = usuario;
+        super(usuario);
         this.conciertoService = new ConciertoService();
         this.sectorService = new SectorService();
         this.usuarioService = new UsuarioService();
         this.openTableFrames = new HashMap<>();
-        initialize();
+        inicializarMenu("Menu Organizador");
     }
 
-    private void initialize() {
-        setTitle("Menu Organizador");
-        EstiloGUI.aplicarTamanioMenuRol(this);
-        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setLocationRelativeTo(null);
-        setLayout(new BorderLayout(10, 10));
-        EstiloGUI.aplicarVentana(this);
-
-        add(buildHeader(), BorderLayout.NORTH);
-        add(buildButtons(), BorderLayout.CENTER);
+    @Override
+    protected String getTituloPanel() {
+        return "Panel de Organizador";
     }
 
-    private JPanel buildHeader() {
-        JPanel panel = new JPanel(new BorderLayout());
-        EstiloGUI.aplicarPanelCabecera(panel);
-
-        JLabel title = new JLabel("Panel de Organizador", SwingConstants.CENTER);
-        EstiloGUI.aplicarTitulo(title);
-        panel.add(title, BorderLayout.NORTH);
-
-        JLabel subtitle = new JLabel(
-                usuario.getNombre() + " " + usuario.getApellido() + " | " + usuario.getEmail(),
-                SwingConstants.CENTER);
-        EstiloGUI.aplicarTextoSecundario(subtitle);
-        panel.add(subtitle, BorderLayout.CENTER);
-
-        return panel;
-    }
-
-    private JPanel buildButtons() {
+    @Override
+    protected JComponent crearContenido() {
         JPanel panel = new JPanel(new BorderLayout());
         EstiloGUI.aplicarPanelContenido(panel);
 
@@ -98,15 +75,11 @@ public class MenuOrganizador extends JFrame {
         addButton(grid, "Modificar concierto", "edit", e -> modificarConcierto());
         addButton(grid, "Ver informacion del evento", "report", e -> verInformacionEvento());
         addButton(grid, "Cambiar password", "edit", e -> PasswordDialogs.cambiarPassword(this, usuario));
-        addButton(grid, "Volver al login", "logout", e -> cerrarSesion());
-        addButton(grid, "Cerrar sistema", "exit", e -> System.exit(0));
+        grid.add(crearBotonVolverLogin());
+        grid.add(crearBotonCerrarSistema());
         panel.add(grid, BorderLayout.NORTH);
 
         return panel;
-    }
-
-    private void addButton(JPanel panel, String label, String icon, java.awt.event.ActionListener action) {
-        panel.add(BotonHelper.crearBoton(label, icon, action));
     }
 
     @Override
@@ -376,11 +349,6 @@ public class MenuOrganizador extends JFrame {
                 seleccionInicial);
 
         return seleccionado == null ? null : opcionesPorEtiqueta.get(seleccionado);
-    }
-
-    private void cerrarSesion() {
-        dispose();
-        new LoginFrame().setVisible(true);
     }
 
     private void cerrarTablasAbiertas() {
