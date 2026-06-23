@@ -1268,16 +1268,10 @@ public class MenuAdministrador extends JFrame {
             }
         }
 
-        JButton subir = new JButton("Subir");
-        subir.addActionListener(e -> moverFila(table, -1));
-        JButton bajar = new JButton("Bajar");
-        bajar.addActionListener(e -> moverFila(table, 1));
         JButton actualizar = new JButton("Actualizar");
         actualizar.addActionListener(e -> refrescar.run());
         JButton cerrar = new JButton("Cerrar");
         cerrar.addActionListener(e -> frame.dispose());
-        bar.add(subir);
-        bar.add(bajar);
         bar.add(actualizar);
         bar.add(cerrar);
 
@@ -1321,25 +1315,6 @@ public class MenuAdministrador extends JFrame {
         }
     }
 
-    private void moverFila(JTable table, int delta) {
-        int row = table.getSelectedRow();
-        if (row < 0) {
-            mostrarInfo("Mover fila", "Seleccione una fila.");
-            return;
-        }
-        int target = row + delta;
-        if (target < 0 || target >= table.getRowCount()) {
-            return;
-        }
-        DefaultTableModel model = (DefaultTableModel) table.getModel();
-        int modelRow = table.convertRowIndexToModel(row);
-        int modelTarget = table.convertRowIndexToModel(target);
-        model.moveRow(modelRow, modelRow, modelTarget);
-        int selectedRow = table.convertRowIndexToView(modelTarget);
-        if (selectedRow >= 0) {
-            table.setRowSelectionInterval(selectedRow, selectedRow);
-        }
-    }
 
     private Integer idSeleccionado(JTable table) {
         int row = table.getSelectedRow();
