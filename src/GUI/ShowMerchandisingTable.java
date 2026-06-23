@@ -6,6 +6,9 @@ import BLL.MerchandisingService;
 
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
+import java.awt.Frame;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -20,12 +23,23 @@ import javax.swing.table.DefaultTableModel;
 
 public class ShowMerchandisingTable {
 
+    private static JFrame activeFrame;
 
     public static void showTable(Concierto concierto, Consumer<Merchandising> onComprar) {
         if (concierto == null) {
             JOptionPane.showMessageDialog(null, "Seleccione un concierto.",
                     "Catalogo de merchandising", JOptionPane.WARNING_MESSAGE);
             return;
+        }
+
+        if (activeFrame != null) {
+            if (activeFrame.isDisplayable()) {
+                activeFrame.setState(Frame.NORMAL);
+                activeFrame.toFront();
+                activeFrame.requestFocus();
+                return;
+            }
+            activeFrame = null;
         }
 
         MerchandisingService merchandisingService = new MerchandisingService();
@@ -40,7 +54,16 @@ public class ShowMerchandisingTable {
 
         JTable table = new JTable(model);
         JFrame frame = new JFrame("Merchandising - " + concierto.getArtista());
+        activeFrame = frame;
         frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        frame.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosed(WindowEvent e) {
+                if (activeFrame == frame) {
+                    activeFrame = null;
+                }
+            }
+        });
         frame.setLayout(new BorderLayout(5, 5));
         frame.add(new JScrollPane(table), BorderLayout.CENTER);
 

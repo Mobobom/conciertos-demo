@@ -6,14 +6,22 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.regex.Pattern;
 
+import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.swing.JTextField;
+import javax.swing.RowFilter;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableRowSorter;
 
 import BLL.Concierto;
 import DLL.ControllerConcierto;
@@ -37,11 +45,26 @@ public class ShowConciertosTable {
         };
 
         JTable table = new JTable(model);
+        TableRowSorter<DefaultTableModel> sorter = new TableRowSorter<>(model);
+        for (int i = 0; i < columns.length; i++) {
+            sorter.setSortable(i, false);
+        }
+        table.setRowSorter(sorter);
+
+        JTextField buscar = new JTextField();
+        configurarBusqueda(buscar, sorter, 1, 4);
+
+        JPanel filtros = new JPanel(new BorderLayout(6, 6));
+        filtros.setBorder(BorderFactory.createEmptyBorder(6, 6, 0, 6));
+        filtros.add(new JLabel("Buscar por artista o lugar:"), BorderLayout.WEST);
+        filtros.add(buscar, BorderLayout.CENTER);
+
         JScrollPane sp = new JScrollPane(table);
 
         JFrame frame = new JFrame("Conciertos disponibles");
         frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         frame.setLayout(new BorderLayout(5, 5));
+        frame.add(filtros, BorderLayout.NORTH);
         frame.add(sp, BorderLayout.CENTER);
 
         Runnable recargar = () -> {
@@ -73,7 +96,8 @@ public class ShowConciertosTable {
                             "Comprar", JOptionPane.WARNING_MESSAGE);
                     return;
                 }
-                int id = Integer.parseInt(table.getModel().getValueAt(row, 0).toString());
+                int modelRow = table.convertRowIndexToModel(row);
+                int id = Integer.parseInt(table.getModel().getValueAt(modelRow, 0).toString());
                 Concierto seleccionado = null;
                 for (Concierto c : data) {
                     if (c.getId() == id) {
@@ -111,6 +135,35 @@ public class ShowConciertosTable {
         frame.setVisible(true);
     }
 
+    private static void configurarBusqueda(JTextField buscar, TableRowSorter<DefaultTableModel> sorter,
+            int... columnas) {
+        buscar.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                aplicarFiltro();
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                aplicarFiltro();
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                aplicarFiltro();
+            }
+
+            private void aplicarFiltro() {
+                String texto = buscar.getText().trim();
+                if (texto.isEmpty()) {
+                    sorter.setRowFilter(null);
+                    return;
+                }
+                sorter.setRowFilter(RowFilter.regexFilter("(?i)" + Pattern.quote(texto), columnas));
+            }
+        });
+    }
+
     private static void moverFila(JFrame frame, JTable table, int delta) {
         int row = table.getSelectedRow();
         if (row < 0) {
@@ -119,11 +172,16 @@ public class ShowConciertosTable {
             return;
         }
         int target = row + delta;
-        DefaultTableModel model = (DefaultTableModel) table.getModel();
-        if (target < 0 || target >= model.getRowCount()) {
+        if (target < 0 || target >= table.getRowCount()) {
             return;
         }
-        model.moveRow(row, row, target);
-        table.setRowSelectionInterval(target, target);
+        DefaultTableModel model = (DefaultTableModel) table.getModel();
+        int modelRow = table.convertRowIndexToModel(row);
+        int modelTarget = table.convertRowIndexToModel(target);
+        model.moveRow(modelRow, modelRow, modelTarget);
+        int selectedRow = table.convertRowIndexToView(modelTarget);
+        if (selectedRow >= 0) {
+            table.setRowSelectionInterval(selectedRow, selectedRow);
+        }
     }
 }

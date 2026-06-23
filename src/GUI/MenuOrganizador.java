@@ -20,6 +20,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Supplier;
+import java.util.regex.Pattern;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -28,8 +29,13 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.swing.JTextField;
+import javax.swing.RowFilter;
 import javax.swing.SwingConstants;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableRowSorter;
 
 public class MenuOrganizador extends JFrame {
 
@@ -372,14 +378,28 @@ public class MenuOrganizador extends JFrame {
         };
 
         JTable table = new JTable(model);
+        final TableRowSorter<DefaultTableModel> sorter = new TableRowSorter<>(model);
+        deshabilitarOrdenamiento(sorter, columns.length);
+        table.setRowSorter(sorter);
         JScrollPane scrollPane = new JScrollPane(table);
 
         JFrame frame = new JFrame(titulo);
         frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         frame.setLayout(new BorderLayout(5, 5));
+        JTextField buscar = new JTextField();
+        configurarBusqueda(buscar, sorter);
+
+        JPanel filtros = new JPanel(new BorderLayout(6, 6));
+        filtros.setBorder(BorderFactory.createEmptyBorder(6, 6, 0, 6));
+        filtros.add(new JLabel("Buscar por artista o lugar:"), BorderLayout.WEST);
+        filtros.add(buscar, BorderLayout.CENTER);
+        frame.add(filtros, BorderLayout.NORTH);
         frame.add(scrollPane, BorderLayout.CENTER);
 
-        Runnable refrescar = () -> model.setDataVector(rowsSupplier.get(), columns);
+        Runnable refrescar = () -> {
+            model.setDataVector(rowsSupplier.get(), columns);
+            deshabilitarOrdenamiento(sorter, columns.length);
+        };
 
         JPanel bar = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 6));
         if (extraButtons != null) {
@@ -407,6 +427,40 @@ public class MenuOrganizador extends JFrame {
         frame.setVisible(true);
     }
 
+    private void configurarBusqueda(JTextField buscar, TableRowSorter<DefaultTableModel> sorter) {
+        buscar.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                aplicarFiltro();
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                aplicarFiltro();
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                aplicarFiltro();
+            }
+
+            private void aplicarFiltro() {
+                String texto = buscar.getText().trim();
+                if (texto.isEmpty()) {
+                    sorter.setRowFilter(null);
+                    return;
+                }
+                sorter.setRowFilter(RowFilter.regexFilter("(?i)" + Pattern.quote(texto), 1, 4));
+            }
+        });
+    }
+
+    private void deshabilitarOrdenamiento(TableRowSorter<DefaultTableModel> sorter, int columnCount) {
+        for (int i = 0; i < columnCount; i++) {
+            sorter.setSortable(i, false);
+        }
+    }
+
     private void moverFila(JTable table, int delta) {
         int row = table.getSelectedRow();
         if (row < 0) {
@@ -414,12 +468,17 @@ public class MenuOrganizador extends JFrame {
             return;
         }
         int target = row + delta;
-        DefaultTableModel model = (DefaultTableModel) table.getModel();
-        if (target < 0 || target >= model.getRowCount()) {
+        if (target < 0 || target >= table.getRowCount()) {
             return;
         }
-        model.moveRow(row, row, target);
-        table.setRowSelectionInterval(target, target);
+        DefaultTableModel model = (DefaultTableModel) table.getModel();
+        int modelRow = table.convertRowIndexToModel(row);
+        int modelTarget = table.convertRowIndexToModel(target);
+        model.moveRow(modelRow, modelRow, modelTarget);
+        int selectedRow = table.convertRowIndexToView(modelTarget);
+        if (selectedRow >= 0) {
+            table.setRowSelectionInterval(selectedRow, selectedRow);
+        }
     }
 
     private Integer idSeleccionado(JTable table) {
@@ -428,7 +487,8 @@ public class MenuOrganizador extends JFrame {
             mostrarInfo("Accion", "Seleccione una fila.");
             return null;
         }
-        Object value = table.getModel().getValueAt(row, 0);
+        int modelRow = table.convertRowIndexToModel(row);
+        Object value = table.getModel().getValueAt(modelRow, 0);
         return Integer.valueOf(value.toString());
     }
 
