@@ -2,10 +2,13 @@ package GUI;
 
 import BLL.Concierto;
 import BLL.ConciertoService;
+import BLL.Merchandising;
+import BLL.MerchandisingService;
 import BLL.Sector;
 import BLL.SectorService;
 import BLL.Usuario;
 import BLL.UsuarioService;
+import BLL.VentaMerchandising;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
@@ -14,6 +17,7 @@ import java.awt.Frame;
 import java.awt.GridLayout;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -49,6 +53,7 @@ public class MenuOrganizador extends MenuBase {
     private final ConciertoService conciertoService;
     private final SectorService sectorService;
     private final UsuarioService usuarioService;
+    private final MerchandisingService merchandisingService;
     private final Map<String, JFrame> openTableFrames;
 
     public MenuOrganizador(Usuario usuario) {
@@ -56,6 +61,7 @@ public class MenuOrganizador extends MenuBase {
         this.conciertoService = new ConciertoService();
         this.sectorService = new SectorService();
         this.usuarioService = new UsuarioService();
+        this.merchandisingService = new MerchandisingService();
         this.openTableFrames = new HashMap<>();
         inicializarMenu("Menu Organizador");
     }
@@ -77,6 +83,8 @@ public class MenuOrganizador extends MenuBase {
         addButton(grid, "Crear concierto", "add", e -> crearConcierto());
         addButton(grid, "Modificar concierto", "edit", e -> modificarConcierto());
         addButton(grid, "Ver informacion del evento", "report", e -> verInformacionEvento());
+        addButton(grid, "Gestionar merchandising", "merchandising", e -> gestionarMerchandising());
+        addButton(grid, "Ventas merchandising", "payment", e -> verVentasMerchandising());
         addButton(grid, "Cambiar password", "edit", e -> PasswordDialogs.cambiarPassword(this, usuario));
         grid.add(crearBotonVolverLogin());
         grid.add(crearBotonCerrarSistema());
@@ -313,6 +321,224 @@ public class MenuOrganizador extends MenuBase {
         return seleccionado == null ? null : conciertosPorEtiqueta.get(seleccionado);
     }
 
+    private void gestionarMerchandising() {
+        String[] columns = {"ID", "Imagen", "Concierto", "Producto", "Precio", "Stock"};
+        Supplier<Object[][]> rows = () -> filasMerchandisingPropio(columns.length);
+        mostrarTablaComun("Gestion de merchandising", columns, rows, (table, refrescar) -> {
+            JButton crear = new JButton("Crear producto");
+            crear.addActionListener(e -> { crearMerchandising(); refrescar.run(); });
+            JButton editar = new JButton("Editar");
+            editar.addActionListener(e -> {
+                Integer id = TablaConBotones.idSeleccionado(this, table);
+                if (id != null) { modificarMerchandising(id); refrescar.run(); }
+            });
+            JButton stock = new JButton("Ajustar stock");
+            stock.addActionListener(e -> {
+                Integer id = TablaConBotones.idSeleccionado(this, table);
+                if (id != null) { ajustarStockMerchandising(id); refrescar.run(); }
+            });
+            JButton eliminar = new JButton("Eliminar");
+            eliminar.addActionListener(e -> {
+                Integer id = TablaConBotones.idSeleccionado(this, table);
+                if (id != null) { eliminarMerchandising(id); refrescar.run(); }
+            });
+            return Arrays.asList(crear, editar, stock, eliminar);
+        }, new TablaConBotones.Busqueda("Buscar por concierto o producto:", 2, 3));
+    }
+
+    private Object[][] filasMerchandisingPropio(int columnas) {
+        try {
+            LinkedList<Concierto> conciertos = conciertosDelOrganizador();
+            LinkedList<Object[]> filas = new LinkedList<>();
+            for (Concierto concierto : conciertos) {
+                LinkedList<Merchandising> productos = merchandisingService.listarPorConcierto(concierto.getId());
+                for (Merchandising producto : productos) {
+                    Object[] fila = new Object[columnas];
+                    fila[0] = producto.getId();
+                    fila[1] = ImagenHelper.cargarMiniatura(producto.getImagenUrl());
+                    fila[2] = concierto.getArtista();
+                    fila[3] = producto.getNombre();
+                    fila[4] = producto.getPrecio();
+                    fila[5] = producto.getStock();
+                    filas.add(fila);
+                }
+            }
+            return filas.toArray(new Object[0][columnas]);
+        } catch (SQLException e) {
+            mostrarError("No se pudo listar el merchandising", e);
+            return new Object[0][columnas];
+        }
+    }
+
+    private void crearMerchandising() {
+        try {
+            Concierto concierto = seleccionarConciertoPropio();
+            if (concierto == null) {
+                return;
+            }
+            String nombre = DialogosUtil.pedirTexto(this, "Nombre del producto", "Remera");
+            BigDecimal precio = DialogosUtil.pedirPrecio(this, "35.00");
+            int stock = DialogosUtil.pedirEntero(this, "Stock", "100");
+            int id = merchandisingService.crearProducto(concierto.getId(), nombre, precio, stock);
+            mostrarInfo("Producto creado", "Se creo el producto con ID " + id + ".");
+        } catch (IllegalArgumentException e) {
+            mostrarInfo("Datos invalidos", e.getMessage());
+        } catch (SQLException e) {
+            mostrarError("No se pudo crear el producto", e);
+        }
+    }
+
+    private void modificarMerchandising(int id) {
+        try {
+            Merchandising producto = merchandisingService.buscarPorId(id);
+            if (!puedeGestionarProducto(producto)) {
+                return;
+            }
+            String nombre = DialogosUtil.pedirTexto(this, "Nombre del producto", producto.getNombre());
+            BigDecimal precio = DialogosUtil.pedirPrecio(this, producto.getPrecio().toString());
+            int stock = DialogosUtil.pedirEntero(this, "Stock", String.valueOf(producto.getStock()));
+            producto.setNombre(nombre);
+            producto.setPrecio(precio);
+            producto.setStock(stock);
+            boolean modificado = merchandisingService.modificarProducto(producto);
+            mostrarInfo("Modificar producto", modificado
+                    ? "El producto fue modificado."
+                    : "No se pudo modificar el producto.");
+        } catch (IllegalArgumentException e) {
+            mostrarInfo("Datos invalidos", e.getMessage());
+        } catch (SQLException e) {
+            mostrarError("No se pudo modificar el producto", e);
+        }
+    }
+
+    private void ajustarStockMerchandising(int id) {
+        try {
+            Merchandising producto = merchandisingService.buscarPorId(id);
+            if (!puedeGestionarProducto(producto)) {
+                return;
+            }
+            int stock = DialogosUtil.pedirEntero(this, "Stock", String.valueOf(producto.getStock()));
+            if (!confirmarAccion("Actualizar stock",
+                    "Desea cambiar el stock de \"" + producto.getNombre() + "\" de "
+                            + producto.getStock() + " a " + stock + "?")) {
+                return;
+            }
+            boolean actualizado = merchandisingService.actualizarStock(id, stock);
+            mostrarInfo("Actualizar stock", actualizado
+                    ? "El stock fue actualizado."
+                    : "No se pudo actualizar el stock.");
+        } catch (IllegalArgumentException e) {
+            mostrarInfo("Datos invalidos", e.getMessage());
+        } catch (SQLException e) {
+            mostrarError("No se pudo actualizar el stock", e);
+        }
+    }
+
+    private void eliminarMerchandising(int id) {
+        try {
+            Merchandising producto = merchandisingService.buscarPorId(id);
+            if (!puedeGestionarProducto(producto)) {
+                return;
+            }
+            if (!confirmarAccion("Eliminar producto", "Desea eliminar el producto seleccionado?")) {
+                return;
+            }
+            boolean eliminado = merchandisingService.eliminarProducto(id);
+            mostrarInfo("Eliminar producto", eliminado
+                    ? "El producto fue eliminado."
+                    : "No se encontro el producto indicado.");
+        } catch (IllegalArgumentException e) {
+            mostrarInfo("Datos invalidos", e.getMessage());
+        } catch (SQLException e) {
+            mostrarError("No se pudo eliminar el producto", e);
+        }
+    }
+
+    private void verVentasMerchandising() {
+        String[] columns = {"Imagen", "Fecha", "Concierto", "Producto", "Comprador",
+                "Cantidad", "Precio unitario", "Total", "Metodo pago"};
+        Supplier<Object[][]> rows = () -> filasVentasMerchandising(columns.length);
+        mostrarTablaComun("Ventas de merchandising", columns, rows, null,
+                new TablaConBotones.Busqueda("Buscar por concierto, producto o comprador:", 2, 3, 4, 8));
+    }
+
+    private Object[][] filasVentasMerchandising(int columnas) {
+        try {
+            LinkedList<VentaMerchandising> ventas =
+                    merchandisingService.listarVentasPorOrganizador(usuario.getId());
+            Object[][] data = new Object[ventas.size()][columnas];
+            for (int i = 0; i < ventas.size(); i++) {
+                VentaMerchandising venta = ventas.get(i);
+                data[i][0] = ImagenHelper.cargarMiniatura(venta.getImagenUrl());
+                data[i][1] = venta.getFecha() == null ? "" : venta.getFecha().toLocalDate();
+                data[i][2] = venta.getConcierto();
+                data[i][3] = venta.getProducto();
+                data[i][4] = venta.getComprador();
+                data[i][5] = venta.getCantidad();
+                data[i][6] = venta.getPrecioUnitario();
+                data[i][7] = venta.getTotal();
+                data[i][8] = venta.getMetodoPago();
+            }
+            return data;
+        } catch (SQLException e) {
+            mostrarError("No se pudieron listar las ventas de merchandising", e);
+            return new Object[0][columnas];
+        }
+    }
+
+    private LinkedList<Concierto> conciertosDelOrganizador() throws SQLException {
+        LinkedList<Concierto> propios = new LinkedList<>();
+        for (Concierto concierto : conciertoService.listarTodos()) {
+            if (concierto.getOrganizadorId() == usuario.getId()) {
+                propios.add(concierto);
+            }
+        }
+        return propios;
+    }
+
+    private Concierto seleccionarConciertoPropio() throws SQLException {
+        LinkedList<Concierto> conciertos = conciertosDelOrganizador();
+        if (conciertos.isEmpty()) {
+            mostrarInfo("Sin conciertos", "No tenes conciertos asignados para gestionar merchandising.");
+            return null;
+        }
+
+        Map<String, Concierto> conciertosPorEtiqueta = new HashMap<>();
+        String[] opciones = new String[conciertos.size()];
+        for (int i = 0; i < conciertos.size(); i++) {
+            Concierto concierto = conciertos.get(i);
+            String etiqueta = String.format("#%d - %s - %s %s - %s",
+                    concierto.getId(), concierto.getArtista(), concierto.getFecha(),
+                    concierto.getHora(), concierto.getLugar());
+            opciones[i] = etiqueta;
+            conciertosPorEtiqueta.put(etiqueta, concierto);
+        }
+
+        String seleccionado = (String) JOptionPane.showInputDialog(
+                this,
+                "Seleccione uno de sus conciertos:",
+                "Conciertos propios",
+                JOptionPane.PLAIN_MESSAGE,
+                null,
+                opciones,
+                opciones[0]);
+
+        return seleccionado == null ? null : conciertosPorEtiqueta.get(seleccionado);
+    }
+
+    private boolean puedeGestionarProducto(Merchandising producto) throws SQLException {
+        if (producto == null) {
+            mostrarInfo("Sin producto", "No se encontro el producto indicado.");
+            return false;
+        }
+        Concierto concierto = conciertoService.buscarPorId(producto.getConciertoId());
+        if (concierto == null || concierto.getOrganizadorId() != usuario.getId()) {
+            mostrarInfo("Accion no permitida", "Solo podes gestionar merchandising de tus conciertos.");
+            return false;
+        }
+        return true;
+    }
+
     private Integer seleccionarOrganizador() throws SQLException {
         return seleccionarOrganizador(0);
     }
@@ -361,6 +587,33 @@ public class MenuOrganizador extends MenuBase {
             }
         }
         openTableFrames.clear();
+    }
+
+    private void mostrarTablaComun(String titulo, String[] columns,
+            Supplier<Object[][]> rowsSupplier,
+            BiFunction<JTable, Runnable, List<JButton>> extraButtons,
+            TablaConBotones.Busqueda busqueda) {
+        JFrame openFrame = openTableFrames.get(titulo);
+        if (openFrame != null) {
+            if (openFrame.isDisplayable()) {
+                openFrame.setState(Frame.NORMAL);
+                openFrame.toFront();
+                openFrame.requestFocus();
+                return;
+            }
+            openTableFrames.remove(titulo);
+        }
+
+        JFrame frame = TablaConBotones.mostrar(this, titulo, columns, rowsSupplier, extraButtons, busqueda);
+        openTableFrames.put(titulo, frame);
+        frame.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosed(WindowEvent e) {
+                if (openTableFrames.get(titulo) == frame) {
+                    openTableFrames.remove(titulo);
+                }
+            }
+        });
     }
 
     private void mostrarTablaConBotones(String titulo, String[] columns,
@@ -614,6 +867,11 @@ public class MenuOrganizador extends MenuBase {
 
     private void mostrarInfo(String titulo, String mensaje) {
         JOptionPane.showMessageDialog(this, mensaje, titulo, JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    private boolean confirmarAccion(String titulo, String mensaje) {
+        return JOptionPane.showConfirmDialog(this, mensaje, titulo,
+                JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE) == JOptionPane.YES_OPTION;
     }
 
     private void mostrarError(String titulo, Exception e) {

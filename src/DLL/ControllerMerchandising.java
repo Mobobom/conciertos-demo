@@ -2,12 +2,14 @@ package DLL;
 
 import BLL.CompraMerchandising;
 import BLL.Merchandising;
+import BLL.VentaMerchandising;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Timestamp;
 import java.util.LinkedList;
 
 public class ControllerMerchandising {
@@ -156,12 +158,58 @@ public class ControllerMerchandising {
         return compras;
     }
 
+    public LinkedList<VentaMerchandising> listarVentasPorComprador(int compradorId) throws SQLException {
+        LinkedList<VentaMerchandising> ventas = new LinkedList<>();
+        String sql = baseVentaMerchandisingSelect()
+                + " WHERE c.comprador_id = ?"
+                + " ORDER BY c.fecha DESC, cm.id DESC";
+        try (PreparedStatement stmt = getConnection().prepareStatement(sql)) {
+            stmt.setInt(1, compradorId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    ventas.add(mapVentaMerchandising(rs));
+                }
+            }
+        }
+        return ventas;
+    }
+
+    public LinkedList<VentaMerchandising> listarVentasPorOrganizador(int organizadorId) throws SQLException {
+        LinkedList<VentaMerchandising> ventas = new LinkedList<>();
+        String sql = baseVentaMerchandisingSelect()
+                + " WHERE co.organizador_id = ?"
+                + " ORDER BY c.fecha DESC, cm.id DESC";
+        try (PreparedStatement stmt = getConnection().prepareStatement(sql)) {
+            stmt.setInt(1, organizadorId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    ventas.add(mapVentaMerchandising(rs));
+                }
+            }
+        }
+        return ventas;
+    }
+
     private String baseSelect() {
         return "SELECT id, concierto_id, nombre, precio, stock, imagen_url FROM merchandising";
     }
 
     private String baseCompraMerchandisingSelect() {
         return "SELECT id, compra_id, merchandising_id, cantidad, precio_unitario FROM compra_merchandising";
+    }
+
+    private String baseVentaMerchandisingSelect() {
+        return "SELECT cm.id AS detalle_id, c.id AS compra_id, c.fecha, "
+                + "co.artista AS concierto, m.nombre AS producto, "
+                + "TRIM(CONCAT(COALESCE(u.nombre, ''), ' ', COALESCE(u.apellido, ''), ' - ', u.email)) AS comprador, "
+                + "cm.cantidad, cm.precio_unitario, (cm.cantidad * cm.precio_unitario) AS total, "
+                + "COALESCE(p.metodo, '') AS metodo_pago, m.imagen_url "
+                + "FROM compra_merchandising cm "
+                + "JOIN compra c ON c.id = cm.compra_id "
+                + "JOIN merchandising m ON m.id = cm.merchandising_id "
+                + "JOIN concierto co ON co.id = c.concierto_id "
+                + "JOIN usuario u ON u.id = c.comprador_id "
+                + "LEFT JOIN pago p ON p.compra_id = c.id";
     }
 
     private void fillStatement(PreparedStatement stmt, Merchandising merchandising) throws SQLException {
@@ -190,6 +238,23 @@ public class ControllerMerchandising {
                 rs.getInt("merchandising_id"),
                 rs.getInt("cantidad"),
                 rs.getBigDecimal("precio_unitario")
+        );
+    }
+
+    private VentaMerchandising mapVentaMerchandising(ResultSet rs) throws SQLException {
+        Timestamp fecha = rs.getTimestamp("fecha");
+        return new VentaMerchandising(
+                rs.getInt("detalle_id"),
+                rs.getInt("compra_id"),
+                fecha == null ? null : fecha.toLocalDateTime(),
+                rs.getString("concierto"),
+                rs.getString("producto"),
+                rs.getString("comprador"),
+                rs.getInt("cantidad"),
+                rs.getBigDecimal("precio_unitario"),
+                rs.getBigDecimal("total"),
+                rs.getString("metodo_pago"),
+                rs.getString("imagen_url")
         );
     }
 

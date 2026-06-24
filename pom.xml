@@ -41,6 +41,12 @@
         <sourceDirectory>${project.basedir}/src</sourceDirectory>
         <testSourceDirectory>${project.basedir}/test</testSourceDirectory>
         <finalName>conciertos-demo</finalName>
+        <resources>
+            <resource>
+                <directory>${project.basedir}/src/resources</directory>
+                <targetPath>resources</targetPath>
+            </resource>
+        </resources>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

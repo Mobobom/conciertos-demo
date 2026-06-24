@@ -2,11 +2,12 @@ package GUI;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
-import java.awt.Image;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.IOException;
 import java.net.URL;
+import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 
 public final class ImagenHelper {
@@ -44,7 +45,7 @@ public final class ImagenHelper {
 
         URL resource = ImagenHelper.class.getResource(IMG_PATH + ruta);
         if (resource != null) {
-            return new ImageIcon(resource);
+            return crearIcono(resource);
         }
 
         String[] rutasAlternativas = {
@@ -55,10 +56,28 @@ public final class ImagenHelper {
         for (String rutaAlternativa : rutasAlternativas) {
             File archivo = new File(rutaAlternativa);
             if (archivo.isFile()) {
-                return new ImageIcon(archivo.getAbsolutePath());
+                return crearIcono(archivo);
             }
         }
         return null;
+    }
+
+    private static ImageIcon crearIcono(URL resource) {
+        try {
+            BufferedImage imagen = ImageIO.read(resource);
+            return imagen == null ? null : new ImageIcon(imagen);
+        } catch (IOException e) {
+            return null;
+        }
+    }
+
+    private static ImageIcon crearIcono(File archivo) {
+        try {
+            BufferedImage imagen = ImageIO.read(archivo);
+            return imagen == null ? null : new ImageIcon(imagen);
+        } catch (IOException e) {
+            return null;
+        }
     }
 
     private static String normalizarRuta(String rutaRelativa) {
@@ -100,8 +119,7 @@ public final class ImagenHelper {
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         int x = (ancho - nuevoAncho) / 2;
         int y = (alto - nuevoAlto) / 2;
-        Image scaled = icon.getImage().getScaledInstance(nuevoAncho, nuevoAlto, Image.SCALE_SMOOTH);
-        g.drawImage(scaled, x, y, null);
+        g.drawImage(icon.getImage(), x, y, nuevoAncho, nuevoAlto, null);
         g.dispose();
         return new ImageIcon(imagen);
     }

@@ -63,6 +63,8 @@ public class MenuComprador extends MenuBase {
                 e -> registrarVentana(TicketsCompradosTable.showTable(this, usuario)));
         addButton(grid, "Ver catalogo merchandising", "merchandising", e -> verCatalogoMerchandising());
         addButton(grid, "Comprar merchandising", "buy", e -> comprarMerchandising());
+        addButton(grid, "Merchandising comprado", "merchandising",
+                e -> registrarVentana(MerchandisingCompradoTable.showTable(this, usuario)));
         addButton(grid, "Cambiar password", "edit", e -> PasswordDialogs.cambiarPassword(this, usuario));
         grid.add(crearBotonVolverLogin());
         panel.add(grid, BorderLayout.NORTH);
