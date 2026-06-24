@@ -10,6 +10,7 @@ public class AdminOtrosPanel extends JPanel {
 
     public AdminOtrosPanel(
             ActionListener gestionarMerchandising,
+            ActionListener verVentasMerchandising,
             ActionListener gestionarUsuarios,
             ActionListener cambiarPassword,
             JButton volverLogin,
@@ -19,6 +20,7 @@ public class AdminOtrosPanel extends JPanel {
         setBorder(BorderFactory.createTitledBorder("Administracion"));
 
         add(BotonHelper.crearBoton("Gestionar merchandising", "merchandising", gestionarMerchandising));
+        add(BotonHelper.crearBoton("Ventas de merchandising", "report", verVentasMerchandising));
         add(BotonHelper.crearBoton("Gestionar usuarios", "user", gestionarUsuarios));
         add(BotonHelper.crearBoton("Cambiar password", "edit", cambiarPassword));
         add(volverLogin);

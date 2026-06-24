@@ -2,10 +2,12 @@ package GUI;
 
 import BLL.Concierto;
 import BLL.ConciertoService;
+import BLL.MerchandisingService;
 import BLL.Sector;
 import BLL.SectorService;
 import BLL.Usuario;
 import BLL.UsuarioService;
+import BLL.VentaMerchandising;
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.Frame;
@@ -45,6 +47,7 @@ public class MenuOrganizador extends MenuBase {
     private final ConciertoService conciertoService;
     private final SectorService sectorService;
     private final UsuarioService usuarioService;
+    private final MerchandisingService merchandisingService;
     private final Map<String, JFrame> openTableFrames;
 
     public MenuOrganizador(Usuario usuario) {
@@ -52,6 +55,7 @@ public class MenuOrganizador extends MenuBase {
         this.conciertoService = new ConciertoService();
         this.sectorService = new SectorService();
         this.usuarioService = new UsuarioService();
+        this.merchandisingService = new MerchandisingService();
         this.openTableFrames = new HashMap<>();
         inicializarMenu("Menu Organizador");
     }
@@ -73,6 +77,7 @@ public class MenuOrganizador extends MenuBase {
         addButton(grid, "Crear concierto", "add", e -> crearConcierto());
         addButton(grid, "Modificar concierto", "edit", e -> modificarConcierto());
         addButton(grid, "Ver informacion del evento", "report", e -> verInformacionEvento());
+        addButton(grid, "Ventas de merchandising", "report", e -> verVentasMerchandising());
         addButton(grid, "Cambiar password", "edit", e -> PasswordDialogs.cambiarPassword(this, usuario));
         grid.add(crearBotonVolverLogin());
         grid.add(crearBotonCerrarSistema());
@@ -359,6 +364,45 @@ public class MenuOrganizador extends MenuBase {
         openTableFrames.clear();
     }
 
+    private void verVentasMerchandising() {
+        String titulo = "Ventas de merchandising";
+        JFrame openFrame = openTableFrames.get(titulo);
+        if (openFrame != null) {
+            if (openFrame.isDisplayable()) {
+                openFrame.setState(Frame.NORMAL);
+                openFrame.toFront();
+                openFrame.requestFocus();
+                return;
+            }
+            openTableFrames.remove(titulo);
+        }
+
+        String[] columns = {"Detalle", "Compra", "Fecha", "Concierto", "Producto",
+                "Comprador", "Cantidad", "Precio unitario", "Total", "Metodo pago"};
+        Supplier<Object[][]> rows = () -> {
+            try {
+                LinkedList<VentaMerchandising> ventas =
+                        merchandisingService.listarVentasPorOrganizador(usuario.getId());
+                return filasVentasMerchandising(ventas, columns.length);
+            } catch (SQLException e) {
+                mostrarError("No se pudieron listar las ventas de merchandising", e);
+                return new Object[0][columns.length];
+            }
+        };
+
+        JFrame frame = TablaConBotones.mostrar(this, titulo, columns, rows, null,
+                new TablaConBotones.Busqueda("Buscar por concierto, producto o comprador:", 3, 4, 5, 9));
+        openTableFrames.put(titulo, frame);
+        frame.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosed(WindowEvent e) {
+                if (openTableFrames.get(titulo) == frame) {
+                    openTableFrames.remove(titulo);
+                }
+            }
+        });
+    }
+
     private void mostrarTablaConBotones(String titulo, String[] columns,
             Supplier<Object[][]> rowsSupplier,
             BiFunction<JTable, Runnable, List<JButton>> extraButtons) {
@@ -479,6 +523,24 @@ public class MenuOrganizador extends MenuBase {
         int modelRow = table.convertRowIndexToModel(row);
         Object value = table.getModel().getValueAt(modelRow, 0);
         return Integer.valueOf(value.toString());
+    }
+
+    private Object[][] filasVentasMerchandising(LinkedList<VentaMerchandising> ventas, int columnCount) {
+        Object[][] data = new Object[ventas.size()][columnCount];
+        for (int i = 0; i < ventas.size(); i++) {
+            VentaMerchandising venta = ventas.get(i);
+            data[i][0] = venta.getDetalleId();
+            data[i][1] = venta.getCompraId();
+            data[i][2] = venta.getFecha();
+            data[i][3] = venta.getConcierto();
+            data[i][4] = venta.getProducto();
+            data[i][5] = venta.getComprador();
+            data[i][6] = venta.getCantidad();
+            data[i][7] = venta.getPrecioUnitario();
+            data[i][8] = venta.getTotal();
+            data[i][9] = venta.getMetodoPago();
+        }
+        return data;
     }
 
     private void mostrarTablaConciertos(String titulo, Supplier<LinkedList<Concierto>> fetcher) {

@@ -10,6 +10,7 @@ import BLL.Ticket;
 import BLL.TicketService;
 import BLL.Usuario;
 import BLL.UsuarioService;
+import BLL.VentaMerchandising;
 import java.awt.BorderLayout;
 import java.awt.Frame;
 import java.awt.GridLayout;
@@ -84,6 +85,7 @@ public class MenuAdministrador extends MenuBase {
                 e -> liberarTicket()));
         panel.add(new AdminOtrosPanel(
                 e -> gestionarMerchandising(),
+                e -> verVentasMerchandising(),
                 e -> gestionarUsuarios(),
                 e -> PasswordDialogs.cambiarPassword(this, usuario),
                 crearBotonVolverLogin(),
@@ -835,6 +837,22 @@ public class MenuAdministrador extends MenuBase {
         }, "Buscar por concierto o producto:", 1, 2);
     }
 
+    private void verVentasMerchandising() {
+        String[] columns = {"Detalle", "Compra", "Fecha", "Concierto", "Producto",
+                "Comprador", "Cantidad", "Precio unitario", "Total", "Metodo pago"};
+        Supplier<Object[][]> rows = () -> {
+            try {
+                LinkedList<VentaMerchandising> ventas = merchandisingService.listarVentas();
+                return filasVentasMerchandising(ventas, columns.length);
+            } catch (SQLException e) {
+                mostrarError("No se pudieron listar las ventas de merchandising", e);
+                return new Object[0][columns.length];
+            }
+        };
+        mostrarTablaConBotones("Ventas de merchandising", columns, rows, null,
+                "Buscar por concierto, producto o comprador:", 3, 4, 5, 9);
+    }
+
     private void gestionarUsuarios() {
         String[] columns = {"ID", "Nombre", "Apellido", "Email", "Documento/DNI", "Rol"};
         Supplier<Object[][]> rows = () -> {
@@ -1107,6 +1125,24 @@ public class MenuAdministrador extends MenuBase {
             });
             return Arrays.asList(bloquear, liberar);
         }, "Buscar por codigo o estado:", 3, 5);
+    }
+
+    private Object[][] filasVentasMerchandising(LinkedList<VentaMerchandising> ventas, int columnCount) {
+        Object[][] data = new Object[ventas.size()][columnCount];
+        for (int i = 0; i < ventas.size(); i++) {
+            VentaMerchandising venta = ventas.get(i);
+            data[i][0] = venta.getDetalleId();
+            data[i][1] = venta.getCompraId();
+            data[i][2] = venta.getFecha();
+            data[i][3] = venta.getConcierto();
+            data[i][4] = venta.getProducto();
+            data[i][5] = venta.getComprador();
+            data[i][6] = venta.getCantidad();
+            data[i][7] = venta.getPrecioUnitario();
+            data[i][8] = venta.getTotal();
+            data[i][9] = venta.getMetodoPago();
+        }
+        return data;
     }
 
     private void mostrarTablaConBotones(String titulo, String[] columns,

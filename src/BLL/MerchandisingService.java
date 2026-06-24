@@ -102,6 +102,17 @@ public class MerchandisingService {
         return controllerMerchandising.listarDisponiblesPorConcierto(conciertoId);
     }
 
+    public LinkedList<VentaMerchandising> listarVentas() throws SQLException {
+        return controllerMerchandising.listarVentas();
+    }
+
+    public LinkedList<VentaMerchandising> listarVentasPorOrganizador(int organizadorId) throws SQLException {
+        if (organizadorId <= 0) {
+            throw new IllegalArgumentException("El organizador es obligatorio.");
+        }
+        return controllerMerchandising.listarVentasPorOrganizador(organizadorId);
+    }
+
     public CompraMerchandisingResultado comprarMerchandising(int compradorId, int merchandisingId,
                                                             int cantidad, String metodoPago) throws SQLException {
         Merchandising merchandising = validarCompra(compradorId, merchandisingId, cantidad, metodoPago);
@@ -212,4 +223,3 @@ public class MerchandisingService {
         }
     }
 }
-
