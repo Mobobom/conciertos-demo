@@ -66,22 +66,29 @@ public final class TablaConBotones {
             public boolean isCellEditable(int row, int column) {
                 return false;
             }
+
+            @Override
+            public Class<?> getColumnClass(int columnIndex) {
+                for (int row = 0; row < getRowCount(); row++) {
+                    Object value = getValueAt(row, columnIndex);
+                    if (value != null) {
+                        return value.getClass();
+                    }
+                }
+                return Object.class;
+            }
         };
 
         JTable table = new JTable(model);
-        TableRowSorter<DefaultTableModel> sorter = null;
-        if ((busqueda != null && busqueda.tieneColumnas()) || filtrosConcierto != null) {
-            sorter = new TableRowSorter<>(model);
-            deshabilitarOrdenamiento(sorter, columns.length);
-            table.setRowSorter(sorter);
-        }
+        TableRowSorter<DefaultTableModel> sorter = new TableRowSorter<>(model);
+        table.setRowSorter(sorter);
 
         JFrame frame = new JFrame(titulo);
         frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         frame.setLayout(new BorderLayout(5, 5));
 
         FiltrosTabla filtrosTabla = null;
-        if (sorter != null) {
+        if ((busqueda != null && busqueda.tieneColumnas()) || filtrosConcierto != null) {
             JTextField buscar = new JTextField();
             filtrosTabla = new FiltrosTabla(sorter, buscar, busqueda, filtrosConcierto);
             configurarFiltros(filtrosTabla);
@@ -112,15 +119,11 @@ public final class TablaConBotones {
 
         frame.add(new JScrollPane(table), BorderLayout.CENTER);
 
-        TableRowSorter<DefaultTableModel> finalSorter = sorter;
         FiltrosTabla finalFiltrosTabla = filtrosTabla;
         Runnable refrescar = () -> {
             model.setDataVector(rowsSupplier.get(), columns);
-            if (finalSorter != null) {
-                deshabilitarOrdenamiento(finalSorter, columns.length);
-                if (finalFiltrosTabla != null) {
-                    finalFiltrosTabla.aplicar();
-                }
+            if (finalFiltrosTabla != null) {
+                finalFiltrosTabla.aplicar();
             }
         };
 
@@ -201,12 +204,6 @@ public final class TablaConBotones {
         fieldConstraints.fill = GridBagConstraints.HORIZONTAL;
         fieldConstraints.insets = new Insets(2, 2, 2, 2);
         panel.add(campo, fieldConstraints);
-    }
-
-    private static void deshabilitarOrdenamiento(TableRowSorter<DefaultTableModel> sorter, int columnCount) {
-        for (int i = 0; i < columnCount; i++) {
-            sorter.setSortable(i, false);
-        }
     }
 
     public static final class Busqueda {

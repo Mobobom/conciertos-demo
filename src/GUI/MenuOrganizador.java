@@ -378,11 +378,21 @@ public class MenuOrganizador extends MenuBase {
             public boolean isCellEditable(int row, int column) {
                 return false;
             }
+
+            @Override
+            public Class<?> getColumnClass(int columnIndex) {
+                for (int row = 0; row < getRowCount(); row++) {
+                    Object value = getValueAt(row, columnIndex);
+                    if (value != null) {
+                        return value.getClass();
+                    }
+                }
+                return Object.class;
+            }
         };
 
         JTable table = new JTable(model);
         final TableRowSorter<DefaultTableModel> sorter = new TableRowSorter<>(model);
-        deshabilitarOrdenamiento(sorter, columns.length);
         table.setRowSorter(sorter);
         JScrollPane scrollPane = new JScrollPane(table);
 
@@ -410,7 +420,6 @@ public class MenuOrganizador extends MenuBase {
 
         Runnable refrescar = () -> {
             model.setDataVector(rowsSupplier.get(), columns);
-            deshabilitarOrdenamiento(sorter, columns.length);
         };
 
         JPanel bar = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 6));
@@ -460,13 +469,6 @@ public class MenuOrganizador extends MenuBase {
             }
         });
     }
-
-    private void deshabilitarOrdenamiento(TableRowSorter<DefaultTableModel> sorter, int columnCount) {
-        for (int i = 0; i < columnCount; i++) {
-            sorter.setSortable(i, false);
-        }
-    }
-
 
     private Integer idSeleccionado(JTable table) {
         int row = table.getSelectedRow();
