@@ -52,7 +52,8 @@ public class ShowConciertosTable {
                         220,
                         300,
                         new int[] {1, 2, 4, 6},
-                        new String[] {"Artista", "Fecha", "Lugar", "Disponibles"}));
+                        new String[] {"Artista", "Fecha", "Lugar", "Disponibles"}),
+                new TablaConBotones.FiltrosConcierto(2, 4, -1));
     }
 
     private static Object[][] cargarFilas(Component parent, ControllerConcierto controller, List<Concierto> data) {

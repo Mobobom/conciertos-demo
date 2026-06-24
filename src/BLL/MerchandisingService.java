@@ -109,6 +109,10 @@ public class MerchandisingService {
         return controllerMerchandising.listarVentasPorComprador(compradorId);
     }
 
+    public LinkedList<VentaMerchandising> listarVentas() throws SQLException {
+        return controllerMerchandising.listarVentas();
+    }
+
     public LinkedList<VentaMerchandising> listarVentasPorOrganizador(int organizadorId) throws SQLException {
         if (organizadorId <= 0) {
             throw new IllegalArgumentException("El organizador es obligatorio.");

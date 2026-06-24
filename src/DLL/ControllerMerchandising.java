@@ -174,6 +174,18 @@ public class ControllerMerchandising {
         return ventas;
     }
 
+    public LinkedList<VentaMerchandising> listarVentas() throws SQLException {
+        LinkedList<VentaMerchandising> ventas = new LinkedList<>();
+        String sql = baseVentaMerchandisingSelect() + " ORDER BY c.fecha DESC, cm.id DESC";
+        try (PreparedStatement stmt = getConnection().prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                ventas.add(mapVentaMerchandising(rs));
+            }
+        }
+        return ventas;
+    }
+
     public LinkedList<VentaMerchandising> listarVentasPorOrganizador(int organizadorId) throws SQLException {
         LinkedList<VentaMerchandising> ventas = new LinkedList<>();
         String sql = baseVentaMerchandisingSelect()

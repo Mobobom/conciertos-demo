@@ -8,7 +8,6 @@ import BLL.Ticket;
 import BLL.TicketService;
 import BLL.Usuario;
 
-import java.awt.BorderLayout;
 import java.awt.Component;
 import java.sql.SQLException;
 import java.util.HashMap;
@@ -16,9 +15,6 @@ import java.util.LinkedList;
 import java.util.Map;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
-import javax.swing.table.DefaultTableModel;
 
 public class TicketsCompradosTable {
 
@@ -67,7 +63,13 @@ public class TicketsCompradosTable {
                 i++;
             }
 
-            return mostrarTabla(parent, "Tickets comprados - " + comprador.getNombre(), columns, rows);
+            return TablaConBotones.mostrar(
+                    parent,
+                    "Tickets comprados - " + comprador.getNombre(),
+                    columns,
+                    () -> rows,
+                    null,
+                    new TablaConBotones.Busqueda("Buscar por concierto, sector o codigo:", 0, 3, 4, 5, 7));
         } catch (IllegalArgumentException e) {
             JOptionPane.showMessageDialog(parent,
                     e.getMessage(),
@@ -82,22 +84,4 @@ public class TicketsCompradosTable {
         return null;
     }
 
-    private static JFrame mostrarTabla(Component parent, String titulo, String[] columns, Object[][] rows) {
-        DefaultTableModel model = new DefaultTableModel(rows, columns) {
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return false;
-            }
-        };
-
-        JTable table = new JTable(model);
-        JFrame frame = new JFrame(titulo);
-        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        frame.setLayout(new BorderLayout(5, 5));
-        frame.add(new JScrollPane(table), BorderLayout.CENTER);
-        frame.setSize(900, 420);
-        frame.setLocationRelativeTo(parent);
-        frame.setVisible(true);
-        return frame;
-    }
 }

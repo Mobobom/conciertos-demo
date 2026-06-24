@@ -10,6 +10,7 @@ import BLL.Ticket;
 import BLL.TicketService;
 import BLL.Usuario;
 import BLL.UsuarioService;
+import BLL.VentaMerchandising;
 import java.awt.BorderLayout;
 import java.awt.Frame;
 import java.awt.GridLayout;
@@ -84,6 +85,7 @@ public class MenuAdministrador extends MenuBase {
                 e -> liberarTicket()));
         panel.add(new AdminOtrosPanel(
                 e -> gestionarMerchandising(),
+                e -> verVentasMerchandising(),
                 e -> gestionarUsuarios(),
                 e -> PasswordDialogs.cambiarPassword(this, usuario),
                 crearBotonVolverLogin(),
@@ -287,7 +289,8 @@ public class MenuAdministrador extends MenuBase {
                 rows[i][4] = sector.getPrecio();
                 rows[i][5] = sector.getDisponibles();
             }
-            mostrarTabla("Sectores del concierto " + concierto.getArtista(), columns, rows);
+            mostrarTablaConBotones("Sectores del concierto " + concierto.getArtista(), columns, () -> rows, null,
+                    "Buscar por tipo o nombre:", 1, 2);
         } catch (IllegalArgumentException e) {
             mostrarInfo("Datos invalidos", e.getMessage());
         } catch (SQLException e) {
@@ -612,7 +615,8 @@ public class MenuAdministrador extends MenuBase {
                 rows[i][5] = ticket.getEstado();
                 rows[i][6] = ticket.getCompraId();
             }
-            mostrarTabla("Tickets del concierto " + concierto.getArtista(), columns, rows);
+            mostrarTablaConBotones("Tickets del concierto " + concierto.getArtista(), columns, () -> rows, null,
+                    "Buscar por codigo o estado:", 3, 5);
         } catch (IllegalArgumentException e) {
             mostrarInfo("Datos invalidos", e.getMessage());
         } catch (SQLException e) {
@@ -743,7 +747,8 @@ public class MenuAdministrador extends MenuBase {
                 if (id != null) { verSectoresDeConcierto(id); }
             });
             return Arrays.asList(crear, editar, cancelar, verSectores);
-        }, "Buscar por artista o lugar:", detallePosterConcierto(9), 1, 4);
+        }, "Buscar por artista o lugar:", detallePosterConcierto(9),
+                new TablaConBotones.FiltrosConcierto(2, 4, 7), 1, 4);
     }
 
     private void verSectoresDeConcierto(int conciertoId) {
@@ -788,7 +793,7 @@ public class MenuAdministrador extends MenuBase {
             JButton verTickets = new JButton("Ver tickets");
             verTickets.addActionListener(e -> verTicketsDeConcierto(conciertoId));
             return Arrays.asList(crear, editar, eliminar, generar, verTickets);
-        });
+        }, "Buscar por tipo o nombre:", 1, 2);
     }
 
     private void gestionarMerchandising() {
@@ -832,7 +837,23 @@ public class MenuAdministrador extends MenuBase {
                 if (id != null) { eliminarMerchandising(id); refrescar.run(); }
             });
             return Arrays.asList(crear, editar, stock, eliminar);
-        });
+        }, "Buscar por concierto o producto:", 1, 2);
+    }
+
+    private void verVentasMerchandising() {
+        String[] columns = {"Detalle", "Compra", "Fecha", "Concierto", "Producto",
+                "Comprador", "Cantidad", "Precio unitario", "Total", "Metodo pago"};
+        Supplier<Object[][]> rows = () -> {
+            try {
+                LinkedList<VentaMerchandising> ventas = merchandisingService.listarVentas();
+                return filasVentasMerchandising(ventas, columns.length);
+            } catch (SQLException e) {
+                mostrarError("No se pudieron listar las ventas de merchandising", e);
+                return new Object[0][columns.length];
+            }
+        };
+        mostrarTablaConBotones("Ventas de merchandising", columns, rows, null,
+                "Buscar por concierto, producto o comprador:", 3, 4, 5, 9);
     }
 
     private void gestionarUsuarios() {
@@ -1106,7 +1127,25 @@ public class MenuAdministrador extends MenuBase {
                 if (id != null) { liberarTicket(id); refrescar.run(); }
             });
             return Arrays.asList(bloquear, liberar);
-        });
+        }, "Buscar por codigo o estado:", 3, 5);
+    }
+
+    private Object[][] filasVentasMerchandising(LinkedList<VentaMerchandising> ventas, int columnCount) {
+        Object[][] data = new Object[ventas.size()][columnCount];
+        for (int i = 0; i < ventas.size(); i++) {
+            VentaMerchandising venta = ventas.get(i);
+            data[i][0] = venta.getDetalleId();
+            data[i][1] = venta.getCompraId();
+            data[i][2] = venta.getFecha();
+            data[i][3] = venta.getConcierto();
+            data[i][4] = venta.getProducto();
+            data[i][5] = venta.getComprador();
+            data[i][6] = venta.getCantidad();
+            data[i][7] = venta.getPrecioUnitario();
+            data[i][8] = venta.getTotal();
+            data[i][9] = venta.getMetodoPago();
+        }
+        return data;
     }
 
     private void mostrarTablaConBotones(String titulo, String[] columns,
@@ -1120,7 +1159,8 @@ public class MenuAdministrador extends MenuBase {
             BiFunction<JTable, Runnable, List<JButton>> extraButtons,
             String etiquetaBusqueda,
             int... columnasBusqueda) {
-        mostrarTablaConBotones(titulo, columns, rowsSupplier, extraButtons, etiquetaBusqueda, null, columnasBusqueda);
+        mostrarTablaConBotones(titulo, columns, rowsSupplier, extraButtons,
+                etiquetaBusqueda, (TablaConBotones.DetalleImagen) null, columnasBusqueda);
     }
 
     private void mostrarTablaConBotones(String titulo, String[] columns,
@@ -1128,6 +1168,27 @@ public class MenuAdministrador extends MenuBase {
             BiFunction<JTable, Runnable, List<JButton>> extraButtons,
             String etiquetaBusqueda,
             TablaConBotones.DetalleImagen detalleImagen,
+            int... columnasBusqueda) {
+        mostrarTablaConBotones(titulo, columns, rowsSupplier, extraButtons,
+                etiquetaBusqueda, detalleImagen, null, columnasBusqueda);
+    }
+
+    private void mostrarTablaConBotones(String titulo, String[] columns,
+            Supplier<Object[][]> rowsSupplier,
+            BiFunction<JTable, Runnable, List<JButton>> extraButtons,
+            String etiquetaBusqueda,
+            TablaConBotones.FiltrosConcierto filtrosConcierto,
+            int... columnasBusqueda) {
+        mostrarTablaConBotones(titulo, columns, rowsSupplier, extraButtons,
+                etiquetaBusqueda, null, filtrosConcierto, columnasBusqueda);
+    }
+
+    private void mostrarTablaConBotones(String titulo, String[] columns,
+            Supplier<Object[][]> rowsSupplier,
+            BiFunction<JTable, Runnable, List<JButton>> extraButtons,
+            String etiquetaBusqueda,
+            TablaConBotones.DetalleImagen detalleImagen,
+            TablaConBotones.FiltrosConcierto filtrosConcierto,
             int... columnasBusqueda) {
         JFrame openFrame = openTableFrames.get(titulo);
         if (openFrame != null) {
@@ -1143,7 +1204,8 @@ public class MenuAdministrador extends MenuBase {
         TablaConBotones.Busqueda busqueda = etiquetaBusqueda == null
                 ? null
                 : new TablaConBotones.Busqueda(etiquetaBusqueda, columnasBusqueda);
-        JFrame frame = TablaConBotones.mostrar(this, titulo, columns, rowsSupplier, extraButtons, busqueda, detalleImagen);
+        JFrame frame = TablaConBotones.mostrar(this, titulo, columns, rowsSupplier, extraButtons,
+                busqueda, detalleImagen, filtrosConcierto);
         openTableFrames.put(titulo, frame);
         frame.addWindowListener(new WindowAdapter() {
             @Override
