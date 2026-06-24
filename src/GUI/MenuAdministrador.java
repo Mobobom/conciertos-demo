@@ -287,7 +287,8 @@ public class MenuAdministrador extends MenuBase {
                 rows[i][4] = sector.getPrecio();
                 rows[i][5] = sector.getDisponibles();
             }
-            mostrarTabla("Sectores del concierto " + concierto.getArtista(), columns, rows);
+            mostrarTablaConBotones("Sectores del concierto " + concierto.getArtista(), columns, () -> rows, null,
+                    "Buscar por tipo o nombre:", 1, 2);
         } catch (IllegalArgumentException e) {
             mostrarInfo("Datos invalidos", e.getMessage());
         } catch (SQLException e) {
@@ -612,7 +613,8 @@ public class MenuAdministrador extends MenuBase {
                 rows[i][5] = ticket.getEstado();
                 rows[i][6] = ticket.getCompraId();
             }
-            mostrarTabla("Tickets del concierto " + concierto.getArtista(), columns, rows);
+            mostrarTablaConBotones("Tickets del concierto " + concierto.getArtista(), columns, () -> rows, null,
+                    "Buscar por codigo o estado:", 3, 5);
         } catch (IllegalArgumentException e) {
             mostrarInfo("Datos invalidos", e.getMessage());
         } catch (SQLException e) {
@@ -787,7 +789,7 @@ public class MenuAdministrador extends MenuBase {
             JButton verTickets = new JButton("Ver tickets");
             verTickets.addActionListener(e -> verTicketsDeConcierto(conciertoId));
             return Arrays.asList(crear, editar, eliminar, generar, verTickets);
-        });
+        }, "Buscar por tipo o nombre:", 1, 2);
     }
 
     private void gestionarMerchandising() {
@@ -830,7 +832,7 @@ public class MenuAdministrador extends MenuBase {
                 if (id != null) { eliminarMerchandising(id); refrescar.run(); }
             });
             return Arrays.asList(crear, editar, stock, eliminar);
-        });
+        }, "Buscar por concierto o producto:", 1, 2);
     }
 
     private void gestionarUsuarios() {
@@ -1104,7 +1106,7 @@ public class MenuAdministrador extends MenuBase {
                 if (id != null) { liberarTicket(id); refrescar.run(); }
             });
             return Arrays.asList(bloquear, liberar);
-        });
+        }, "Buscar por codigo o estado:", 3, 5);
     }
 
     private void mostrarTablaConBotones(String titulo, String[] columns,

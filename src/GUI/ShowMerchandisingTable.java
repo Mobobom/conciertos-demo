@@ -4,23 +4,18 @@ import BLL.Concierto;
 import BLL.Merchandising;
 import BLL.MerchandisingService;
 
-import java.awt.BorderLayout;
 import java.awt.Component;
-import java.awt.FlowLayout;
 import java.awt.Frame;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
-import javax.swing.table.DefaultTableModel;
 
 public class ShowMerchandisingTable {
 
@@ -50,17 +45,35 @@ public class ShowMerchandisingTable {
         MerchandisingService merchandisingService = new MerchandisingService();
         List<Merchandising> data = new ArrayList<>();
         String[] columns = {"ID", "Producto", "Precio", "Stock", "Estado"};
-        DefaultTableModel model = new DefaultTableModel(columns, 0) {
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return false;
-            }
-        };
 
-        JTable table = new JTable(model);
-        JFrame frame = new JFrame("Merchandising - " + concierto.getArtista());
+        JFrame frame = TablaConBotones.mostrar(
+                parent,
+                "Merchandising - " + concierto.getArtista(),
+                columns,
+                () -> cargarFilas(parent, concierto, merchandisingService, data),
+                (table, recargar) -> {
+                    if (onComprar == null) {
+                        return Arrays.asList();
+                    }
+                    JButton comprar = new JButton("Comprar seleccionado");
+                    comprar.addActionListener(e -> {
+                        Merchandising seleccionado = obtenerSeleccionado(frameActual(), table, data);
+                        if (seleccionado == null) {
+                            return;
+                        }
+                        if (seleccionado.getStock() <= 0) {
+                            JOptionPane.showMessageDialog(frameActual(),
+                                    "El producto seleccionado no tiene stock disponible.",
+                                    "Comprar merchandising", JOptionPane.WARNING_MESSAGE);
+                            return;
+                        }
+                        onComprar.accept(seleccionado);
+                        recargar.run();
+                    });
+                    return Arrays.asList(comprar);
+                },
+                new TablaConBotones.Busqueda("Buscar por producto o estado:", 1, 4));
         activeFrame = frame;
-        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         frame.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosed(WindowEvent e) {
@@ -69,71 +82,41 @@ public class ShowMerchandisingTable {
                 }
             }
         });
-        frame.setLayout(new BorderLayout(5, 5));
-        frame.add(new JScrollPane(table), BorderLayout.CENTER);
-
-        Runnable recargar = () -> {
-            try {
-                data.clear();
-                data.addAll(merchandisingService.listarPorConcierto(concierto.getId()));
-                model.setRowCount(0);
-                for (Merchandising m : data) {
-                    model.addRow(new Object[] {
-                            m.getId(), m.getNombre(), m.getPrecio(), m.getStock(),
-                            m.getStock() > 0 ? "Disponible" : "Agotado"
-                    });
-                }
-            } catch (SQLException e) {
-                JOptionPane.showMessageDialog(frame,
-                        "Error de base de datos: " + e.getMessage(),
-                        "Catalogo de merchandising", JOptionPane.ERROR_MESSAGE);
-            }
-        };
-        recargar.run();
-
-        JPanel bar = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 6));
-        if (onComprar != null) {
-            JButton comprar = new JButton("Comprar seleccionado");
-            comprar.addActionListener(e -> {
-                Merchandising seleccionado = obtenerSeleccionado(frame, table, data);
-                if (seleccionado == null) {
-                    return;
-                }
-                if (seleccionado.getStock() <= 0) {
-                    JOptionPane.showMessageDialog(frame,
-                            "El producto seleccionado no tiene stock disponible.",
-                            "Comprar merchandising", JOptionPane.WARNING_MESSAGE);
-                    return;
-                }
-                onComprar.accept(seleccionado);
-                recargar.run();
-            });
-            bar.add(comprar);
-        }
-
-        JButton actualizar = new JButton("Actualizar");
-        actualizar.addActionListener(e -> recargar.run());
-        JButton cerrar = new JButton("Cerrar");
-        cerrar.addActionListener(e -> frame.dispose());
-        bar.add(actualizar);
-        bar.add(cerrar);
-        frame.add(bar, BorderLayout.SOUTH);
-
-        frame.setSize(720, 420);
-        frame.setLocationRelativeTo(parent);
-        frame.setVisible(true);
         return frame;
     }
 
-    private static Merchandising obtenerSeleccionado(JFrame frame, JTable table, List<Merchandising> data) {
-        int row = table.getSelectedRow();
-        if (row < 0) {
-            JOptionPane.showMessageDialog(frame, "Seleccione un producto.",
-                    "Merchandising", JOptionPane.WARNING_MESSAGE);
+    private static Object[][] cargarFilas(Component parent, Concierto concierto,
+            MerchandisingService merchandisingService, List<Merchandising> data) {
+        try {
+            data.clear();
+            data.addAll(merchandisingService.listarPorConcierto(concierto.getId()));
+            Object[][] rows = new Object[data.size()][5];
+            for (int i = 0; i < data.size(); i++) {
+                Merchandising m = data.get(i);
+                rows[i][0] = m.getId();
+                rows[i][1] = m.getNombre();
+                rows[i][2] = m.getPrecio();
+                rows[i][3] = m.getStock();
+                rows[i][4] = m.getStock() > 0 ? "Disponible" : "Agotado";
+            }
+            return rows;
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(parent,
+                    "Error de base de datos: " + e.getMessage(),
+                    "Catalogo de merchandising", JOptionPane.ERROR_MESSAGE);
+            return new Object[0][0];
+        }
+    }
+
+    private static JFrame frameActual() {
+        return activeFrame;
+    }
+
+    private static Merchandising obtenerSeleccionado(JFrame frame, javax.swing.JTable table, List<Merchandising> data) {
+        Integer id = TablaConBotones.idSeleccionado(frame, table);
+        if (id == null) {
             return null;
         }
-        int modelRow = table.convertRowIndexToModel(row);
-        int id = Integer.parseInt(table.getModel().getValueAt(modelRow, 0).toString());
         for (Merchandising m : data) {
             if (m.getId() == id) {
                 return m;
@@ -144,4 +127,3 @@ public class ShowMerchandisingTable {
         return null;
     }
 }
-
