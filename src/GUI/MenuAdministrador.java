@@ -705,7 +705,7 @@ public class MenuAdministrador extends MenuBase {
     }
 
     private void mostrarTablaConciertos(String titulo, Supplier<LinkedList<Concierto>> fetcher) {
-        String[] columns = {"ID", "Artista", "Fecha", "Hora", "Lugar", "Capacidad", "Disponibles", "Estado", "Organizador"};
+        String[] columns = {"ID", "Artista", "Fecha", "Hora", "Lugar", "Capacidad", "Disponibles", "Estado", "Organizador", "Poster"};
         Supplier<Object[][]> rows = () -> {
             LinkedList<Concierto> conciertos = fetcher.get();
             Object[][] data = new Object[conciertos.size()][columns.length];
@@ -720,6 +720,7 @@ public class MenuAdministrador extends MenuBase {
                 data[i][6] = concierto.getDisponibles();
                 data[i][7] = concierto.getEstado();
                 data[i][8] = concierto.getOrganizadorId();
+                data[i][9] = concierto.getPosterUrl();
             }
             return data;
         };
@@ -742,7 +743,7 @@ public class MenuAdministrador extends MenuBase {
                 if (id != null) { verSectoresDeConcierto(id); }
             });
             return Arrays.asList(crear, editar, cancelar, verSectores);
-        }, "Buscar por artista o lugar:", 1, 4);
+        }, "Buscar por artista o lugar:", detallePosterConcierto(9), 1, 4);
     }
 
     private void verSectoresDeConcierto(int conciertoId) {
@@ -1118,6 +1119,15 @@ public class MenuAdministrador extends MenuBase {
             BiFunction<JTable, Runnable, List<JButton>> extraButtons,
             String etiquetaBusqueda,
             int... columnasBusqueda) {
+        mostrarTablaConBotones(titulo, columns, rowsSupplier, extraButtons, etiquetaBusqueda, null, columnasBusqueda);
+    }
+
+    private void mostrarTablaConBotones(String titulo, String[] columns,
+            Supplier<Object[][]> rowsSupplier,
+            BiFunction<JTable, Runnable, List<JButton>> extraButtons,
+            String etiquetaBusqueda,
+            TablaConBotones.DetalleImagen detalleImagen,
+            int... columnasBusqueda) {
         JFrame openFrame = openTableFrames.get(titulo);
         if (openFrame != null) {
             if (openFrame.isDisplayable()) {
@@ -1132,7 +1142,7 @@ public class MenuAdministrador extends MenuBase {
         TablaConBotones.Busqueda busqueda = etiquetaBusqueda == null
                 ? null
                 : new TablaConBotones.Busqueda(etiquetaBusqueda, columnasBusqueda);
-        JFrame frame = TablaConBotones.mostrar(this, titulo, columns, rowsSupplier, extraButtons, busqueda);
+        JFrame frame = TablaConBotones.mostrar(this, titulo, columns, rowsSupplier, extraButtons, busqueda, detalleImagen);
         openTableFrames.put(titulo, frame);
         frame.addWindowListener(new WindowAdapter() {
             @Override
@@ -1144,6 +1154,14 @@ public class MenuAdministrador extends MenuBase {
         });
     }
 
+    private TablaConBotones.DetalleImagen detallePosterConcierto(int columnaPoster) {
+        return new TablaConBotones.DetalleImagen(
+                columnaPoster,
+                220,
+                300,
+                new int[] {1, 2, 4, 7},
+                new String[] {"Artista", "Fecha", "Lugar", "Estado"});
+    }
 
     private Integer idSeleccionado(JTable table) {
         return TablaConBotones.idSeleccionado(this, table);

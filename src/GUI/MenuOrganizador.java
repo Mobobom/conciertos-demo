@@ -7,6 +7,8 @@ import BLL.SectorService;
 import BLL.Usuario;
 import BLL.UsuarioService;
 import java.awt.BorderLayout;
+import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Frame;
 import java.awt.GridLayout;
@@ -32,12 +34,14 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.RowFilter;
 import javax.swing.SwingConstants;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableColumn;
 import javax.swing.table.TableRowSorter;
 
 public class MenuOrganizador extends MenuBase {
@@ -381,6 +385,7 @@ public class MenuOrganizador extends MenuBase {
         };
 
         JTable table = new JTable(model);
+        ocultarColumna(table, 8);
         final TableRowSorter<DefaultTableModel> sorter = new TableRowSorter<>(model);
         deshabilitarOrdenamiento(sorter, columns.length);
         table.setRowSorter(sorter);
@@ -406,11 +411,13 @@ public class MenuOrganizador extends MenuBase {
         filtros.add(new JLabel("Buscar por artista o lugar:"), BorderLayout.WEST);
         filtros.add(buscar, BorderLayout.CENTER);
         frame.add(filtros, BorderLayout.NORTH);
-        frame.add(scrollPane, BorderLayout.CENTER);
+        frame.add(crearPanelDetallePoster(table, scrollPane), BorderLayout.CENTER);
 
         Runnable refrescar = () -> {
             model.setDataVector(rowsSupplier.get(), columns);
+            ocultarColumna(table, 8);
             deshabilitarOrdenamiento(sorter, columns.length);
+            actualizarDetallePoster(table);
         };
 
         JPanel bar = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 6));
@@ -428,9 +435,10 @@ public class MenuOrganizador extends MenuBase {
         bar.add(cerrar);
 
         frame.add(bar, BorderLayout.SOUTH);
-        frame.setSize(880, 420);
+        frame.setSize(1040, 520);
         frame.setLocationRelativeTo(this);
         frame.setVisible(true);
+        actualizarDetallePoster(table);
     }
 
     private void configurarBusqueda(JTextField buscar, TableRowSorter<DefaultTableModel> sorter) {
@@ -479,8 +487,97 @@ public class MenuOrganizador extends MenuBase {
         return Integer.valueOf(value.toString());
     }
 
+    private JPanel crearPanelDetallePoster(JTable table, JScrollPane scrollPane) {
+        JPanel panel = new JPanel(new BorderLayout(8, 8));
+        EstiloGUI.aplicarPanel(panel);
+        panel.add(scrollPane, BorderLayout.CENTER);
+
+        JPanel detalle = new JPanel(new BorderLayout(6, 6));
+        EstiloGUI.aplicarPanel(detalle);
+        detalle.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(EstiloGUI.BORDE),
+                BorderFactory.createEmptyBorder(8, 8, 8, 8)));
+        detalle.setPreferredSize(new Dimension(252, 410));
+
+        JLabel poster = new JLabel();
+        poster.setName("poster");
+        poster.setHorizontalAlignment(SwingConstants.CENTER);
+        detalle.add(poster, BorderLayout.CENTER);
+
+        JTextArea info = new JTextArea();
+        info.setName("posterInfo");
+        EstiloGUI.aplicarAreaTexto(info);
+        info.setLineWrap(true);
+        info.setWrapStyleWord(true);
+        detalle.add(info, BorderLayout.SOUTH);
+
+        table.getSelectionModel().addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting()) {
+                actualizarDetallePoster(table);
+            }
+        });
+
+        panel.add(detalle, BorderLayout.EAST);
+        return panel;
+    }
+
+    private void actualizarDetallePoster(JTable table) {
+        JLabel poster = buscarComponente(table.getTopLevelAncestor(), "poster", JLabel.class);
+        JTextArea info = buscarComponente(table.getTopLevelAncestor(), "posterInfo", JTextArea.class);
+        if (poster == null || info == null) {
+            return;
+        }
+
+        int row = table.getSelectedRow();
+        if (row < 0) {
+            poster.setIcon(ImagenHelper.cargarImagen(null, 220, 300));
+            info.setText("Seleccione un concierto para ver su poster.");
+            return;
+        }
+
+        int modelRow = table.convertRowIndexToModel(row);
+        poster.setIcon(ImagenHelper.cargarImagen(valorTabla(table, modelRow, 8), 220, 300));
+        info.setText("Artista: " + valorTabla(table, modelRow, 1)
+                + "\nFecha: " + valorTabla(table, modelRow, 2)
+                + "\nLugar: " + valorTabla(table, modelRow, 4)
+                + "\nEstado: " + valorTabla(table, modelRow, 7));
+    }
+
+    private String valorTabla(JTable table, int modelRow, int column) {
+        Object value = table.getModel().getValueAt(modelRow, column);
+        return value == null ? "" : value.toString();
+    }
+
+    private void ocultarColumna(JTable table, int columnaModelo) {
+        int columnaVista = table.convertColumnIndexToView(columnaModelo);
+        if (columnaVista < 0) {
+            return;
+        }
+        TableColumn column = table.getColumnModel().getColumn(columnaVista);
+        table.getColumnModel().removeColumn(column);
+    }
+
+    private <T extends Component> T buscarComponente(Component raiz, String nombre, Class<T> tipo) {
+        if (raiz == null) {
+            return null;
+        }
+        if (tipo.isInstance(raiz) && nombre.equals(raiz.getName())) {
+            return tipo.cast(raiz);
+        }
+        if (raiz instanceof java.awt.Container) {
+            Component[] hijos = ((java.awt.Container) raiz).getComponents();
+            for (Component hijo : hijos) {
+                T encontrado = buscarComponente(hijo, nombre, tipo);
+                if (encontrado != null) {
+                    return encontrado;
+                }
+            }
+        }
+        return null;
+    }
+
     private void mostrarTablaConciertos(String titulo, Supplier<LinkedList<Concierto>> fetcher) {
-        String[] columns = {"ID", "Artista", "Fecha", "Hora", "Lugar", "Capacidad", "Disponibles", "Estado"};
+        String[] columns = {"ID", "Artista", "Fecha", "Hora", "Lugar", "Capacidad", "Disponibles", "Estado", "Poster"};
         Supplier<Object[][]> rows = () -> {
             LinkedList<Concierto> conciertos = fetcher.get();
             Object[][] data = new Object[conciertos.size()][columns.length];
@@ -494,6 +591,7 @@ public class MenuOrganizador extends MenuBase {
                 data[i][5] = concierto.getCapacidadTotal();
                 data[i][6] = concierto.getDisponibles();
                 data[i][7] = concierto.getEstado();
+                data[i][8] = concierto.getPosterUrl();
             }
             return data;
         };
