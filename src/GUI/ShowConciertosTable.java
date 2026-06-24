@@ -46,7 +46,8 @@ public class ShowConciertosTable {
                     });
                     return Arrays.asList(comprar);
                 },
-                new TablaConBotones.Busqueda("Buscar por artista o lugar:", 1, 4));
+                new TablaConBotones.Busqueda("Buscar por artista o lugar:", 1, 4),
+                new TablaConBotones.FiltrosConcierto(2, 4, -1));
     }
 
     private static Object[][] cargarFilas(Component parent, ControllerConcierto controller, List<Concierto> data) {
