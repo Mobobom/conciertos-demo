@@ -9,16 +9,23 @@ public class Merchandising {
     private String nombre;
     private BigDecimal precio;
     private int stock;
+    private String imagenUrl;
 
     public Merchandising() {
     }
 
     public Merchandising(int id, int conciertoId, String nombre, BigDecimal precio, int stock) {
+        this(id, conciertoId, nombre, precio, stock, null);
+    }
+
+    public Merchandising(int id, int conciertoId, String nombre, BigDecimal precio, int stock,
+                         String imagenUrl) {
         this.id = id;
         this.conciertoId = conciertoId;
         this.nombre = nombre;
         this.precio = precio;
         this.stock = stock;
+        this.imagenUrl = imagenUrl;
     }
 
     public int getId() { return id; }
@@ -36,11 +43,13 @@ public class Merchandising {
     public int getStock() { return stock; }
     public void setStock(int stock) { this.stock = stock; }
 
+    public String getImagenUrl() { return imagenUrl; }
+    public void setImagenUrl(String imagenUrl) { this.imagenUrl = imagenUrl; }
+
     @Override
     public String toString() {
         return "Merchandising [id=" + id + ", conciertoId=" + conciertoId
                 + ", nombre=" + nombre + ", precio=" + precio
-                + ", stock=" + stock + "]";
+                + ", stock=" + stock + ", imagenUrl=" + imagenUrl + "]";
     }
 }
-

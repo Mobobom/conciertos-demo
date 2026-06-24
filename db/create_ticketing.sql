@@ -44,6 +44,7 @@ CREATE TABLE `concierto` (
   `capacidad_total` INT(11)      NOT NULL,
   `organizador_id`  INT(11)      DEFAULT NULL,
   `estado`          ENUM('Activo','Cancelado') NOT NULL DEFAULT 'Activo',
+  `poster_url`      VARCHAR(255) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `uq_concierto_fecha_hora_lugar` (`fecha`,`hora`,`lugar`),
   KEY `fk_concierto_organizador` (`organizador_id`),
@@ -129,6 +130,7 @@ CREATE TABLE `merchandising` (
   `nombre`       VARCHAR(100)  NOT NULL,
   `precio`       DECIMAL(10,2) NOT NULL,
   `stock`        INT(11)       NOT NULL,
+  `imagen_url`   VARCHAR(255)  DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `fk_merch_concierto` (`concierto_id`),
   CONSTRAINT `fk_merch_concierto`

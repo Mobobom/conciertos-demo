@@ -25,9 +25,9 @@ INSERT INTO `usuario` (`id`,`nombre`,`apellido`,`email`,`documento`,`password`,`
 
 -- concierto
 
-INSERT INTO `concierto` (`id`,`artista`,`fecha`,`hora`,`lugar`,`capacidad_total`,`organizador_id`,`estado`) VALUES
-(1,'Coldplay','2026-06-15','21:00:00','Estadio Monumental',60,2,'Activo'),
-(2,'Taylor Swift','2026-08-20','20:30:00','Estadio Velez',60,2,'Activo');
+INSERT INTO `concierto` (`id`,`artista`,`fecha`,`hora`,`lugar`,`capacidad_total`,`organizador_id`,`estado`,`poster_url`) VALUES
+(1,'Coldplay','2026-06-15','21:00:00','Estadio Monumental',60,2,'Activo','concerts/coldplay-2026-poster.png'),
+(2,'Taylor Swift','2026-08-20','20:30:00','Estadio Velez',60,2,'Activo','concerts/taylor-swift-2026-poster.png');
 
 -- sector
 
@@ -128,11 +128,11 @@ INSERT INTO `ticket` (`concierto_id`,`sector_id`,`codigo`,`precio`,`estado`) VAL
 
 -- merchandising
 
-INSERT INTO `merchandising` (`concierto_id`,`nombre`,`precio`,`stock`) VALUES
-(1,'Remera Coldplay',35.00,100),
-(1,'Poster Coldplay',15.00,200),
-(2,'Remera Taylor',40.00,100),
-(2,'Poster Taylor',18.00,200);
+INSERT INTO `merchandising` (`concierto_id`,`nombre`,`precio`,`stock`,`imagen_url`) VALUES
+(1,'Remera Coldplay',35.00,100,'merch/coldplay-2026-remera.png'),
+(1,'Poster Coldplay',15.00,200,'merch/coldplay-2026-poster.png'),
+(2,'Remera Taylor',40.00,100,'merch/taylor-swift-2026-remera.png'),
+(2,'Poster Taylor',18.00,200,'merch/taylor-swift-2026-poster.png');
 
 
 -- estacionamiento
