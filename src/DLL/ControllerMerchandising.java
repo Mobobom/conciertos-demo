@@ -19,7 +19,8 @@ public class ControllerMerchandising {
     }
 
     public int crear(Merchandising merchandising) throws SQLException {
-        String sql = "INSERT INTO merchandising (concierto_id, nombre, precio, stock) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO merchandising (concierto_id, nombre, precio, stock, imagen_url) "
+                + "VALUES (?, ?, ?, ?, ?)";
         try (PreparedStatement stmt = getConnection().prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             fillStatement(stmt, merchandising);
             stmt.executeUpdate();
@@ -88,10 +89,10 @@ public class ControllerMerchandising {
     }
 
     public boolean modificar(Merchandising merchandising) throws SQLException {
-        String sql = "UPDATE merchandising SET concierto_id = ?, nombre = ?, precio = ?, stock = ? WHERE id = ?";
+        String sql = "UPDATE merchandising SET concierto_id = ?, nombre = ?, precio = ?, stock = ?, imagen_url = ? WHERE id = ?";
         try (PreparedStatement stmt = getConnection().prepareStatement(sql)) {
             fillStatement(stmt, merchandising);
-            stmt.setInt(5, merchandising.getId());
+            stmt.setInt(6, merchandising.getId());
             return stmt.executeUpdate() == 1;
         }
     }
@@ -157,6 +158,22 @@ public class ControllerMerchandising {
         return compras;
     }
 
+    public LinkedList<VentaMerchandising> listarVentasPorComprador(int compradorId) throws SQLException {
+        LinkedList<VentaMerchandising> ventas = new LinkedList<>();
+        String sql = baseVentaMerchandisingSelect()
+                + " WHERE c.comprador_id = ?"
+                + " ORDER BY c.fecha DESC, cm.id DESC";
+        try (PreparedStatement stmt = getConnection().prepareStatement(sql)) {
+            stmt.setInt(1, compradorId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    ventas.add(mapVentaMerchandising(rs));
+                }
+            }
+        }
+        return ventas;
+    }
+
     public LinkedList<VentaMerchandising> listarVentas() throws SQLException {
         LinkedList<VentaMerchandising> ventas = new LinkedList<>();
         String sql = baseVentaMerchandisingSelect() + " ORDER BY c.fecha DESC, cm.id DESC";
@@ -172,7 +189,8 @@ public class ControllerMerchandising {
     public LinkedList<VentaMerchandising> listarVentasPorOrganizador(int organizadorId) throws SQLException {
         LinkedList<VentaMerchandising> ventas = new LinkedList<>();
         String sql = baseVentaMerchandisingSelect()
-                + " WHERE co.organizador_id = ? ORDER BY c.fecha DESC, cm.id DESC";
+                + " WHERE co.organizador_id = ?"
+                + " ORDER BY c.fecha DESC, cm.id DESC";
         try (PreparedStatement stmt = getConnection().prepareStatement(sql)) {
             stmt.setInt(1, organizadorId);
             try (ResultSet rs = stmt.executeQuery()) {
@@ -185,7 +203,7 @@ public class ControllerMerchandising {
     }
 
     private String baseSelect() {
-        return "SELECT id, concierto_id, nombre, precio, stock FROM merchandising";
+        return "SELECT id, concierto_id, nombre, precio, stock, imagen_url FROM merchandising";
     }
 
     private String baseCompraMerchandisingSelect() {
@@ -195,10 +213,9 @@ public class ControllerMerchandising {
     private String baseVentaMerchandisingSelect() {
         return "SELECT cm.id AS detalle_id, c.id AS compra_id, c.fecha, "
                 + "co.artista AS concierto, m.nombre AS producto, "
-                + "CONCAT_WS(' | ', CONCAT_WS(' ', u.nombre, u.apellido), u.email) AS comprador, "
-                + "cm.cantidad, cm.precio_unitario, "
-                + "(cm.cantidad * cm.precio_unitario) AS total, "
-                + "COALESCE(p.metodo, '') AS metodo_pago "
+                + "TRIM(CONCAT(COALESCE(u.nombre, ''), ' ', COALESCE(u.apellido, ''), ' - ', u.email)) AS comprador, "
+                + "cm.cantidad, cm.precio_unitario, (cm.cantidad * cm.precio_unitario) AS total, "
+                + "COALESCE(p.metodo, '') AS metodo_pago, m.imagen_url "
                 + "FROM compra_merchandising cm "
                 + "JOIN compra c ON c.id = cm.compra_id "
                 + "JOIN merchandising m ON m.id = cm.merchandising_id "
@@ -212,6 +229,7 @@ public class ControllerMerchandising {
         stmt.setString(2, merchandising.getNombre());
         stmt.setBigDecimal(3, merchandising.getPrecio());
         stmt.setInt(4, merchandising.getStock());
+        stmt.setString(5, normalizarRutaImagen(merchandising.getImagenUrl()));
     }
 
     private Merchandising mapMerchandising(ResultSet rs) throws SQLException {
@@ -220,7 +238,8 @@ public class ControllerMerchandising {
                 rs.getInt("concierto_id"),
                 rs.getString("nombre"),
                 rs.getBigDecimal("precio"),
-                rs.getInt("stock")
+                rs.getInt("stock"),
+                rs.getString("imagen_url")
         );
     }
 
@@ -246,7 +265,15 @@ public class ControllerMerchandising {
                 rs.getInt("cantidad"),
                 rs.getBigDecimal("precio_unitario"),
                 rs.getBigDecimal("total"),
-                rs.getString("metodo_pago")
+                rs.getString("metodo_pago"),
+                rs.getString("imagen_url")
         );
+    }
+
+    private String normalizarRutaImagen(String ruta) {
+        if (ruta == null || ruta.trim().isEmpty()) {
+            return null;
+        }
+        return ruta.trim();
     }
 }

@@ -17,7 +17,7 @@ public class ShowConciertosTable {
     public static JFrame showTable(Component parent, Consumer<Concierto> onComprar) {
         ControllerConcierto controller = new ControllerConcierto();
         List<Concierto> data = new ArrayList<>();
-        String[] columns = {"ID", "Artista", "Fecha", "Hora", "Lugar", "Capacidad", "Disponibles"};
+        String[] columns = {"ID", "Artista", "Fecha", "Hora", "Lugar", "Capacidad", "Disponibles", "Poster"};
 
         return TablaConBotones.mostrar(
                 parent,
@@ -47,6 +47,12 @@ public class ShowConciertosTable {
                     return Arrays.asList(comprar);
                 },
                 new TablaConBotones.Busqueda("Buscar por artista o lugar:", 1, 4),
+                new TablaConBotones.DetalleImagen(
+                        7,
+                        220,
+                        300,
+                        new int[] {1, 2, 4, 6},
+                        new String[] {"Artista", "Fecha", "Lugar", "Disponibles"}),
                 new TablaConBotones.FiltrosConcierto(2, 4, -1));
     }
 
@@ -54,7 +60,7 @@ public class ShowConciertosTable {
         try {
             data.clear();
             data.addAll(controller.mostrarActivos());
-            Object[][] rows = new Object[data.size()][7];
+            Object[][] rows = new Object[data.size()][8];
             for (int i = 0; i < data.size(); i++) {
                 Concierto c = data.get(i);
                 rows[i][0] = c.getId();
@@ -64,6 +70,7 @@ public class ShowConciertosTable {
                 rows[i][4] = c.getLugar();
                 rows[i][5] = c.getCapacidadTotal();
                 rows[i][6] = c.getDisponibles();
+                rows[i][7] = c.getPosterUrl();
             }
             return rows;
         } catch (SQLException e) {

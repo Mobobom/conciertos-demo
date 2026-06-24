@@ -13,6 +13,7 @@ public class Concierto {
     private int capacidadTotal;
     private int organizadorId;
     private String estado;
+    private String posterUrl;
 
     private int disponibles;
 
@@ -21,6 +22,12 @@ public class Concierto {
 
     public Concierto(int id, String artista, LocalDate fecha, LocalTime hora,
                      String lugar, int capacidadTotal, int organizadorId, String estado) {
+        this(id, artista, fecha, hora, lugar, capacidadTotal, organizadorId, estado, null);
+    }
+
+    public Concierto(int id, String artista, LocalDate fecha, LocalTime hora,
+                     String lugar, int capacidadTotal, int organizadorId, String estado,
+                     String posterUrl) {
         this.id = id;
         this.artista = artista;
         this.fecha = fecha;
@@ -29,6 +36,7 @@ public class Concierto {
         this.capacidadTotal = capacidadTotal;
         this.organizadorId = organizadorId;
         this.estado = estado;
+        this.posterUrl = posterUrl;
     }
 
     public int getId() { return id; }
@@ -55,6 +63,9 @@ public class Concierto {
     public String getEstado() { return estado; }
     public void setEstado(String estado) { this.estado = estado; }
 
+    public String getPosterUrl() { return posterUrl; }
+    public void setPosterUrl(String posterUrl) { this.posterUrl = posterUrl; }
+
     public int getDisponibles() { return disponibles; }
     public void setDisponibles(int disponibles) { this.disponibles = disponibles; }
 
@@ -63,6 +74,7 @@ public class Concierto {
         return "Concierto [id=" + id + ", artista=" + artista + ", fecha=" + fecha
                 + ", hora=" + hora + ", lugar=" + lugar
                 + ", capacidadTotal=" + capacidadTotal + ", estado=" + estado
+                + ", posterUrl=" + posterUrl
                 + ", disponibles=" + disponibles + "]";
     }
 }

@@ -102,6 +102,13 @@ public class MerchandisingService {
         return controllerMerchandising.listarDisponiblesPorConcierto(conciertoId);
     }
 
+    public LinkedList<VentaMerchandising> listarComprasPorComprador(int compradorId) throws SQLException {
+        if (compradorId <= 0) {
+            throw new IllegalArgumentException("El comprador es obligatorio.");
+        }
+        return controllerMerchandising.listarVentasPorComprador(compradorId);
+    }
+
     public LinkedList<VentaMerchandising> listarVentas() throws SQLException {
         return controllerMerchandising.listarVentas();
     }

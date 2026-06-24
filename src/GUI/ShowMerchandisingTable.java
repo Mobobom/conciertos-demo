@@ -44,7 +44,7 @@ public class ShowMerchandisingTable {
 
         MerchandisingService merchandisingService = new MerchandisingService();
         List<Merchandising> data = new ArrayList<>();
-        String[] columns = {"ID", "Producto", "Precio", "Stock", "Estado"};
+        String[] columns = {"ID", "Imagen", "Producto", "Precio", "Stock", "Estado"};
 
         JFrame frame = TablaConBotones.mostrar(
                 parent,
@@ -72,7 +72,8 @@ public class ShowMerchandisingTable {
                     });
                     return Arrays.asList(comprar);
                 },
-                new TablaConBotones.Busqueda("Buscar por producto o estado:", 1, 4));
+                new TablaConBotones.Busqueda("Buscar por producto o estado:", 2, 5));
+
         activeFrame = frame;
         frame.addWindowListener(new WindowAdapter() {
             @Override
@@ -90,14 +91,15 @@ public class ShowMerchandisingTable {
         try {
             data.clear();
             data.addAll(merchandisingService.listarPorConcierto(concierto.getId()));
-            Object[][] rows = new Object[data.size()][5];
+            Object[][] rows = new Object[data.size()][6];
             for (int i = 0; i < data.size(); i++) {
                 Merchandising m = data.get(i);
                 rows[i][0] = m.getId();
-                rows[i][1] = m.getNombre();
-                rows[i][2] = m.getPrecio();
-                rows[i][3] = m.getStock();
-                rows[i][4] = m.getStock() > 0 ? "Disponible" : "Agotado";
+                rows[i][1] = ImagenHelper.cargarMiniatura(m.getImagenUrl());
+                rows[i][2] = m.getNombre();
+                rows[i][3] = m.getPrecio();
+                rows[i][4] = m.getStock();
+                rows[i][5] = m.getStock() > 0 ? "Disponible" : "Agotado";
             }
             return rows;
         } catch (SQLException e) {

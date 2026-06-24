@@ -5,21 +5,22 @@ import java.time.LocalDateTime;
 
 public class VentaMerchandising {
 
-    private int detalleId;
-    private int compraId;
-    private LocalDateTime fecha;
-    private String concierto;
-    private String producto;
-    private String comprador;
-    private int cantidad;
-    private BigDecimal precioUnitario;
-    private BigDecimal total;
-    private String metodoPago;
+    private final int detalleId;
+    private final int compraId;
+    private final LocalDateTime fecha;
+    private final String concierto;
+    private final String producto;
+    private final String comprador;
+    private final int cantidad;
+    private final BigDecimal precioUnitario;
+    private final BigDecimal total;
+    private final String metodoPago;
+    private final String imagenUrl;
 
     public VentaMerchandising(int detalleId, int compraId, LocalDateTime fecha,
                               String concierto, String producto, String comprador,
-                              int cantidad, BigDecimal precioUnitario,
-                              BigDecimal total, String metodoPago) {
+                              int cantidad, BigDecimal precioUnitario, BigDecimal total,
+                              String metodoPago, String imagenUrl) {
         this.detalleId = detalleId;
         this.compraId = compraId;
         this.fecha = fecha;
@@ -30,6 +31,7 @@ public class VentaMerchandising {
         this.precioUnitario = precioUnitario;
         this.total = total;
         this.metodoPago = metodoPago;
+        this.imagenUrl = imagenUrl;
     }
 
     public int getDetalleId() { return detalleId; }
@@ -42,4 +44,5 @@ public class VentaMerchandising {
     public BigDecimal getPrecioUnitario() { return precioUnitario; }
     public BigDecimal getTotal() { return total; }
     public String getMetodoPago() { return metodoPago; }
+    public String getImagenUrl() { return imagenUrl; }
 }
