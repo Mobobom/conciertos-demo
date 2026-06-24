@@ -38,29 +38,20 @@ public final class TablaConBotones {
     private TablaConBotones() {
     }
 
-    public static JFrame mostrar(
-            Component parent,
-            String titulo,
-            String[] columns,
+    public static JFrame mostrar(Component parent, String titulo, String[] columns,
             Supplier<Object[][]> rowsSupplier,
             BiFunction<JTable, Runnable, List<JButton>> extraButtons) {
         return mostrarCompleta(parent, titulo, columns, rowsSupplier, extraButtons, null, null, null);
     }
 
-    public static JFrame mostrar(
-            Component parent,
-            String titulo,
-            String[] columns,
+    public static JFrame mostrar(Component parent, String titulo, String[] columns,
             Supplier<Object[][]> rowsSupplier,
             BiFunction<JTable, Runnable, List<JButton>> extraButtons,
             Busqueda busqueda) {
         return mostrarCompleta(parent, titulo, columns, rowsSupplier, extraButtons, busqueda, null, null);
     }
 
-    public static JFrame mostrar(
-            Component parent,
-            String titulo,
-            String[] columns,
+    public static JFrame mostrar(Component parent, String titulo, String[] columns,
             Supplier<Object[][]> rowsSupplier,
             BiFunction<JTable, Runnable, List<JButton>> extraButtons,
             Busqueda busqueda,
@@ -68,10 +59,7 @@ public final class TablaConBotones {
         return mostrarCompleta(parent, titulo, columns, rowsSupplier, extraButtons, busqueda, detalleImagen, null);
     }
 
-    public static JFrame mostrar(
-            Component parent,
-            String titulo,
-            String[] columns,
+    public static JFrame mostrar(Component parent, String titulo, String[] columns,
             Supplier<Object[][]> rowsSupplier,
             BiFunction<JTable, Runnable, List<JButton>> extraButtons,
             Busqueda busqueda,
@@ -79,10 +67,7 @@ public final class TablaConBotones {
         return mostrarCompleta(parent, titulo, columns, rowsSupplier, extraButtons, busqueda, null, filtrosConcierto);
     }
 
-    public static JFrame mostrar(
-            Component parent,
-            String titulo,
-            String[] columns,
+    public static JFrame mostrar(Component parent, String titulo, String[] columns,
             Supplier<Object[][]> rowsSupplier,
             BiFunction<JTable, Runnable, List<JButton>> extraButtons,
             Busqueda busqueda,
@@ -92,10 +77,7 @@ public final class TablaConBotones {
                 busqueda, detalleImagen, filtrosConcierto);
     }
 
-    private static JFrame mostrarCompleta(
-            Component parent,
-            String titulo,
-            String[] columns,
+    private static JFrame mostrarCompleta(Component parent, String titulo, String[] columns,
             Supplier<Object[][]> rowsSupplier,
             BiFunction<JTable, Runnable, List<JButton>> extraButtons,
             Busqueda busqueda,
