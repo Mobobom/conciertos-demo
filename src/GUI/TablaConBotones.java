@@ -63,9 +63,21 @@ public final class TablaConBotones {
             public boolean isCellEditable(int row, int column) {
                 return false;
             }
+
+            @Override
+            public Class<?> getColumnClass(int columnIndex) {
+                for (int row = 0; row < getRowCount(); row++) {
+                    Object value = getValueAt(row, columnIndex);
+                    if (value != null) {
+                        return value.getClass();
+                    }
+                }
+                return Object.class;
+            }
         };
 
         JTable table = new JTable(model);
+        ajustarAltoSiTieneImagenes(table);
         if (detalleImagen != null) {
             ocultarColumna(table, detalleImagen.columnaImagen);
         }
@@ -102,6 +114,7 @@ public final class TablaConBotones {
         TableRowSorter<DefaultTableModel> finalSorter = sorter;
         Runnable refrescar = () -> {
             model.setDataVector(rowsSupplier.get(), columns);
+            ajustarAltoSiTieneImagenes(table);
             if (detalleImagen != null) {
                 ocultarColumna(table, detalleImagen.columnaImagen);
                 actualizarDetalleImagen(table, detalleImagen);
@@ -145,6 +158,15 @@ public final class TablaConBotones {
         int modelRow = table.convertRowIndexToModel(row);
         Object value = table.getModel().getValueAt(modelRow, 0);
         return Integer.valueOf(value.toString());
+    }
+
+    private static void ajustarAltoSiTieneImagenes(JTable table) {
+        for (int column = 0; column < table.getModel().getColumnCount(); column++) {
+            if (javax.swing.ImageIcon.class.isAssignableFrom(table.getModel().getColumnClass(column))) {
+                table.setRowHeight(56);
+                return;
+            }
+        }
     }
 
     private static JPanel crearPanelConDetalle(JTable table, JScrollPane scrollPane, DetalleImagen detalleImagen) {

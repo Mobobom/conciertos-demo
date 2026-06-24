@@ -792,7 +792,7 @@ public class MenuAdministrador extends MenuBase {
     }
 
     private void gestionarMerchandising() {
-        String[] columns = {"ID", "Concierto", "Producto", "Precio", "Stock"};
+        String[] columns = {"ID", "Imagen", "Concierto", "Producto", "Precio", "Stock"};
         Supplier<Object[][]> rows = () -> {
             try {
                 LinkedList<Merchandising> productos = merchandisingService.listarTodos();
@@ -801,10 +801,11 @@ public class MenuAdministrador extends MenuBase {
                     Merchandising producto = productos.get(i);
                     Concierto concierto = conciertoService.buscarPorId(producto.getConciertoId());
                     data[i][0] = producto.getId();
-                    data[i][1] = concierto == null ? producto.getConciertoId() : concierto.getArtista();
-                    data[i][2] = producto.getNombre();
-                    data[i][3] = producto.getPrecio();
-                    data[i][4] = producto.getStock();
+                    data[i][1] = ImagenHelper.cargarMiniatura(producto.getImagenUrl());
+                    data[i][2] = concierto == null ? producto.getConciertoId() : concierto.getArtista();
+                    data[i][3] = producto.getNombre();
+                    data[i][4] = producto.getPrecio();
+                    data[i][5] = producto.getStock();
                 }
                 return data;
             } catch (SQLException e) {

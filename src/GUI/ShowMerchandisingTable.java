@@ -49,15 +49,27 @@ public class ShowMerchandisingTable {
 
         MerchandisingService merchandisingService = new MerchandisingService();
         List<Merchandising> data = new ArrayList<>();
-        String[] columns = {"ID", "Producto", "Precio", "Stock", "Estado"};
+        String[] columns = {"ID", "Imagen", "Producto", "Precio", "Stock", "Estado"};
         DefaultTableModel model = new DefaultTableModel(columns, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
                 return false;
             }
+
+            @Override
+            public Class<?> getColumnClass(int columnIndex) {
+                for (int row = 0; row < getRowCount(); row++) {
+                    Object value = getValueAt(row, columnIndex);
+                    if (value != null) {
+                        return value.getClass();
+                    }
+                }
+                return Object.class;
+            }
         };
 
         JTable table = new JTable(model);
+        table.setRowHeight(56);
         JFrame frame = new JFrame("Merchandising - " + concierto.getArtista());
         activeFrame = frame;
         frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -79,7 +91,9 @@ public class ShowMerchandisingTable {
                 model.setRowCount(0);
                 for (Merchandising m : data) {
                     model.addRow(new Object[] {
-                            m.getId(), m.getNombre(), m.getPrecio(), m.getStock(),
+                            m.getId(),
+                            ImagenHelper.cargarMiniatura(m.getImagenUrl()),
+                            m.getNombre(), m.getPrecio(), m.getStock(),
                             m.getStock() > 0 ? "Disponible" : "Agotado"
                     });
                 }
@@ -144,4 +158,3 @@ public class ShowMerchandisingTable {
         return null;
     }
 }
-
