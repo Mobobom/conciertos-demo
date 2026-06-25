@@ -2,95 +2,101 @@ package GUI;
 
 import BLL.Concierto;
 import BLL.ConciertoService;
+import BLL.Merchandising;
+import BLL.MerchandisingService;
 import BLL.Sector;
 import BLL.SectorService;
 import BLL.Usuario;
 import BLL.UsuarioService;
+import BLL.VentaMerchandising;
 import java.awt.BorderLayout;
+import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.Frame;
 import java.awt.GridLayout;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.time.format.DateTimeParseException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
-import java.util.Map;
-import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Supplier;
+import java.util.regex.Pattern;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
+import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
+import javax.swing.RowFilter;
 import javax.swing.SwingConstants;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableColumn;
+import javax.swing.table.TableRowSorter;
 
-public class MenuOrganizador extends JFrame {
+public class MenuOrganizador extends MenuBase {
 
-    private final Usuario usuario;
     private final ConciertoService conciertoService;
     private final SectorService sectorService;
     private final UsuarioService usuarioService;
+    private final MerchandisingService merchandisingService;
+    private final Map<String, JFrame> openTableFrames;
 
     public MenuOrganizador(Usuario usuario) {
-        this.usuario = usuario;
+        super(usuario);
         this.conciertoService = new ConciertoService();
         this.sectorService = new SectorService();
         this.usuarioService = new UsuarioService();
-        initialize();
+        this.merchandisingService = new MerchandisingService();
+        this.openTableFrames = new HashMap<>();
+        inicializarMenu("Menu Organizador");
     }
 
-    private void initialize() {
-        setTitle("Menu Organizador");
-        setSize(780, 480);
-        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setLocationRelativeTo(null);
-        setLayout(new BorderLayout(10, 10));
-
-        add(buildHeader(), BorderLayout.NORTH);
-        add(buildButtons(), BorderLayout.CENTER);
+    @Override
+    protected String getTituloPanel() {
+        return "Panel de Organizador";
     }
 
-    private JPanel buildHeader() {
+    @Override
+    protected JComponent crearContenido() {
         JPanel panel = new JPanel(new BorderLayout());
-        panel.setBorder(BorderFactory.createEmptyBorder(15, 15, 5, 15));
+        EstiloGUI.aplicarPanelContenido(panel);
 
-        JLabel title = new JLabel("Panel de Organizador", SwingConstants.CENTER);
-        title.setFont(title.getFont().deriveFont(18f));
-        panel.add(title, BorderLayout.NORTH);
+        JPanel grid = new JPanel(new GridLayout(0, 2, EstiloGUI.ESPACIADO, EstiloGUI.ESPACIADO));
+        EstiloGUI.aplicarPanel(grid);
 
-        JLabel subtitle = new JLabel(
-                usuario.getNombre() + " " + usuario.getApellido() + " | " + usuario.getEmail(),
-                SwingConstants.CENTER);
-        panel.add(subtitle, BorderLayout.CENTER);
-
-        return panel;
-    }
-
-    private JPanel buildButtons() {
-        JPanel panel = new JPanel(new GridLayout(0, 2, 10, 10));
-        panel.setBorder(BorderFactory.createEmptyBorder(10, 20, 20, 20));
-
-        addButton(panel, "Listar conciertos activos", e -> mostrarConciertosActivos());
-        addButton(panel, "Crear concierto", e -> crearConcierto());
-        addButton(panel, "Modificar concierto", e -> modificarConcierto());
-        addButton(panel, "Ver informacion del evento", e -> verInformacionEvento());
-        addButton(panel, "Cerrar sesion", e -> cerrarSesion());
-        addButton(panel, "Cerrar menu", e -> dispose());
+        addButton(grid, "Listar conciertos activos", "search", e -> mostrarConciertosActivos());
+        addButton(grid, "Crear concierto", "add", e -> crearConcierto());
+        addButton(grid, "Modificar concierto", "edit", e -> modificarConcierto());
+        addButton(grid, "Ver informacion del evento", "report", e -> verInformacionEvento());
+        addButton(grid, "Gestionar merchandising", "merchandising", e -> gestionarMerchandising());
+        addButton(grid, "Ventas merchandising", "payment", e -> verVentasMerchandising());
+        addButton(grid, "Cambiar password", "edit", e -> PasswordDialogs.cambiarPassword(this, usuario));
+        grid.add(crearBotonVolverLogin());
+        grid.add(crearBotonCerrarSistema());
+        panel.add(grid, BorderLayout.NORTH);
 
         return panel;
     }
 
-    private void addButton(JPanel panel, String label, java.awt.event.ActionListener action) {
-        JButton button = new JButton(label);
-        button.addActionListener(action);
-        panel.add(button);
+    @Override
+    public void dispose() {
+        cerrarTablasAbiertas();
+        super.dispose();
     }
 
     private void mostrarConciertosActivos() {
@@ -106,11 +112,11 @@ public class MenuOrganizador extends JFrame {
 
     private void crearConcierto() {
         try {
-            String artista = pedirTexto("Artista", "Ingrese el nombre del artista");
-            LocalDate fecha = pedirFecha("Fecha (yyyy-MM-dd)", "2026-06-15");
-            LocalTime hora = pedirHora("Hora (HH:mm)", "21:00");
-            String lugar = pedirTexto("Lugar", "Ingrese el lugar del concierto");
-            int capacidadTotal = pedirEntero("Capacidad total", "60");
+            String artista = DialogosUtil.pedirTexto(this, "Artista", "Ingrese el nombre del artista");
+            LocalDate fecha = DialogosUtil.pedirFecha(this, "Fecha (yyyy-MM-dd)", "2026-06-15");
+            LocalTime hora = DialogosUtil.pedirHora(this, "Hora (HH:mm)", "21:00");
+            String lugar = DialogosUtil.pedirTexto(this, "Lugar", "Ingrese el lugar del concierto");
+            int capacidadTotal = DialogosUtil.pedirEntero(this, "Capacidad total", "60");
             Integer organizadorId = seleccionarOrganizador();
             if (organizadorId == null) {
                 return;
@@ -135,11 +141,11 @@ public class MenuOrganizador extends JFrame {
                 return;
             }
 
-            String artista = pedirTexto("Artista", concierto.getArtista());
-            LocalDate fecha = pedirFecha("Fecha (yyyy-MM-dd)", concierto.getFecha().toString());
-            LocalTime hora = pedirHora("Hora (HH:mm)", concierto.getHora().toString());
-            String lugar = pedirTexto("Lugar", concierto.getLugar());
-            int capacidadTotal = pedirEntero("Capacidad total", String.valueOf(concierto.getCapacidadTotal()));
+            String artista = DialogosUtil.pedirTexto(this, "Artista", concierto.getArtista());
+            LocalDate fecha = DialogosUtil.pedirFecha(this, "Fecha (yyyy-MM-dd)", concierto.getFecha().toString());
+            LocalTime hora = DialogosUtil.pedirHora(this, "Hora (HH:mm)", concierto.getHora().toString());
+            String lugar = DialogosUtil.pedirTexto(this, "Lugar", concierto.getLugar());
+            int capacidadTotal = DialogosUtil.pedirEntero(this, "Capacidad total", String.valueOf(concierto.getCapacidadTotal()));
             Integer organizadorId = seleccionarOrganizador(concierto.getOrganizadorId());
             if (organizadorId == null) {
                 return;
@@ -175,11 +181,11 @@ public class MenuOrganizador extends JFrame {
                 return;
             }
 
-            String artista = pedirTexto("Artista", concierto.getArtista());
-            LocalDate fecha = pedirFecha("Fecha (yyyy-MM-dd)", concierto.getFecha().toString());
-            LocalTime hora = pedirHora("Hora (HH:mm)", concierto.getHora().toString());
-            String lugar = pedirTexto("Lugar", concierto.getLugar());
-            int capacidadTotal = pedirEntero("Capacidad total", String.valueOf(concierto.getCapacidadTotal()));
+            String artista = DialogosUtil.pedirTexto(this, "Artista", concierto.getArtista());
+            LocalDate fecha = DialogosUtil.pedirFecha(this, "Fecha (yyyy-MM-dd)", concierto.getFecha().toString());
+            LocalTime hora = DialogosUtil.pedirHora(this, "Hora (HH:mm)", concierto.getHora().toString());
+            String lugar = DialogosUtil.pedirTexto(this, "Lugar", concierto.getLugar());
+            int capacidadTotal = DialogosUtil.pedirEntero(this, "Capacidad total", String.valueOf(concierto.getCapacidadTotal()));
             Integer organizadorId = seleccionarOrganizador(concierto.getOrganizadorId());
             if (organizadorId == null) {
                 return;
@@ -315,6 +321,224 @@ public class MenuOrganizador extends JFrame {
         return seleccionado == null ? null : conciertosPorEtiqueta.get(seleccionado);
     }
 
+    private void gestionarMerchandising() {
+        String[] columns = {"ID", "Imagen", "Concierto", "Producto", "Precio", "Stock"};
+        Supplier<Object[][]> rows = () -> filasMerchandisingPropio(columns.length);
+        mostrarTablaComun("Gestion de merchandising", columns, rows, (table, refrescar) -> {
+            JButton crear = new JButton("Crear producto");
+            crear.addActionListener(e -> { crearMerchandising(); refrescar.run(); });
+            JButton editar = new JButton("Editar");
+            editar.addActionListener(e -> {
+                Integer id = TablaConBotones.idSeleccionado(this, table);
+                if (id != null) { modificarMerchandising(id); refrescar.run(); }
+            });
+            JButton stock = new JButton("Ajustar stock");
+            stock.addActionListener(e -> {
+                Integer id = TablaConBotones.idSeleccionado(this, table);
+                if (id != null) { ajustarStockMerchandising(id); refrescar.run(); }
+            });
+            JButton eliminar = new JButton("Eliminar");
+            eliminar.addActionListener(e -> {
+                Integer id = TablaConBotones.idSeleccionado(this, table);
+                if (id != null) { eliminarMerchandising(id); refrescar.run(); }
+            });
+            return Arrays.asList(crear, editar, stock, eliminar);
+        }, new TablaConBotones.Busqueda("Buscar por concierto o producto:", 2, 3));
+    }
+
+    private Object[][] filasMerchandisingPropio(int columnas) {
+        try {
+            LinkedList<Concierto> conciertos = conciertosDelOrganizador();
+            LinkedList<Object[]> filas = new LinkedList<>();
+            for (Concierto concierto : conciertos) {
+                LinkedList<Merchandising> productos = merchandisingService.listarPorConcierto(concierto.getId());
+                for (Merchandising producto : productos) {
+                    Object[] fila = new Object[columnas];
+                    fila[0] = producto.getId();
+                    fila[1] = ImagenHelper.cargarMiniatura(producto.getImagenUrl());
+                    fila[2] = concierto.getArtista();
+                    fila[3] = producto.getNombre();
+                    fila[4] = producto.getPrecio();
+                    fila[5] = producto.getStock();
+                    filas.add(fila);
+                }
+            }
+            return filas.toArray(new Object[0][columnas]);
+        } catch (SQLException e) {
+            mostrarError("No se pudo listar el merchandising", e);
+            return new Object[0][columnas];
+        }
+    }
+
+    private void crearMerchandising() {
+        try {
+            Concierto concierto = seleccionarConciertoPropio();
+            if (concierto == null) {
+                return;
+            }
+            String nombre = DialogosUtil.pedirTexto(this, "Nombre del producto", "Remera");
+            BigDecimal precio = DialogosUtil.pedirPrecio(this, "35.00");
+            int stock = DialogosUtil.pedirEntero(this, "Stock", "100");
+            int id = merchandisingService.crearProducto(concierto.getId(), nombre, precio, stock);
+            mostrarInfo("Producto creado", "Se creo el producto con ID " + id + ".");
+        } catch (IllegalArgumentException e) {
+            mostrarInfo("Datos invalidos", e.getMessage());
+        } catch (SQLException e) {
+            mostrarError("No se pudo crear el producto", e);
+        }
+    }
+
+    private void modificarMerchandising(int id) {
+        try {
+            Merchandising producto = merchandisingService.buscarPorId(id);
+            if (!puedeGestionarProducto(producto)) {
+                return;
+            }
+            String nombre = DialogosUtil.pedirTexto(this, "Nombre del producto", producto.getNombre());
+            BigDecimal precio = DialogosUtil.pedirPrecio(this, producto.getPrecio().toString());
+            int stock = DialogosUtil.pedirEntero(this, "Stock", String.valueOf(producto.getStock()));
+            producto.setNombre(nombre);
+            producto.setPrecio(precio);
+            producto.setStock(stock);
+            boolean modificado = merchandisingService.modificarProducto(producto);
+            mostrarInfo("Modificar producto", modificado
+                    ? "El producto fue modificado."
+                    : "No se pudo modificar el producto.");
+        } catch (IllegalArgumentException e) {
+            mostrarInfo("Datos invalidos", e.getMessage());
+        } catch (SQLException e) {
+            mostrarError("No se pudo modificar el producto", e);
+        }
+    }
+
+    private void ajustarStockMerchandising(int id) {
+        try {
+            Merchandising producto = merchandisingService.buscarPorId(id);
+            if (!puedeGestionarProducto(producto)) {
+                return;
+            }
+            int stock = DialogosUtil.pedirEntero(this, "Stock", String.valueOf(producto.getStock()));
+            if (!confirmarAccion("Actualizar stock",
+                    "Desea cambiar el stock de \"" + producto.getNombre() + "\" de "
+                            + producto.getStock() + " a " + stock + "?")) {
+                return;
+            }
+            boolean actualizado = merchandisingService.actualizarStock(id, stock);
+            mostrarInfo("Actualizar stock", actualizado
+                    ? "El stock fue actualizado."
+                    : "No se pudo actualizar el stock.");
+        } catch (IllegalArgumentException e) {
+            mostrarInfo("Datos invalidos", e.getMessage());
+        } catch (SQLException e) {
+            mostrarError("No se pudo actualizar el stock", e);
+        }
+    }
+
+    private void eliminarMerchandising(int id) {
+        try {
+            Merchandising producto = merchandisingService.buscarPorId(id);
+            if (!puedeGestionarProducto(producto)) {
+                return;
+            }
+            if (!confirmarAccion("Eliminar producto", "Desea eliminar el producto seleccionado?")) {
+                return;
+            }
+            boolean eliminado = merchandisingService.eliminarProducto(id);
+            mostrarInfo("Eliminar producto", eliminado
+                    ? "El producto fue eliminado."
+                    : "No se encontro el producto indicado.");
+        } catch (IllegalArgumentException e) {
+            mostrarInfo("Datos invalidos", e.getMessage());
+        } catch (SQLException e) {
+            mostrarError("No se pudo eliminar el producto", e);
+        }
+    }
+
+    private void verVentasMerchandising() {
+        String[] columns = {"Imagen", "Fecha", "Concierto", "Producto", "Comprador",
+                "Cantidad", "Precio unitario", "Total", "Metodo pago"};
+        Supplier<Object[][]> rows = () -> filasVentasMerchandising(columns.length);
+        mostrarTablaComun("Ventas de merchandising", columns, rows, null,
+                new TablaConBotones.Busqueda("Buscar por concierto, producto o comprador:", 2, 3, 4, 8));
+    }
+
+    private Object[][] filasVentasMerchandising(int columnas) {
+        try {
+            LinkedList<VentaMerchandising> ventas =
+                    merchandisingService.listarVentasPorOrganizador(usuario.getId());
+            Object[][] data = new Object[ventas.size()][columnas];
+            for (int i = 0; i < ventas.size(); i++) {
+                VentaMerchandising venta = ventas.get(i);
+                data[i][0] = ImagenHelper.cargarMiniatura(venta.getImagenUrl());
+                data[i][1] = venta.getFecha() == null ? "" : venta.getFecha().toLocalDate();
+                data[i][2] = venta.getConcierto();
+                data[i][3] = venta.getProducto();
+                data[i][4] = venta.getComprador();
+                data[i][5] = venta.getCantidad();
+                data[i][6] = venta.getPrecioUnitario();
+                data[i][7] = venta.getTotal();
+                data[i][8] = venta.getMetodoPago();
+            }
+            return data;
+        } catch (SQLException e) {
+            mostrarError("No se pudieron listar las ventas de merchandising", e);
+            return new Object[0][columnas];
+        }
+    }
+
+    private LinkedList<Concierto> conciertosDelOrganizador() throws SQLException {
+        LinkedList<Concierto> propios = new LinkedList<>();
+        for (Concierto concierto : conciertoService.listarTodos()) {
+            if (concierto.getOrganizadorId() == usuario.getId()) {
+                propios.add(concierto);
+            }
+        }
+        return propios;
+    }
+
+    private Concierto seleccionarConciertoPropio() throws SQLException {
+        LinkedList<Concierto> conciertos = conciertosDelOrganizador();
+        if (conciertos.isEmpty()) {
+            mostrarInfo("Sin conciertos", "No tenes conciertos asignados para gestionar merchandising.");
+            return null;
+        }
+
+        Map<String, Concierto> conciertosPorEtiqueta = new HashMap<>();
+        String[] opciones = new String[conciertos.size()];
+        for (int i = 0; i < conciertos.size(); i++) {
+            Concierto concierto = conciertos.get(i);
+            String etiqueta = String.format("#%d - %s - %s %s - %s",
+                    concierto.getId(), concierto.getArtista(), concierto.getFecha(),
+                    concierto.getHora(), concierto.getLugar());
+            opciones[i] = etiqueta;
+            conciertosPorEtiqueta.put(etiqueta, concierto);
+        }
+
+        String seleccionado = (String) JOptionPane.showInputDialog(
+                this,
+                "Seleccione uno de sus conciertos:",
+                "Conciertos propios",
+                JOptionPane.PLAIN_MESSAGE,
+                null,
+                opciones,
+                opciones[0]);
+
+        return seleccionado == null ? null : conciertosPorEtiqueta.get(seleccionado);
+    }
+
+    private boolean puedeGestionarProducto(Merchandising producto) throws SQLException {
+        if (producto == null) {
+            mostrarInfo("Sin producto", "No se encontro el producto indicado.");
+            return false;
+        }
+        Concierto concierto = conciertoService.buscarPorId(producto.getConciertoId());
+        if (concierto == null || concierto.getOrganizadorId() != usuario.getId()) {
+            mostrarInfo("Accion no permitida", "Solo podes gestionar merchandising de tus conciertos.");
+            return false;
+        }
+        return true;
+    }
+
     private Integer seleccionarOrganizador() throws SQLException {
         return seleccionarOrganizador(0);
     }
@@ -356,30 +580,107 @@ public class MenuOrganizador extends JFrame {
         return seleccionado == null ? null : opcionesPorEtiqueta.get(seleccionado);
     }
 
-    private void cerrarSesion() {
-        dispose();
-        new LoginFrame().setVisible(true);
+    private void cerrarTablasAbiertas() {
+        for (JFrame frame : openTableFrames.values().toArray(new JFrame[0])) {
+            if (frame != null && frame.isDisplayable()) {
+                frame.dispose();
+            }
+        }
+        openTableFrames.clear();
+    }
+
+    private void mostrarTablaComun(String titulo, String[] columns,
+            Supplier<Object[][]> rowsSupplier,
+            BiFunction<JTable, Runnable, List<JButton>> extraButtons,
+            TablaConBotones.Busqueda busqueda) {
+        JFrame openFrame = openTableFrames.get(titulo);
+        if (openFrame != null) {
+            if (openFrame.isDisplayable()) {
+                openFrame.setState(Frame.NORMAL);
+                openFrame.toFront();
+                openFrame.requestFocus();
+                return;
+            }
+            openTableFrames.remove(titulo);
+        }
+
+        JFrame frame = TablaConBotones.mostrar(this, titulo, columns, rowsSupplier, extraButtons, busqueda);
+        openTableFrames.put(titulo, frame);
+        frame.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosed(WindowEvent e) {
+                if (openTableFrames.get(titulo) == frame) {
+                    openTableFrames.remove(titulo);
+                }
+            }
+        });
     }
 
     private void mostrarTablaConBotones(String titulo, String[] columns,
             Supplier<Object[][]> rowsSupplier,
             BiFunction<JTable, Runnable, List<JButton>> extraButtons) {
+        JFrame openFrame = openTableFrames.get(titulo);
+        if (openFrame != null) {
+            if (openFrame.isDisplayable()) {
+                openFrame.setState(Frame.NORMAL);
+                openFrame.toFront();
+                openFrame.requestFocus();
+                return;
+            }
+            openTableFrames.remove(titulo);
+        }
+
         DefaultTableModel model = new DefaultTableModel(rowsSupplier.get(), columns) {
             @Override
             public boolean isCellEditable(int row, int column) {
                 return false;
             }
+
+            @Override
+            public Class<?> getColumnClass(int columnIndex) {
+                for (int row = 0; row < getRowCount(); row++) {
+                    Object value = getValueAt(row, columnIndex);
+                    if (value != null) {
+                        return value.getClass();
+                    }
+                }
+                return Object.class;
+            }
         };
 
         JTable table = new JTable(model);
+        ocultarColumna(table, 8);
+        final TableRowSorter<DefaultTableModel> sorter = new TableRowSorter<>(model);
+        table.setRowSorter(sorter);
         JScrollPane scrollPane = new JScrollPane(table);
 
         JFrame frame = new JFrame(titulo);
+        openTableFrames.put(titulo, frame);
         frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        frame.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosed(WindowEvent e) {
+                if (openTableFrames.get(titulo) == frame) {
+                    openTableFrames.remove(titulo);
+                }
+            }
+        });
         frame.setLayout(new BorderLayout(5, 5));
-        frame.add(scrollPane, BorderLayout.CENTER);
+        JTextField buscar = new JTextField();
+        configurarBusqueda(buscar, sorter);
 
-        Runnable refrescar = () -> model.setDataVector(rowsSupplier.get(), columns);
+        JPanel filtros = new JPanel(new BorderLayout(6, 6));
+        filtros.setBorder(BorderFactory.createEmptyBorder(6, 6, 0, 6));
+        filtros.add(new JLabel("Buscar por artista o lugar:"), BorderLayout.WEST);
+        filtros.add(buscar, BorderLayout.CENTER);
+        frame.add(filtros, BorderLayout.NORTH);
+        frame.add(crearPanelDetallePoster(table, scrollPane), BorderLayout.CENTER);
+
+        Runnable refrescar = () -> {
+            model.setDataVector(rowsSupplier.get(), columns);
+            ocultarColumna(table, 8);
+            actualizarDetallePoster(table);
+        };
 
         JPanel bar = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 6));
         if (extraButtons != null) {
@@ -388,38 +689,46 @@ public class MenuOrganizador extends JFrame {
             }
         }
 
-        JButton subir = new JButton("Subir");
-        subir.addActionListener(e -> moverFila(table, -1));
-        JButton bajar = new JButton("Bajar");
-        bajar.addActionListener(e -> moverFila(table, 1));
         JButton actualizar = new JButton("Actualizar");
         actualizar.addActionListener(e -> refrescar.run());
         JButton cerrar = new JButton("Cerrar");
         cerrar.addActionListener(e -> frame.dispose());
-        bar.add(subir);
-        bar.add(bajar);
         bar.add(actualizar);
         bar.add(cerrar);
 
         frame.add(bar, BorderLayout.SOUTH);
-        frame.setSize(880, 420);
+        frame.setSize(1040, 520);
         frame.setLocationRelativeTo(this);
         frame.setVisible(true);
+        actualizarDetallePoster(table);
     }
 
-    private void moverFila(JTable table, int delta) {
-        int row = table.getSelectedRow();
-        if (row < 0) {
-            mostrarInfo("Mover fila", "Seleccione una fila.");
-            return;
-        }
-        int target = row + delta;
-        DefaultTableModel model = (DefaultTableModel) table.getModel();
-        if (target < 0 || target >= model.getRowCount()) {
-            return;
-        }
-        model.moveRow(row, row, target);
-        table.setRowSelectionInterval(target, target);
+    private void configurarBusqueda(JTextField buscar, TableRowSorter<DefaultTableModel> sorter) {
+        buscar.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                aplicarFiltro();
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                aplicarFiltro();
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                aplicarFiltro();
+            }
+
+            private void aplicarFiltro() {
+                String texto = buscar.getText().trim();
+                if (texto.isEmpty()) {
+                    sorter.setRowFilter(null);
+                    return;
+                }
+                sorter.setRowFilter(RowFilter.regexFilter("(?i)" + Pattern.quote(texto), 1, 4));
+            }
+        });
     }
 
     private Integer idSeleccionado(JTable table) {
@@ -428,12 +737,102 @@ public class MenuOrganizador extends JFrame {
             mostrarInfo("Accion", "Seleccione una fila.");
             return null;
         }
-        Object value = table.getModel().getValueAt(row, 0);
+        int modelRow = table.convertRowIndexToModel(row);
+        Object value = table.getModel().getValueAt(modelRow, 0);
         return Integer.valueOf(value.toString());
     }
 
+    private JPanel crearPanelDetallePoster(JTable table, JScrollPane scrollPane) {
+        JPanel panel = new JPanel(new BorderLayout(8, 8));
+        EstiloGUI.aplicarPanel(panel);
+        panel.add(scrollPane, BorderLayout.CENTER);
+
+        JPanel detalle = new JPanel(new BorderLayout(6, 6));
+        EstiloGUI.aplicarPanel(detalle);
+        detalle.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(EstiloGUI.BORDE),
+                BorderFactory.createEmptyBorder(8, 8, 8, 8)));
+        detalle.setPreferredSize(new Dimension(252, 410));
+
+        JLabel poster = new JLabel();
+        poster.setName("poster");
+        poster.setHorizontalAlignment(SwingConstants.CENTER);
+        detalle.add(poster, BorderLayout.CENTER);
+
+        JTextArea info = new JTextArea();
+        info.setName("posterInfo");
+        EstiloGUI.aplicarAreaTexto(info);
+        info.setLineWrap(true);
+        info.setWrapStyleWord(true);
+        detalle.add(info, BorderLayout.SOUTH);
+
+        table.getSelectionModel().addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting()) {
+                actualizarDetallePoster(table);
+            }
+        });
+
+        panel.add(detalle, BorderLayout.EAST);
+        return panel;
+    }
+
+    private void actualizarDetallePoster(JTable table) {
+        JLabel poster = buscarComponente(table.getTopLevelAncestor(), "poster", JLabel.class);
+        JTextArea info = buscarComponente(table.getTopLevelAncestor(), "posterInfo", JTextArea.class);
+        if (poster == null || info == null) {
+            return;
+        }
+
+        int row = table.getSelectedRow();
+        if (row < 0) {
+            poster.setIcon(ImagenHelper.cargarImagen(null, 220, 300));
+            info.setText("Seleccione un concierto para ver su poster.");
+            return;
+        }
+
+        int modelRow = table.convertRowIndexToModel(row);
+        poster.setIcon(ImagenHelper.cargarImagen(valorTabla(table, modelRow, 8), 220, 300));
+        info.setText("Artista: " + valorTabla(table, modelRow, 1)
+                + "\nFecha: " + valorTabla(table, modelRow, 2)
+                + "\nLugar: " + valorTabla(table, modelRow, 4)
+                + "\nEstado: " + valorTabla(table, modelRow, 7));
+    }
+
+    private String valorTabla(JTable table, int modelRow, int column) {
+        Object value = table.getModel().getValueAt(modelRow, column);
+        return value == null ? "" : value.toString();
+    }
+
+    private void ocultarColumna(JTable table, int columnaModelo) {
+        int columnaVista = table.convertColumnIndexToView(columnaModelo);
+        if (columnaVista < 0) {
+            return;
+        }
+        TableColumn column = table.getColumnModel().getColumn(columnaVista);
+        table.getColumnModel().removeColumn(column);
+    }
+
+    private <T extends Component> T buscarComponente(Component raiz, String nombre, Class<T> tipo) {
+        if (raiz == null) {
+            return null;
+        }
+        if (tipo.isInstance(raiz) && nombre.equals(raiz.getName())) {
+            return tipo.cast(raiz);
+        }
+        if (raiz instanceof java.awt.Container) {
+            Component[] hijos = ((java.awt.Container) raiz).getComponents();
+            for (Component hijo : hijos) {
+                T encontrado = buscarComponente(hijo, nombre, tipo);
+                if (encontrado != null) {
+                    return encontrado;
+                }
+            }
+        }
+        return null;
+    }
+
     private void mostrarTablaConciertos(String titulo, Supplier<LinkedList<Concierto>> fetcher) {
-        String[] columns = {"ID", "Artista", "Fecha", "Hora", "Lugar", "Capacidad", "Disponibles", "Estado"};
+        String[] columns = {"ID", "Artista", "Fecha", "Hora", "Lugar", "Capacidad", "Disponibles", "Estado", "Poster"};
         Supplier<Object[][]> rows = () -> {
             LinkedList<Concierto> conciertos = fetcher.get();
             Object[][] data = new Object[conciertos.size()][columns.length];
@@ -447,6 +846,7 @@ public class MenuOrganizador extends JFrame {
                 data[i][5] = concierto.getCapacidadTotal();
                 data[i][6] = concierto.getDisponibles();
                 data[i][7] = concierto.getEstado();
+                data[i][8] = concierto.getPosterUrl();
             }
             return data;
         };
@@ -467,74 +867,13 @@ public class MenuOrganizador extends JFrame {
         });
     }
 
-    private String pedirTexto(String campo, String valorInicial) {
-        String valor = (String) JOptionPane.showInputDialog(this,
-                "Ingrese " + campo,
-                campo,
-                JOptionPane.PLAIN_MESSAGE,
-                null,
-                null,
-                valorInicial);
-        if (valor == null) {
-            throw new IllegalArgumentException("Operacion cancelada.");
-        }
-        if (valor.trim().isEmpty()) {
-            throw new IllegalArgumentException("El campo " + campo + " es obligatorio.");
-        }
-        return valor.trim();
-    }
-
-    private int pedirEntero(String campo, String valorInicial) {
-        String valor = (String) JOptionPane.showInputDialog(this,
-                "Ingrese " + campo,
-                campo,
-                JOptionPane.PLAIN_MESSAGE,
-                null,
-                null,
-                valorInicial);
-        if (valor == null) {
-            throw new IllegalArgumentException("Operacion cancelada.");
-        }
-        return Integer.parseInt(valor.trim());
-    }
-
-    private LocalDate pedirFecha(String campo, String valorInicial) {
-        String valor = pedirTextoConDefault(campo, valorInicial);
-        try {
-            return LocalDate.parse(valor);
-        } catch (DateTimeParseException e) {
-            throw new IllegalArgumentException("Formato de fecha invalido. Use yyyy-MM-dd.");
-        }
-    }
-
-    private LocalTime pedirHora(String campo, String valorInicial) {
-        String valor = pedirTextoConDefault(campo, valorInicial);
-        try {
-            return LocalTime.parse(valor);
-        } catch (DateTimeParseException e) {
-            throw new IllegalArgumentException("Formato de hora invalido. Use HH:mm.");
-        }
-    }
-
-    private String pedirTextoConDefault(String campo, String valorInicial) {
-        String valor = (String) JOptionPane.showInputDialog(this,
-                "Ingrese " + campo,
-                campo,
-                JOptionPane.PLAIN_MESSAGE,
-                null,
-                null,
-                valorInicial);
-        if (valor == null) {
-            throw new IllegalArgumentException("Operacion cancelada.");
-        }
-        if (valor.trim().isEmpty()) {
-            throw new IllegalArgumentException("El campo " + campo + " es obligatorio.");
-        }
-        return valor.trim();
-    }
-
     private void mostrarInfo(String titulo, String mensaje) {
         JOptionPane.showMessageDialog(this, mensaje, titulo, JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    private boolean confirmarAccion(String titulo, String mensaje) {
+        return JOptionPane.showConfirmDialog(this, mensaje, titulo,
+                JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE) == JOptionPane.YES_OPTION;
     }
 
     private void mostrarError(String titulo, Exception e) {

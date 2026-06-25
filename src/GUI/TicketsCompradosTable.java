@@ -8,20 +8,17 @@ import BLL.Ticket;
 import BLL.TicketService;
 import BLL.Usuario;
 
-import java.awt.BorderLayout;
+import java.awt.Component;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
-import javax.swing.table.DefaultTableModel;
 
 public class TicketsCompradosTable {
 
-    public static void showTable(Usuario comprador) {
+    public static JFrame showTable(Component parent, Usuario comprador) {
         TicketService ticketService = new TicketService();
         ConciertoService conciertoService = new ConciertoService();
         SectorService sectorService = new SectorService();
@@ -29,11 +26,11 @@ public class TicketsCompradosTable {
         try {
             LinkedList<Ticket> tickets = ticketService.listarCompradosPorComprador(comprador.getId());
             if (tickets.isEmpty()) {
-                JOptionPane.showMessageDialog(null,
+                JOptionPane.showMessageDialog(parent,
                         "No hay tickets comprados para este usuario.",
                         "Tickets comprados",
                         JOptionPane.INFORMATION_MESSAGE);
-                return;
+                return null;
             }
 
             Map<Integer, Concierto> conciertosPorId = new HashMap<>();
@@ -66,35 +63,25 @@ public class TicketsCompradosTable {
                 i++;
             }
 
-            mostrarTabla("Tickets comprados - " + comprador.getNombre(), columns, rows);
+            return TablaConBotones.mostrar(
+                    parent,
+                    "Tickets comprados - " + comprador.getNombre(),
+                    columns,
+                    () -> rows,
+                    null,
+                    new TablaConBotones.Busqueda("Buscar por concierto, sector o codigo:", 0, 3, 4, 5, 7));
         } catch (IllegalArgumentException e) {
-            JOptionPane.showMessageDialog(null,
+            JOptionPane.showMessageDialog(parent,
                     e.getMessage(),
                     "Tickets comprados",
                     JOptionPane.WARNING_MESSAGE);
         } catch (SQLException e) {
-            JOptionPane.showMessageDialog(null,
+            JOptionPane.showMessageDialog(parent,
                     "Error de base de datos: " + e.getMessage(),
                     "Tickets comprados",
                     JOptionPane.ERROR_MESSAGE);
         }
+        return null;
     }
 
-    private static void mostrarTabla(String titulo, String[] columns, Object[][] rows) {
-        DefaultTableModel model = new DefaultTableModel(rows, columns) {
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return false;
-            }
-        };
-
-        JTable table = new JTable(model);
-        JFrame frame = new JFrame(titulo);
-        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        frame.setLayout(new BorderLayout(5, 5));
-        frame.add(new JScrollPane(table), BorderLayout.CENTER);
-        frame.setSize(900, 420);
-        frame.setLocationRelativeTo(null);
-        frame.setVisible(true);
-    }
 }

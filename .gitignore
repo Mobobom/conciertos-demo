@@ -4,7 +4,9 @@ Docs/
 # Java build outputs
 bin/
 out/
+target/
 *.class
+temp/
 
 # IntelliJ IDEA local metadata
 .idea/

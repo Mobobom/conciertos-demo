@@ -22,12 +22,12 @@ public class ControllerConcierto {
         LinkedList<Concierto> result = new LinkedList<>();
         String sql =
             "SELECT c.id, c.artista, c.fecha, c.hora, c.lugar, " +
-            "       c.capacidad_total, c.organizador_id, c.estado, " +
+            "       c.capacidad_total, c.organizador_id, c.estado, c.poster_url, " +
             "       COALESCE(SUM(CASE WHEN t.estado='Disponible' THEN 1 ELSE 0 END), 0) AS disponibles " +
             "FROM concierto c " +
             "LEFT JOIN ticket t ON t.concierto_id = c.id " +
             "WHERE c.estado = 'Activo' " +
-            "GROUP BY c.id, c.artista, c.fecha, c.hora, c.lugar, c.capacidad_total, c.organizador_id, c.estado " +
+            "GROUP BY c.id, c.artista, c.fecha, c.hora, c.lugar, c.capacidad_total, c.organizador_id, c.estado, c.poster_url " +
             "ORDER BY c.fecha, c.hora";
 
         try (PreparedStatement stmt = getConnection().prepareStatement(sql);
@@ -44,11 +44,11 @@ public class ControllerConcierto {
         LinkedList<Concierto> result = new LinkedList<>();
         String sql =
             "SELECT c.id, c.artista, c.fecha, c.hora, c.lugar, " +
-            "       c.capacidad_total, c.organizador_id, c.estado, " +
+            "       c.capacidad_total, c.organizador_id, c.estado, c.poster_url, " +
             "       COALESCE(SUM(CASE WHEN t.estado='Disponible' THEN 1 ELSE 0 END), 0) AS disponibles " +
             "FROM concierto c " +
             "LEFT JOIN ticket t ON t.concierto_id = c.id " +
-            "GROUP BY c.id, c.artista, c.fecha, c.hora, c.lugar, c.capacidad_total, c.organizador_id, c.estado " +
+            "GROUP BY c.id, c.artista, c.fecha, c.hora, c.lugar, c.capacidad_total, c.organizador_id, c.estado, c.poster_url " +
             "ORDER BY c.fecha, c.hora";
 
         try (PreparedStatement stmt = getConnection().prepareStatement(sql);
@@ -63,12 +63,12 @@ public class ControllerConcierto {
     public Concierto buscarPorId(int id) throws SQLException {
         String sql =
             "SELECT c.id, c.artista, c.fecha, c.hora, c.lugar, " +
-            "       c.capacidad_total, c.organizador_id, c.estado, " +
+            "       c.capacidad_total, c.organizador_id, c.estado, c.poster_url, " +
             "       COALESCE(SUM(CASE WHEN t.estado='Disponible' THEN 1 ELSE 0 END), 0) AS disponibles " +
             "FROM concierto c " +
             "LEFT JOIN ticket t ON t.concierto_id = c.id " +
             "WHERE c.id = ? " +
-            "GROUP BY c.id, c.artista, c.fecha, c.hora, c.lugar, c.capacidad_total, c.organizador_id, c.estado";
+            "GROUP BY c.id, c.artista, c.fecha, c.hora, c.lugar, c.capacidad_total, c.organizador_id, c.estado, c.poster_url";
 
         try (PreparedStatement stmt = getConnection().prepareStatement(sql)) {
             stmt.setInt(1, id);
@@ -82,8 +82,8 @@ public class ControllerConcierto {
     }
 
     public int crear(Concierto concierto) throws SQLException {
-        String sql = "INSERT INTO concierto (artista, fecha, hora, lugar, capacidad_total, organizador_id, estado) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO concierto (artista, fecha, hora, lugar, capacidad_total, organizador_id, estado, poster_url) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (PreparedStatement stmt = getConnection().prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             fillStatement(stmt, concierto);
@@ -102,10 +102,10 @@ public class ControllerConcierto {
 
     public boolean modificar(Concierto concierto) throws SQLException {
         String sql = "UPDATE concierto SET artista = ?, fecha = ?, hora = ?, lugar = ?, "
-                + "capacidad_total = ?, organizador_id = ?, estado = ? WHERE id = ?";
+                + "capacidad_total = ?, organizador_id = ?, estado = ?, poster_url = ? WHERE id = ?";
         try (PreparedStatement stmt = getConnection().prepareStatement(sql)) {
             fillStatement(stmt, concierto);
-            stmt.setInt(8, concierto.getId());
+            stmt.setInt(9, concierto.getId());
             return stmt.executeUpdate() == 1;
         }
     }
@@ -161,6 +161,7 @@ public class ControllerConcierto {
             stmt.setNull(6, java.sql.Types.INTEGER);
         }
         stmt.setString(7, concierto.getEstado());
+        stmt.setString(8, normalizarRutaImagen(concierto.getPosterUrl()));
     }
 
     private Concierto mapConciertoConDisponibles(ResultSet rs) throws SQLException {
@@ -172,9 +173,17 @@ public class ControllerConcierto {
             rs.getString("lugar"),
             rs.getInt("capacidad_total"),
             rs.getInt("organizador_id"),
-            rs.getString("estado")
+            rs.getString("estado"),
+            rs.getString("poster_url")
         );
         c.setDisponibles(rs.getInt("disponibles"));
         return c;
+    }
+
+    private String normalizarRutaImagen(String ruta) {
+        if (ruta == null || ruta.trim().isEmpty()) {
+            return null;
+        }
+        return ruta.trim();
     }
 }

@@ -23,6 +23,7 @@ conciertos-demo-main/
 ## Requisitos
 
 - **Java** 11 o superior
+- **Maven** 3.8 o superior
 - **MySQL** 8.x
 
 ## Configuración de la base de datos
@@ -67,6 +68,23 @@ Resultado esperado: `5 usuarios, 2 conciertos, 6 sectores, 120 tickets`.
 
 ## Compilar y ejecutar
 
+### Opcion recomendada: Maven
+
+```bash
+# Compilar y empaquetar la aplicacion
+mvn clean package
+
+# Ejecutar desde Maven
+mvn exec:java
+
+# Ejecutar el JAR generado
+java -jar target/conciertos-demo.jar
+```
+
+Maven descarga automaticamente el conector JDBC de MySQL y BCrypt segun lo definido en `pom.xml`.
+
+### Opcion manual con javac
+
 ```bash
 # Compilar (apuntando a JRE 11 por compatibilidad con el JRE instalado)
 mkdir -p bin
@@ -77,7 +95,15 @@ java -cp "bin:lib/*" GUI.Main
 ```
 
 > El conector JDBC (`lib/mysql-connector-j-8.4.0.jar`) debe estar en el classpath
-> tanto al compilar como al ejecutar; por eso ambos comandos incluyen `lib/*`.
+> tanto al compilar como al ejecutar cuando se usa la opcion manual; por eso ambos comandos incluyen `lib/*`.
+
+### Tests unitarios
+
+```bash
+mvn test
+```
+
+Los tests unitarios cubren validaciones de servicios BLL con controladores falsos, por lo que no requieren una base de datos MySQL activa.
 
 Al iniciar, se abrirá la pantalla de **Login**. Se puede probar con:
 
@@ -86,26 +112,28 @@ admin@ticket.com / admin123
 juan@mail.com / 1234
 ```
 
-En consola se verá:
+En la salida de logs se vera un mensaje similar a:
 
 ```
-Conexion: conectado a jdbc:mysql://localhost:3306/ticketing?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+INFO: Conexion establecida con jdbc:mysql://localhost:3306/ticketing?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
 ```
 
-La ventana **"Conciertos disponibles"** muestra las columnas *ID, Artista, Fecha, Hora, Lugar, Capacidad, Disponibles* con dos filas de prueba: *Coldplay* (15/06/2026, Estadio Monumental) y *Taylor Swift* (20/08/2026, Estadio Velez), ambas con 60 entradas disponibles. Bajo la tabla hay una barra de botones (**Subir / Bajar / Actualizar / Cerrar**, y **Comprar seleccionado** cuando se abre desde el menú del comprador).
+La ventana **"Conciertos disponibles"** muestra las columnas *ID, Artista, Fecha, Hora, Lugar, Capacidad, Disponibles* con dos filas de prueba: *Coldplay* (15/06/2026, Estadio Monumental) y *Taylor Swift* (20/08/2026, Estadio Velez), ambas con 60 entradas disponibles. Bajo la tabla hay una barra de botones (**Actualizar / Cerrar**, y **Comprar seleccionado** cuando se abre desde el menú del comprador).
 
 ## Flujo de la aplicación y roles
 
 Tras autenticarse se abre una pantalla principal según el rol:
 
-- **Administrador** → `MenuAdministrador`: alta, modificación y cancelación de conciertos; gestión de sectores y generación de tickets; bloqueo/liberación de tickets.
+- **Administrador** → `MenuAdministrador`: alta, modificación y cancelación de conciertos; gestión de sectores y generación de tickets; bloqueo/liberación de tickets; gestión de usuarios y cambio/restablecimiento de passwords.
 - **Organizador** → `MenuOrganizador`: creación y modificación de conciertos y consulta de la información del evento.
 - **Comprador** → `MenuComprador`: ver conciertos, comprar tickets (sector → cantidad → método de pago) y consultar sus tickets comprados.
 - **Personal de acceso** → `MenuPersonalAcceso`: validación de tickets por código.
 
 Administrador y Organizador acceden directamente a su menú de gestión; Comprador y Personal de acceso ven primero una pantalla base (`RoleHomeFrame`) desde la que abren su menú de rol, la tabla de conciertos o (comprador) sus tickets comprados.
 
-Las tablas de conciertos, sectores y tickets incluyen una barra de botones para operar sobre la **fila seleccionada** (editar, eliminar, cancelar, bloquear/liberar, según la pantalla), además de **Subir/Bajar** para reordenar la vista, **Actualizar** para recargar desde la base de datos y **Cerrar**. El reordenamiento es solo visual y no se persiste.
+Todos los roles pueden cambiar su propio password desde su menú. El administrador además puede listar, crear, editar, eliminar usuarios y restablecer passwords desde **Gestionar usuarios**; el campo `Documento/DNI` es opcional y representa el número de documento del usuario.
+
+Las tablas de conciertos, sectores y tickets incluyen una barra de botones para operar sobre la **fila seleccionada** (editar, eliminar, cancelar, bloquear/liberar, según la pantalla), además de **Actualizar** para recargar desde la base de datos y **Cerrar**.
 
 ## Datos de prueba
 
@@ -148,7 +176,7 @@ Ver `db/create_ticketing.sql` para el detalle completo, y `docs/Especificacion_d
 
 ## Notas técnicas
 
-- **Driver JDBC**: se usa `mysql-connector-j-8.4.0.jar`, porque los conectores antiguos no soportan el plugin de autenticación `caching_sha2_password` que MySQL 8 utiliza por defecto.
+- **Driver JDBC**: Maven usa `com.mysql:mysql-connector-j:8.4.0`; la opcion manual usa `lib/mysql-connector-j-8.4.0.jar`. Los conectores antiguos no soportan el plugin de autenticación `caching_sha2_password` que MySQL 8 utiliza por defecto.
 - **URL JDBC**: `jdbc:mysql://localhost:3306/ticketing?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC` (definida en `src/DLL/Conexion.java`).
 - **Autenticación MySQL 8**: el parámetro `allowPublicKeyRetrieval=true` permite el login con `caching_sha2_password` sobre una conexión sin SSL (entorno de desarrollo local).
-- **Contraseñas**: se almacenan como hashes bcrypt (`lib/jbcrypt-0.4.jar`); `UsuarioService` valida con `BCrypt.checkpw`.
+- **Contraseñas**: se almacenan como hashes bcrypt (`org.mindrot:jbcrypt:0.4` en Maven o `lib/jbcrypt-0.4.jar` en la opcion manual); `UsuarioService` valida con `BCrypt.checkpw`.

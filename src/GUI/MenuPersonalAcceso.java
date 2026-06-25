@@ -9,9 +9,8 @@ import BLL.TicketService;
 import BLL.Usuario;
 import BLL.ValidacionTicketResult;
 
-import javax.swing.BorderFactory;
 import javax.swing.JButton;
-import javax.swing.JFrame;
+import javax.swing.JComponent;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
@@ -22,64 +21,56 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
 
-public class MenuPersonalAcceso extends JFrame {
+public class MenuPersonalAcceso extends MenuBase {
 
-    private final Usuario usuario;
     private final ConciertoService conciertoService;
     private final SectorService sectorService;
     private final TicketService ticketService;
 
     public MenuPersonalAcceso(Usuario usuario) {
-        this.usuario = usuario;
+        super(usuario);
         this.conciertoService = new ConciertoService();
         this.sectorService = new SectorService();
         this.ticketService = new TicketService();
-        initialize();
+        inicializarMenu("Menu Personal de Acceso - " + usuario.getNombre());
     }
 
-    private void initialize() {
-        setTitle("Menu Personal de Acceso - " + usuario.getNombre());
-        setSize(520, 280);
-        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setLocationRelativeTo(null);
-        setLayout(new BorderLayout(10, 10));
-
-        add(buildHeader(), BorderLayout.NORTH);
-        add(buildButtons(), BorderLayout.CENTER);
+    @Override
+    protected String getTituloPanel() {
+        return "Panel de Personal de Acceso";
     }
 
-    private JPanel buildHeader() {
+    @Override
+    protected JComponent crearCabecera() {
         JPanel panel = new JPanel(new BorderLayout());
-        panel.setBorder(BorderFactory.createEmptyBorder(15, 15, 5, 15));
+        EstiloGUI.aplicarPanelCabecera(panel);
 
         JTextArea header = new JTextArea(
                 "Bienvenido " + usuario.getNombre() + " " + usuario.getApellido() + "\n"
                         + "Rol: " + usuario.getRol() + "\n"
                         + "Valide tickets seleccionando concierto y ticket.");
-        header.setEditable(false);
-        header.setOpaque(false);
-        header.setFocusable(false);
-        header.setFont(header.getFont().deriveFont(14f));
+        EstiloGUI.aplicarAreaTexto(header);
         panel.add(header, BorderLayout.CENTER);
         return panel;
     }
 
-    private JPanel buildButtons() {
-        JPanel panel = new JPanel(new GridLayout(0, 1, 10, 10));
-        panel.setBorder(BorderFactory.createEmptyBorder(15, 80, 25, 80));
+    @Override
+    protected JComponent crearContenido() {
+        JPanel panel = new JPanel(new BorderLayout());
+        EstiloGUI.aplicarPanelContenido(panel);
 
-        JButton validateButton = new JButton("Validar codigo de ticket");
-        validateButton.addActionListener(e -> validarTicket());
+        JPanel grid = new JPanel(new GridLayout(0, 2, EstiloGUI.ESPACIADO, EstiloGUI.ESPACIADO));
+        EstiloGUI.aplicarPanel(grid);
 
-        JButton closeButton = new JButton("Cerrar");
-        closeButton.addActionListener(e -> dispose());
+        JButton validateButton = BotonHelper.crearBoton("Validar codigo de ticket", "validate", e -> validarTicket());
+        JButton passwordButton = BotonHelper.crearBoton("Cambiar password", "edit",
+                e -> PasswordDialogs.cambiarPassword(this, usuario));
 
-        JButton exitButton = new JButton("Salir");
-        exitButton.addActionListener(e -> System.exit(0));
-
-        panel.add(validateButton);
-        panel.add(closeButton);
-        panel.add(exitButton);
+        grid.add(validateButton);
+        grid.add(passwordButton);
+        grid.add(crearBotonVolverLogin());
+        grid.add(crearBotonCerrarSistema());
+        panel.add(grid, BorderLayout.NORTH);
         return panel;
     }
 
@@ -92,6 +83,9 @@ public class MenuPersonalAcceso extends JFrame {
 
             Ticket ticket = seleccionarTicket(concierto);
             if (ticket == null) {
+                return;
+            }
+            if (!confirmarValidacionTicket(ticket)) {
                 return;
             }
 
@@ -182,5 +176,14 @@ public class MenuPersonalAcceso extends JFrame {
                 opciones[0]);
 
         return seleccionado == null ? null : ticketsPorEtiqueta.get(seleccionado);
+    }
+
+    private boolean confirmarValidacionTicket(Ticket ticket) {
+        String mensaje = "Codigo: " + ticket.getCodigo() + "\n"
+                + "Estado actual: " + ticket.getEstado() + "\n\n"
+                + "Desea validar este ticket?";
+        int opcion = JOptionPane.showConfirmDialog(this, mensaje,
+                "Confirmar validacion", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+        return opcion == JOptionPane.YES_OPTION;
     }
 }

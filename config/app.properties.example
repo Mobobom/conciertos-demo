@@ -1,0 +1,12 @@
+# Servidor MySQL: host/puerto pueden ser remotos (no solo localhost)
+host=localhost
+puerto=3306
+base=ticketing
+usuario=ticketing
+contrasena=tu_contrasena
+# Parametros SSL (para un servidor remoto usar useSSL=true y verifyServerCertificate=true con truststore)
+useSSL=false
+requireSSL=false
+verifyServerCertificate=false
+allowPublicKeyRetrieval=true
+serverTimezone=UTC

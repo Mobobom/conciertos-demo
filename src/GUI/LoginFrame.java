@@ -34,10 +34,11 @@ public class LoginFrame extends JFrame {
 
     private void initialize() {
         setTitle("Sistema de Tickets - Login");
-        setSize(460, 330);
+        EstiloGUI.aplicarTamanioLogin(this);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout(10, 10));
+        EstiloGUI.aplicarVentana(this);
 
         add(buildHeader(), BorderLayout.NORTH);
         add(buildForm(), BorderLayout.CENTER);
@@ -46,10 +47,10 @@ public class LoginFrame extends JFrame {
 
     private JPanel buildHeader() {
         JPanel panel = new JPanel(new BorderLayout());
-        panel.setBorder(BorderFactory.createEmptyBorder(15, 15, 5, 15));
+        EstiloGUI.aplicarPanelCabecera(panel);
 
         JLabel title = new JLabel("Sistema de Gestion y Venta de Tickets", SwingConstants.CENTER);
-        title.setFont(title.getFont().deriveFont(17f));
+        EstiloGUI.aplicarTitulo(title);
         panel.add(title, BorderLayout.NORTH);
 
         JTextArea help = new JTextArea(
@@ -58,9 +59,7 @@ public class LoginFrame extends JFrame {
                         + "org@ticket.com / org123\n"
                         + "acceso@ticket.com / acceso123\n"
                         + "juan@mail.com / 1234");
-        help.setEditable(false);
-        help.setOpaque(false);
-        help.setFocusable(false);
+        EstiloGUI.aplicarAreaTexto(help);
         panel.add(help, BorderLayout.CENTER);
 
         return panel;
@@ -68,7 +67,7 @@ public class LoginFrame extends JFrame {
 
     private JPanel buildForm() {
         JPanel panel = new JPanel(new GridBagLayout());
-        panel.setBorder(BorderFactory.createEmptyBorder(5, 25, 5, 25));
+        EstiloGUI.aplicarPanelContenido(panel);
 
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(6, 6, 6, 6);
@@ -100,16 +99,11 @@ public class LoginFrame extends JFrame {
 
     private JPanel buildButtons() {
         JPanel panel = new JPanel();
-        panel.setBorder(BorderFactory.createEmptyBorder(5, 15, 15, 15));
+        EstiloGUI.aplicarPanelContenido(panel);
 
-        JButton loginButton = new JButton("Ingresar");
-        loginButton.addActionListener(e -> login());
-
-        JButton clearButton = new JButton("Limpiar");
-        clearButton.addActionListener(e -> clearForm());
-
-        JButton exitButton = new JButton("Salir");
-        exitButton.addActionListener(e -> System.exit(0));
+        JButton loginButton = BotonHelper.crearBoton("Ingresar", "login", e -> login());
+        JButton clearButton = BotonHelper.crearBoton("Limpiar", "delete", e -> clearForm());
+        JButton exitButton = BotonHelper.crearBoton("Salir", "exit", e -> System.exit(0));
 
         panel.add(loginButton);
         panel.add(clearButton);
@@ -163,4 +157,3 @@ public class LoginFrame extends JFrame {
         emailField.requestFocusInWindow();
     }
 }
-

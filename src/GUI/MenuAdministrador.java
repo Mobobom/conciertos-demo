@@ -2,20 +2,24 @@ package GUI;
 
 import BLL.Concierto;
 import BLL.ConciertoService;
+import BLL.Merchandising;
+import BLL.MerchandisingService;
 import BLL.Sector;
 import BLL.SectorService;
 import BLL.Ticket;
 import BLL.TicketService;
 import BLL.Usuario;
 import BLL.UsuarioService;
+import BLL.VentaMerchandising;
 import java.awt.BorderLayout;
-import java.awt.FlowLayout;
+import java.awt.Frame;
 import java.awt.GridLayout;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.time.format.DateTimeParseException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -24,86 +28,79 @@ import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Supplier;
 import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
 import javax.swing.JButton;
+import javax.swing.JComponent;
 import javax.swing.JFrame;
-import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
-import javax.swing.SwingConstants;
-import javax.swing.table.DefaultTableModel;
 
-public class MenuAdministrador extends JFrame {
+public class MenuAdministrador extends MenuBase {
 
-    private final Usuario usuario;
     private final ConciertoService conciertoService;
     private final SectorService sectorService;
     private final UsuarioService usuarioService;
     private final TicketService ticketService;
+    private final MerchandisingService merchandisingService;
+    private final Map<String, JFrame> openTableFrames;
 
     public MenuAdministrador(Usuario usuario) {
-        this.usuario = usuario;
+        super(usuario);
         this.conciertoService = new ConciertoService();
         this.sectorService = new SectorService();
         this.usuarioService = new UsuarioService();
         this.ticketService = new TicketService();
-        initialize();
+        this.merchandisingService = new MerchandisingService();
+        this.openTableFrames = new HashMap<>();
+        inicializarMenu("Menu Administrador");
     }
 
-    private void initialize() {
-        setTitle("Menu Administrador");
-        setSize(820, 520);
-        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setLocationRelativeTo(null);
-        setLayout(new BorderLayout(10, 10));
-
-        add(buildHeader(), BorderLayout.NORTH);
-        add(buildButtons(), BorderLayout.CENTER);
+    @Override
+    protected String getTituloPanel() {
+        return "Panel de Administrador";
     }
 
-    private JPanel buildHeader() {
-        JPanel panel = new JPanel(new BorderLayout());
-        panel.setBorder(BorderFactory.createEmptyBorder(15, 15, 5, 15));
+    @Override
+    protected JComponent crearContenido() {
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        EstiloGUI.aplicarPanelContenido(panel);
 
-        JLabel title = new JLabel("Panel de Administrador", SwingConstants.CENTER);
-        title.setFont(title.getFont().deriveFont(18f));
-        panel.add(title, BorderLayout.NORTH);
+        panel.add(new AdminConciertosPanel(
+                e -> mostrarConciertosActivos(),
+                e -> mostrarTodosLosConciertos(),
+                e -> crearConcierto(),
+                e -> modificarConcierto(),
+                e -> cancelarConcierto(),
+                e -> verDisponibilidadConcierto()));
+        panel.add(new AdminSectoresPanel(
+                e -> verSectoresDeConcierto(),
+                e -> crearSector(),
+                e -> crearTicketsDeSector()));
+        panel.add(new AdminTicketsPanel(
+                e -> verTicketsDeConcierto(),
+                e -> bloquearTicket(),
+                e -> liberarTicket()));
+        panel.add(new AdminOtrosPanel(
+                e -> gestionarMerchandising(),
+                e -> verVentasMerchandising(),
+                e -> gestionarUsuarios(),
+                e -> PasswordDialogs.cambiarPassword(this, usuario),
+                crearBotonVolverLogin(),
+                crearBotonCerrarSistema()));
 
-        JLabel subtitle = new JLabel(
-                usuario.getNombre() + " " + usuario.getApellido() + " | " + usuario.getEmail(),
-                SwingConstants.CENTER);
-        panel.add(subtitle, BorderLayout.CENTER);
-
-        return panel;
+        JScrollPane scrollPane = new JScrollPane(panel);
+        scrollPane.setBorder(BorderFactory.createEmptyBorder());
+        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
+        return scrollPane;
     }
 
-    private JPanel buildButtons() {
-        JPanel panel = new JPanel(new GridLayout(0, 2, 10, 10));
-        panel.setBorder(BorderFactory.createEmptyBorder(10, 20, 20, 20));
-
-        addButton(panel, "Listar conciertos activos", e -> mostrarConciertosActivos());
-        addButton(panel, "Listar todos los conciertos", e -> mostrarTodosLosConciertos());
-        addButton(panel, "Crear concierto", e -> crearConcierto());
-        addButton(panel, "Modificar concierto", e -> modificarConcierto());
-        addButton(panel, "Cancelar concierto", e -> cancelarConcierto());
-        addButton(panel, "Ver disponibilidad", e -> verDisponibilidadConcierto());
-        addButton(panel, "Ver sectores", e -> verSectoresDeConcierto());
-        addButton(panel, "Crear sector", e -> crearSector());
-        addButton(panel, "Crear tickets de sector", e -> crearTicketsDeSector());
-        addButton(panel, "Ver tickets", e -> verTicketsDeConcierto());
-        addButton(panel, "Bloquear ticket", e -> bloquearTicket());
-        addButton(panel, "Liberar ticket", e -> liberarTicket());
-        addButton(panel, "Cerrar sesion", e -> cerrarSesion());
-        addButton(panel, "Cerrar menu", e -> dispose());
-
-        return panel;
-    }
-
-    private void addButton(JPanel panel, String label, java.awt.event.ActionListener action) {
-        JButton button = new JButton(label);
-        button.addActionListener(action);
-        panel.add(button);
+    @Override
+    public void dispose() {
+        cerrarTablasAbiertas();
+        super.dispose();
     }
 
     private void mostrarConciertosActivos() {
@@ -130,11 +127,11 @@ public class MenuAdministrador extends JFrame {
 
     private void crearConcierto() {
         try {
-            String artista = pedirTexto("Artista", "Ingrese el nombre del artista");
-            LocalDate fecha = pedirFecha("Fecha (yyyy-MM-dd)", "2026-06-15");
-            LocalTime hora = pedirHora("Hora (HH:mm)", "21:00");
-            String lugar = pedirTexto("Lugar", "Ingrese el lugar del concierto");
-            int capacidadTotal = pedirEntero("Capacidad total", "60");
+            String artista = DialogosUtil.pedirTexto(this, "Artista", "Ingrese el nombre del artista");
+            LocalDate fecha = DialogosUtil.pedirFecha(this, "Fecha (yyyy-MM-dd)", "2026-06-15");
+            LocalTime hora = DialogosUtil.pedirHora(this, "Hora (HH:mm)", "21:00");
+            String lugar = DialogosUtil.pedirTexto(this, "Lugar", "Ingrese el lugar del concierto");
+            int capacidadTotal = DialogosUtil.pedirEntero(this, "Capacidad total", "60");
             Integer organizadorId = seleccionarOrganizador();
             if (organizadorId == null) {
                 return;
@@ -152,35 +149,7 @@ public class MenuAdministrador extends JFrame {
     private void modificarConcierto() {
         try {
             Concierto concierto = seleccionarConcierto();
-            if (concierto == null) {
-                return;
-            }
-            if (!puedeModificarConcierto(concierto)) {
-                return;
-            }
-
-            String artista = pedirTexto("Artista", concierto.getArtista());
-            LocalDate fecha = pedirFecha("Fecha (yyyy-MM-dd)", concierto.getFecha().toString());
-            LocalTime hora = pedirHora("Hora (HH:mm)", concierto.getHora().toString());
-            String lugar = pedirTexto("Lugar", concierto.getLugar());
-            int capacidadTotal = pedirEntero("Capacidad total", String.valueOf(concierto.getCapacidadTotal()));
-            Integer organizadorId = seleccionarOrganizador(concierto.getOrganizadorId());
-            if (organizadorId == null) {
-                return;
-            }
-
-            concierto.setArtista(artista);
-            concierto.setFecha(fecha);
-            concierto.setHora(hora);
-            concierto.setLugar(lugar);
-            concierto.setCapacidadTotal(capacidadTotal);
-            concierto.setOrganizadorId(organizadorId);
-
-            if (conciertoService.modificarConcierto(concierto)) {
-                mostrarInfo("Concierto modificado", "Se actualizo el concierto " + concierto.getArtista() + ".");
-            } else {
-                mostrarInfo("Sin cambios", "No se pudo modificar el concierto.");
-            }
+            modificarConcierto(concierto);
         } catch (IllegalArgumentException e) {
             mostrarInfo("Datos invalidos", e.getMessage());
         } catch (SQLException e) {
@@ -195,32 +164,7 @@ public class MenuAdministrador extends JFrame {
                 mostrarInfo("Sin concierto", "No se encontro el concierto indicado.");
                 return;
             }
-            if (!puedeModificarConcierto(concierto)) {
-                return;
-            }
-
-            String artista = pedirTexto("Artista", concierto.getArtista());
-            LocalDate fecha = pedirFecha("Fecha (yyyy-MM-dd)", concierto.getFecha().toString());
-            LocalTime hora = pedirHora("Hora (HH:mm)", concierto.getHora().toString());
-            String lugar = pedirTexto("Lugar", concierto.getLugar());
-            int capacidadTotal = pedirEntero("Capacidad total", String.valueOf(concierto.getCapacidadTotal()));
-            Integer organizadorId = seleccionarOrganizador(concierto.getOrganizadorId());
-            if (organizadorId == null) {
-                return;
-            }
-
-            concierto.setArtista(artista);
-            concierto.setFecha(fecha);
-            concierto.setHora(hora);
-            concierto.setLugar(lugar);
-            concierto.setCapacidadTotal(capacidadTotal);
-            concierto.setOrganizadorId(organizadorId);
-
-            if (conciertoService.modificarConcierto(concierto)) {
-                mostrarInfo("Concierto modificado", "Se actualizo el concierto " + concierto.getArtista() + ".");
-            } else {
-                mostrarInfo("Sin cambios", "No se pudo modificar el concierto.");
-            }
+            modificarConcierto(concierto);
         } catch (IllegalArgumentException e) {
             mostrarInfo("Datos invalidos", e.getMessage());
         } catch (SQLException e) {
@@ -228,17 +172,39 @@ public class MenuAdministrador extends JFrame {
         }
     }
 
+    private void modificarConcierto(Concierto concierto) throws SQLException {
+        if (concierto == null || !puedeModificarConcierto(concierto)) {
+            return;
+        }
+
+        String artista = DialogosUtil.pedirTexto(this, "Artista", concierto.getArtista());
+        LocalDate fecha = DialogosUtil.pedirFecha(this, "Fecha (yyyy-MM-dd)", concierto.getFecha().toString());
+        LocalTime hora = DialogosUtil.pedirHora(this, "Hora (HH:mm)", concierto.getHora().toString());
+        String lugar = DialogosUtil.pedirTexto(this, "Lugar", concierto.getLugar());
+        int capacidadTotal = DialogosUtil.pedirEntero(this, "Capacidad total", String.valueOf(concierto.getCapacidadTotal()));
+        Integer organizadorId = seleccionarOrganizador(concierto.getOrganizadorId());
+        if (organizadorId == null) {
+            return;
+        }
+
+        concierto.setArtista(artista);
+        concierto.setFecha(fecha);
+        concierto.setHora(hora);
+        concierto.setLugar(lugar);
+        concierto.setCapacidadTotal(capacidadTotal);
+        concierto.setOrganizadorId(organizadorId);
+
+        if (conciertoService.modificarConcierto(concierto)) {
+            mostrarInfo("Concierto modificado", "Se actualizo el concierto " + concierto.getArtista() + ".");
+        } else {
+            mostrarInfo("Sin cambios", "No se pudo modificar el concierto.");
+        }
+    }
+
     private void cancelarConcierto() {
         try {
             Concierto concierto = seleccionarConcierto();
-            if (concierto == null) {
-                return;
-            }
-
-            boolean cancelado = conciertoService.cancelarConcierto(concierto.getId());
-            mostrarInfo("Cancelar concierto", cancelado
-                    ? "El concierto fue cancelado."
-                    : "No se encontro el concierto indicado.");
+            cancelarConcierto(concierto);
         } catch (IllegalArgumentException e) {
             mostrarInfo("Datos invalidos", e.getMessage());
         } catch (SQLException e) {
@@ -248,15 +214,32 @@ public class MenuAdministrador extends JFrame {
 
     private void cancelarConcierto(int conciertoId) {
         try {
-            boolean cancelado = conciertoService.cancelarConcierto(conciertoId);
-            mostrarInfo("Cancelar concierto", cancelado
-                    ? "El concierto fue cancelado."
-                    : "No se encontro el concierto indicado.");
+            Concierto concierto = conciertoService.buscarPorId(conciertoId);
+            if (concierto == null) {
+                mostrarInfo("Cancelar concierto", "No se encontro el concierto indicado.");
+                return;
+            }
+            cancelarConcierto(concierto);
         } catch (IllegalArgumentException e) {
             mostrarInfo("Datos invalidos", e.getMessage());
         } catch (SQLException e) {
             mostrarError("No se pudo cancelar el concierto", e);
         }
+    }
+
+    private void cancelarConcierto(Concierto concierto) throws SQLException {
+        if (concierto == null) {
+            return;
+        }
+        if (!confirmarAccion("Cancelar concierto",
+                "Desea cancelar el concierto \"" + concierto.getArtista() + "\"?")) {
+            return;
+        }
+
+        boolean cancelado = conciertoService.cancelarConcierto(concierto.getId());
+        mostrarInfo("Cancelar concierto", cancelado
+                ? "El concierto fue cancelado."
+                : "No se encontro el concierto indicado.");
     }
 
     private boolean puedeModificarConcierto(Concierto concierto) {
@@ -306,7 +289,8 @@ public class MenuAdministrador extends JFrame {
                 rows[i][4] = sector.getPrecio();
                 rows[i][5] = sector.getDisponibles();
             }
-            mostrarTabla("Sectores del concierto " + concierto.getArtista(), columns, rows);
+            mostrarTablaConBotones("Sectores del concierto " + concierto.getArtista(), columns, () -> rows, null,
+                    "Buscar por tipo o nombre:", 1, 2);
         } catch (IllegalArgumentException e) {
             mostrarInfo("Datos invalidos", e.getMessage());
         } catch (SQLException e) {
@@ -320,22 +304,7 @@ public class MenuAdministrador extends JFrame {
             if (concierto == null) {
                 return;
             }
-            String tipo = seleccionarTipoSector();
-            if (tipo == null) {
-                return;
-            }
-            String nombre = pedirTexto("Nombre del sector", "Principal");
-            int capacidad = pedirEntero("Capacidad del sector", "10");
-            String precioStr = pedirTexto("Precio (ej. 100.00)", "100.00");
-            BigDecimal precio;
-            try {
-                precio = new BigDecimal(precioStr.trim());
-            } catch (NumberFormatException ex) {
-                throw new IllegalArgumentException("Precio invalido.");
-            }
-
-            int id = sectorService.crearSector(concierto.getId(), tipo, nombre, capacidad, precio);
-            mostrarInfo("Sector creado", "Se creo el sector con ID " + id + ".");
+            crearSector(concierto.getId());
         } catch (IllegalArgumentException e) {
             mostrarInfo("Datos invalidos", e.getMessage());
         } catch (SQLException e) {
@@ -349,9 +318,9 @@ public class MenuAdministrador extends JFrame {
             if (tipo == null) {
                 return;
             }
-            String nombre = pedirTexto("Nombre del sector", "Principal");
-            int capacidad = pedirEntero("Capacidad del sector", "10");
-            String precioStr = pedirTexto("Precio (ej. 100.00)", "100.00");
+            String nombre = DialogosUtil.pedirTexto(this, "Nombre del sector", "Principal");
+            int capacidad = DialogosUtil.pedirEntero(this, "Capacidad del sector", "10");
+            String precioStr = DialogosUtil.pedirTexto(this, "Precio (ej. 100.00)", "100.00");
             BigDecimal precio;
             try {
                 precio = new BigDecimal(precioStr.trim());
@@ -411,9 +380,9 @@ public class MenuAdministrador extends JFrame {
             if (tipo == null) {
                 return;
             }
-            String nombre = pedirTexto("Nombre del sector", sector.getNombre());
-            int capacidad = pedirEntero("Capacidad del sector", String.valueOf(sector.getCapacidad()));
-            String precioStr = pedirTexto("Precio (ej. 100.00)", sector.getPrecio().toString());
+            String nombre = DialogosUtil.pedirTexto(this, "Nombre del sector", sector.getNombre());
+            int capacidad = DialogosUtil.pedirEntero(this, "Capacidad del sector", String.valueOf(sector.getCapacidad()));
+            String precioStr = DialogosUtil.pedirTexto(this, "Precio (ej. 100.00)", sector.getPrecio().toString());
             BigDecimal precio;
             try {
                 precio = new BigDecimal(precioStr.trim());
@@ -439,12 +408,7 @@ public class MenuAdministrador extends JFrame {
 
     private void eliminarSector(int sectorId) {
         try {
-            int confirmacion = JOptionPane.showConfirmDialog(
-                    this,
-                    "Desea eliminar el sector seleccionado?",
-                    "Eliminar sector",
-                    JOptionPane.YES_NO_OPTION);
-            if (confirmacion != JOptionPane.YES_OPTION) {
+            if (!confirmarAccion("Eliminar sector", "Desea eliminar el sector seleccionado?")) {
                 return;
             }
 
@@ -622,9 +586,13 @@ public class MenuAdministrador extends JFrame {
         return conciertosPorId;
     }
 
-    private void cerrarSesion() {
-        dispose();
-        new LoginFrame().setVisible(true);
+    private void cerrarTablasAbiertas() {
+        for (JFrame frame : openTableFrames.values().toArray(new JFrame[0])) {
+            if (frame != null && frame.isDisplayable()) {
+                frame.dispose();
+            }
+        }
+        openTableFrames.clear();
     }
 
     private void verTicketsDeConcierto() {
@@ -647,7 +615,8 @@ public class MenuAdministrador extends JFrame {
                 rows[i][5] = ticket.getEstado();
                 rows[i][6] = ticket.getCompraId();
             }
-            mostrarTabla("Tickets del concierto " + concierto.getArtista(), columns, rows);
+            mostrarTablaConBotones("Tickets del concierto " + concierto.getArtista(), columns, () -> rows, null,
+                    "Buscar por codigo o estado:", 3, 5);
         } catch (IllegalArgumentException e) {
             mostrarInfo("Datos invalidos", e.getMessage());
         } catch (SQLException e) {
@@ -666,11 +635,7 @@ public class MenuAdministrador extends JFrame {
             if (ticket == null) {
                 return;
             }
-
-            boolean bloqueado = ticketService.bloquearTicket(ticket.getId());
-            mostrarInfo("Bloquear ticket", bloqueado
-                    ? "El ticket fue bloqueado."
-                    : "No se pudo bloquear el ticket.");
+            bloquearTicket(ticket.getId(), "Desea bloquear el ticket " + ticket.getCodigo() + "?");
         } catch (IllegalArgumentException e) {
             mostrarInfo("Datos invalidos", e.getMessage());
         } catch (SQLException e) {
@@ -689,11 +654,7 @@ public class MenuAdministrador extends JFrame {
             if (ticket == null) {
                 return;
             }
-
-            boolean liberado = ticketService.liberarTicket(ticket.getId());
-            mostrarInfo("Liberar ticket", liberado
-                    ? "El ticket fue liberado."
-                    : "No se pudo liberar el ticket.");
+            liberarTicket(ticket.getId(), "Desea liberar el ticket " + ticket.getCodigo() + "?");
         } catch (IllegalArgumentException e) {
             mostrarInfo("Datos invalidos", e.getMessage());
         } catch (SQLException e) {
@@ -703,10 +664,7 @@ public class MenuAdministrador extends JFrame {
 
     private void bloquearTicket(int ticketId) {
         try {
-            boolean bloqueado = ticketService.bloquearTicket(ticketId);
-            mostrarInfo("Bloquear ticket", bloqueado
-                    ? "El ticket fue bloqueado."
-                    : "No se pudo bloquear el ticket.");
+            bloquearTicket(ticketId, "Desea bloquear el ticket seleccionado?");
         } catch (IllegalArgumentException e) {
             mostrarInfo("Datos invalidos", e.getMessage());
         } catch (SQLException e) {
@@ -716,10 +674,7 @@ public class MenuAdministrador extends JFrame {
 
     private void liberarTicket(int ticketId) {
         try {
-            boolean liberado = ticketService.liberarTicket(ticketId);
-            mostrarInfo("Liberar ticket", liberado
-                    ? "El ticket fue liberado."
-                    : "No se pudo liberar el ticket.");
+            liberarTicket(ticketId, "Desea liberar el ticket seleccionado?");
         } catch (IllegalArgumentException e) {
             mostrarInfo("Datos invalidos", e.getMessage());
         } catch (SQLException e) {
@@ -727,12 +682,34 @@ public class MenuAdministrador extends JFrame {
         }
     }
 
+    private void bloquearTicket(int ticketId, String mensajeConfirmacion) throws SQLException {
+        if (!confirmarAccion("Bloquear ticket", mensajeConfirmacion)) {
+            return;
+        }
+
+        boolean bloqueado = ticketService.bloquearTicket(ticketId);
+        mostrarInfo("Bloquear ticket", bloqueado
+                ? "El ticket fue bloqueado."
+                : "No se pudo bloquear el ticket.");
+    }
+
+    private void liberarTicket(int ticketId, String mensajeConfirmacion) throws SQLException {
+        if (!confirmarAccion("Liberar ticket", mensajeConfirmacion)) {
+            return;
+        }
+
+        boolean liberado = ticketService.liberarTicket(ticketId);
+        mostrarInfo("Liberar ticket", liberado
+                ? "El ticket fue liberado."
+                : "No se pudo liberar el ticket.");
+    }
+
     private void mostrarTabla(String titulo, String[] columns, Object[][] rows) {
         mostrarTablaConBotones(titulo, columns, () -> rows, null);
     }
 
     private void mostrarTablaConciertos(String titulo, Supplier<LinkedList<Concierto>> fetcher) {
-        String[] columns = {"ID", "Artista", "Fecha", "Hora", "Lugar", "Capacidad", "Disponibles", "Estado", "Organizador"};
+        String[] columns = {"ID", "Artista", "Fecha", "Hora", "Lugar", "Capacidad", "Disponibles", "Estado", "Organizador", "Poster"};
         Supplier<Object[][]> rows = () -> {
             LinkedList<Concierto> conciertos = fetcher.get();
             Object[][] data = new Object[conciertos.size()][columns.length];
@@ -747,6 +724,7 @@ public class MenuAdministrador extends JFrame {
                 data[i][6] = concierto.getDisponibles();
                 data[i][7] = concierto.getEstado();
                 data[i][8] = concierto.getOrganizadorId();
+                data[i][9] = concierto.getPosterUrl();
             }
             return data;
         };
@@ -769,7 +747,8 @@ public class MenuAdministrador extends JFrame {
                 if (id != null) { verSectoresDeConcierto(id); }
             });
             return Arrays.asList(crear, editar, cancelar, verSectores);
-        });
+        }, "Buscar por artista o lugar:", detallePosterConcierto(9),
+                new TablaConBotones.FiltrosConcierto(2, 4, 7), 1, 4);
     }
 
     private void verSectoresDeConcierto(int conciertoId) {
@@ -814,7 +793,304 @@ public class MenuAdministrador extends JFrame {
             JButton verTickets = new JButton("Ver tickets");
             verTickets.addActionListener(e -> verTicketsDeConcierto(conciertoId));
             return Arrays.asList(crear, editar, eliminar, generar, verTickets);
-        });
+        }, "Buscar por tipo o nombre:", 1, 2);
+    }
+
+    private void gestionarMerchandising() {
+        String[] columns = {"ID", "Imagen", "Concierto", "Producto", "Precio", "Stock"};
+        Supplier<Object[][]> rows = () -> {
+            try {
+                LinkedList<Merchandising> productos = merchandisingService.listarTodos();
+                Object[][] data = new Object[productos.size()][columns.length];
+                for (int i = 0; i < productos.size(); i++) {
+                    Merchandising producto = productos.get(i);
+                    Concierto concierto = conciertoService.buscarPorId(producto.getConciertoId());
+                    data[i][0] = producto.getId();
+                    data[i][1] = ImagenHelper.cargarMiniatura(producto.getImagenUrl());
+                    data[i][2] = concierto == null ? producto.getConciertoId() : concierto.getArtista();
+                    data[i][3] = producto.getNombre();
+                    data[i][4] = producto.getPrecio();
+                    data[i][5] = producto.getStock();
+                }
+                return data;
+            } catch (SQLException e) {
+                mostrarError("No se pudo listar el merchandising", e);
+                return new Object[0][columns.length];
+            }
+        };
+        mostrarTablaConBotones("Gestion de merchandising", columns, rows, (table, refrescar) -> {
+            JButton crear = new JButton("Crear producto");
+            crear.addActionListener(e -> { crearMerchandising(); refrescar.run(); });
+            JButton editar = new JButton("Editar");
+            editar.addActionListener(e -> {
+                Integer id = idSeleccionado(table);
+                if (id != null) { modificarMerchandising(id); refrescar.run(); }
+            });
+            JButton stock = new JButton("Ajustar stock");
+            stock.addActionListener(e -> {
+                Integer id = idSeleccionado(table);
+                if (id != null) { ajustarStockMerchandising(id); refrescar.run(); }
+            });
+            JButton eliminar = new JButton("Eliminar");
+            eliminar.addActionListener(e -> {
+                Integer id = idSeleccionado(table);
+                if (id != null) { eliminarMerchandising(id); refrescar.run(); }
+            });
+            return Arrays.asList(crear, editar, stock, eliminar);
+        }, "Buscar por concierto o producto:", 1, 2);
+    }
+
+    private void verVentasMerchandising() {
+        String[] columns = {"Detalle", "Compra", "Fecha", "Concierto", "Producto",
+                "Comprador", "Cantidad", "Precio unitario", "Total", "Metodo pago"};
+        Supplier<Object[][]> rows = () -> {
+            try {
+                LinkedList<VentaMerchandising> ventas = merchandisingService.listarVentas();
+                return filasVentasMerchandising(ventas, columns.length);
+            } catch (SQLException e) {
+                mostrarError("No se pudieron listar las ventas de merchandising", e);
+                return new Object[0][columns.length];
+            }
+        };
+        mostrarTablaConBotones("Ventas de merchandising", columns, rows, null,
+                "Buscar por concierto, producto o comprador:", 3, 4, 5, 9);
+    }
+
+    private void gestionarUsuarios() {
+        String[] columns = {"ID", "Nombre", "Apellido", "Email", "Documento/DNI", "Rol"};
+        Supplier<Object[][]> rows = () -> {
+            try {
+                LinkedList<Usuario> usuarios = usuarioService.listarUsuarios();
+                Object[][] data = new Object[usuarios.size()][columns.length];
+                for (int i = 0; i < usuarios.size(); i++) {
+                    Usuario usuarioListado = usuarios.get(i);
+                    data[i][0] = usuarioListado.getId();
+                    data[i][1] = usuarioListado.getNombre();
+                    data[i][2] = usuarioListado.getApellido();
+                    data[i][3] = usuarioListado.getEmail();
+                    data[i][4] = usuarioListado.getDocumento();
+                    data[i][5] = usuarioListado.getRol();
+                }
+                return data;
+            } catch (SQLException e) {
+                mostrarError("No se pudieron listar los usuarios", e);
+                return new Object[0][columns.length];
+            }
+        };
+        mostrarTablaConBotones("Gestion de usuarios", columns, rows, (table, refrescar) -> {
+            JButton crear = new JButton("Crear usuario");
+            crear.addActionListener(e -> { crearUsuario(); refrescar.run(); });
+            JButton editar = new JButton("Editar");
+            editar.addActionListener(e -> {
+                Integer id = idSeleccionado(table);
+                if (id != null) { modificarUsuario(id); refrescar.run(); }
+            });
+            JButton password = new JButton("Cambiar password");
+            password.addActionListener(e -> {
+                Integer id = idSeleccionado(table);
+                if (id != null) { cambiarPasswordUsuario(id); refrescar.run(); }
+            });
+            JButton eliminar = new JButton("Eliminar");
+            eliminar.addActionListener(e -> {
+                Integer id = idSeleccionado(table);
+                if (id != null) { eliminarUsuario(id); refrescar.run(); }
+            });
+            return Arrays.asList(crear, editar, password, eliminar);
+        }, "Buscar por nombre, email o rol:", 1, 2, 3, 5);
+    }
+
+    private void crearUsuario() {
+        try {
+            String nombre = DialogosUtil.pedirTexto(this, "Nombre", "Nombre");
+            String apellido = DialogosUtil.pedirTexto(this, "Apellido", "Apellido");
+            String email = DialogosUtil.pedirTexto(this, "Email", "usuario@mail.com");
+            String documento = DialogosUtil.pedirTextoOpcional(this, "Documento/DNI (opcional)", "");
+            String rol = seleccionarRol("Comprador");
+            if (rol == null) {
+                return;
+            }
+            String password = PasswordDialogs.pedirNuevoPassword(this, "Password inicial");
+            if (password == null) {
+                return;
+            }
+
+            int id = usuarioService.crearUsuario(nombre, apellido, email, documento, password, rol);
+            mostrarInfo("Usuario creado", "Se creo el usuario con ID " + id + ".");
+        } catch (IllegalArgumentException e) {
+            mostrarInfo("Datos invalidos", e.getMessage());
+        } catch (SQLException e) {
+            mostrarError("No se pudo crear el usuario", e);
+        }
+    }
+
+    private void modificarUsuario(int id) {
+        try {
+            Usuario usuarioEditado = usuarioService.buscarPorId(id);
+            if (usuarioEditado == null) {
+                mostrarInfo("Sin usuario", "No se encontro el usuario indicado.");
+                return;
+            }
+
+            String nombre = DialogosUtil.pedirTexto(this, "Nombre", usuarioEditado.getNombre());
+            String apellido = DialogosUtil.pedirTexto(this, "Apellido", usuarioEditado.getApellido());
+            String email = DialogosUtil.pedirTexto(this, "Email", usuarioEditado.getEmail());
+            String documento = DialogosUtil.pedirTextoOpcional(this, "Documento/DNI (opcional)", usuarioEditado.getDocumento());
+            String rol = seleccionarRol(usuarioEditado.getRol());
+            if (rol == null) {
+                return;
+            }
+
+            usuarioEditado.setNombre(nombre);
+            usuarioEditado.setApellido(apellido);
+            usuarioEditado.setEmail(email);
+            usuarioEditado.setDocumento(documento);
+            usuarioEditado.setRol(rol);
+
+            boolean modificado = usuarioService.modificarUsuario(usuarioEditado);
+            mostrarInfo("Modificar usuario", modificado
+                    ? "El usuario fue modificado."
+                    : "No se pudo modificar el usuario.");
+        } catch (IllegalArgumentException e) {
+            mostrarInfo("Datos invalidos", e.getMessage());
+        } catch (SQLException e) {
+            mostrarError("No se pudo modificar el usuario", e);
+        }
+    }
+
+    private void cambiarPasswordUsuario(int id) {
+        try {
+            Usuario usuarioCambio = usuarioService.buscarPorId(id);
+            if (usuarioCambio == null) {
+                mostrarInfo("Sin usuario", "No se encontro el usuario indicado.");
+                return;
+            }
+            String password = PasswordDialogs.pedirNuevoPassword(this, "Cambiar password de " + usuarioCambio.getEmail());
+            if (password == null) {
+                return;
+            }
+            if (!confirmarAccion("Cambiar password",
+                    "Desea cambiar el password de " + usuarioCambio.getEmail() + "?")) {
+                return;
+            }
+
+            boolean actualizado = usuarioService.actualizarPassword(id, password, password);
+            mostrarInfo("Cambiar password", actualizado
+                    ? "El password fue actualizado."
+                    : "No se pudo actualizar el password.");
+        } catch (IllegalArgumentException e) {
+            mostrarInfo("Datos invalidos", e.getMessage());
+        } catch (SQLException e) {
+            mostrarError("No se pudo actualizar el password", e);
+        }
+    }
+
+    private void eliminarUsuario(int id) {
+        try {
+            if (id == usuario.getId()) {
+                mostrarInfo("Eliminar usuario", "No se puede eliminar el usuario actual.");
+                return;
+            }
+            Usuario usuarioEliminar = usuarioService.buscarPorId(id);
+            if (usuarioEliminar == null) {
+                mostrarInfo("Sin usuario", "No se encontro el usuario indicado.");
+                return;
+            }
+            if (!confirmarAccion("Eliminar usuario",
+                    "Desea eliminar el usuario " + usuarioEliminar.getEmail() + "?")) {
+                return;
+            }
+
+            boolean eliminado = usuarioService.eliminarUsuario(id);
+            mostrarInfo("Eliminar usuario", eliminado
+                    ? "El usuario fue eliminado."
+                    : "No se encontro el usuario indicado.");
+        } catch (IllegalArgumentException e) {
+            mostrarInfo("Datos invalidos", e.getMessage());
+        } catch (SQLException e) {
+            mostrarError("No se pudo eliminar el usuario", e);
+        }
+    }
+
+    private void crearMerchandising() {
+        try {
+            Concierto concierto = seleccionarConcierto();
+            if (concierto == null) {
+                return;
+            }
+            String nombre = DialogosUtil.pedirTexto(this, "Nombre del producto", "Remera");
+            BigDecimal precio = DialogosUtil.pedirPrecio(this, "35.00");
+            int stock = DialogosUtil.pedirEntero(this, "Stock", "100");
+            int id = merchandisingService.crearProducto(concierto.getId(), nombre, precio, stock);
+            mostrarInfo("Producto creado", "Se creo el producto con ID " + id + ".");
+        } catch (IllegalArgumentException e) {
+            mostrarInfo("Datos invalidos", e.getMessage());
+        } catch (SQLException e) {
+            mostrarError("No se pudo crear el producto", e);
+        }
+    }
+
+    private void modificarMerchandising(int id) {
+        try {
+            Merchandising producto = merchandisingService.buscarPorId(id);
+            if (producto == null) {
+                mostrarInfo("Sin producto", "No se encontro el producto indicado.");
+                return;
+            }
+            String nombre = DialogosUtil.pedirTexto(this, "Nombre del producto", producto.getNombre());
+            BigDecimal precio = DialogosUtil.pedirPrecio(this, producto.getPrecio().toString());
+            int stock = DialogosUtil.pedirEntero(this, "Stock", String.valueOf(producto.getStock()));
+            producto.setNombre(nombre);
+            producto.setPrecio(precio);
+            producto.setStock(stock);
+            boolean modificado = merchandisingService.modificarProducto(producto);
+            mostrarInfo("Modificar producto", modificado
+                    ? "El producto fue modificado."
+                    : "No se pudo modificar el producto.");
+        } catch (IllegalArgumentException e) {
+            mostrarInfo("Datos invalidos", e.getMessage());
+        } catch (SQLException e) {
+            mostrarError("No se pudo modificar el producto", e);
+        }
+    }
+
+    private void ajustarStockMerchandising(int id) {
+        try {
+            Merchandising producto = merchandisingService.buscarPorId(id);
+            if (producto == null) {
+                mostrarInfo("Sin producto", "No se encontro el producto indicado.");
+                return;
+            }
+            int stock = DialogosUtil.pedirEntero(this, "Stock", String.valueOf(producto.getStock()));
+            if (!confirmarAccion("Actualizar stock",
+                    "Desea cambiar el stock de \"" + producto.getNombre() + "\" de "
+                            + producto.getStock() + " a " + stock + "?")) {
+                return;
+            }
+            boolean actualizado = merchandisingService.actualizarStock(id, stock);
+            mostrarInfo("Actualizar stock", actualizado
+                    ? "El stock fue actualizado."
+                    : "No se pudo actualizar el stock.");
+        } catch (IllegalArgumentException e) {
+            mostrarInfo("Datos invalidos", e.getMessage());
+        } catch (SQLException e) {
+            mostrarError("No se pudo actualizar el stock", e);
+        }
+    }
+
+    private void eliminarMerchandising(int id) {
+        try {
+            if (!confirmarAccion("Eliminar producto", "Desea eliminar el producto seleccionado?")) {
+                return;
+            }
+            boolean eliminado = merchandisingService.eliminarProducto(id);
+            mostrarInfo("Eliminar producto", eliminado
+                    ? "El producto fue eliminado."
+                    : "No se encontro el producto indicado.");
+        } catch (IllegalArgumentException e) {
+            mostrarInfo("Datos invalidos", e.getMessage());
+        } catch (SQLException e) {
+            mostrarError("No se pudo eliminar el producto", e);
+        }
     }
 
     private void verTicketsDeConcierto(int conciertoId) {
@@ -851,144 +1127,129 @@ public class MenuAdministrador extends JFrame {
                 if (id != null) { liberarTicket(id); refrescar.run(); }
             });
             return Arrays.asList(bloquear, liberar);
-        });
+        }, "Buscar por codigo o estado:", 3, 5);
+    }
+
+    private Object[][] filasVentasMerchandising(LinkedList<VentaMerchandising> ventas, int columnCount) {
+        Object[][] data = new Object[ventas.size()][columnCount];
+        for (int i = 0; i < ventas.size(); i++) {
+            VentaMerchandising venta = ventas.get(i);
+            data[i][0] = venta.getDetalleId();
+            data[i][1] = venta.getCompraId();
+            data[i][2] = venta.getFecha();
+            data[i][3] = venta.getConcierto();
+            data[i][4] = venta.getProducto();
+            data[i][5] = venta.getComprador();
+            data[i][6] = venta.getCantidad();
+            data[i][7] = venta.getPrecioUnitario();
+            data[i][8] = venta.getTotal();
+            data[i][9] = venta.getMetodoPago();
+        }
+        return data;
     }
 
     private void mostrarTablaConBotones(String titulo, String[] columns,
             Supplier<Object[][]> rowsSupplier,
             BiFunction<JTable, Runnable, List<JButton>> extraButtons) {
-        DefaultTableModel model = new DefaultTableModel(rowsSupplier.get(), columns) {
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return false;
-            }
-        };
-
-        JTable table = new JTable(model);
-        JScrollPane scrollPane = new JScrollPane(table);
-
-        JFrame frame = new JFrame(titulo);
-        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        frame.setLayout(new BorderLayout(5, 5));
-        frame.add(scrollPane, BorderLayout.CENTER);
-
-        Runnable refrescar = () -> model.setDataVector(rowsSupplier.get(), columns);
-
-        JPanel bar = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 6));
-        if (extraButtons != null) {
-            for (JButton button : extraButtons.apply(table, refrescar)) {
-                bar.add(button);
-            }
-        }
-
-        JButton subir = new JButton("Subir");
-        subir.addActionListener(e -> moverFila(table, -1));
-        JButton bajar = new JButton("Bajar");
-        bajar.addActionListener(e -> moverFila(table, 1));
-        JButton actualizar = new JButton("Actualizar");
-        actualizar.addActionListener(e -> refrescar.run());
-        JButton cerrar = new JButton("Cerrar");
-        cerrar.addActionListener(e -> frame.dispose());
-        bar.add(subir);
-        bar.add(bajar);
-        bar.add(actualizar);
-        bar.add(cerrar);
-
-        frame.add(bar, BorderLayout.SOUTH);
-        frame.setSize(960, 460);
-        frame.setLocationRelativeTo(this);
-        frame.setVisible(true);
+        mostrarTablaConBotones(titulo, columns, rowsSupplier, extraButtons, null);
     }
 
-    private void moverFila(JTable table, int delta) {
-        int row = table.getSelectedRow();
-        if (row < 0) {
-            mostrarInfo("Mover fila", "Seleccione una fila.");
-            return;
+    private void mostrarTablaConBotones(String titulo, String[] columns,
+            Supplier<Object[][]> rowsSupplier,
+            BiFunction<JTable, Runnable, List<JButton>> extraButtons,
+            String etiquetaBusqueda,
+            int... columnasBusqueda) {
+        mostrarTablaConBotones(titulo, columns, rowsSupplier, extraButtons,
+                etiquetaBusqueda, (TablaConBotones.DetalleImagen) null, columnasBusqueda);
+    }
+
+    private void mostrarTablaConBotones(String titulo, String[] columns,
+            Supplier<Object[][]> rowsSupplier,
+            BiFunction<JTable, Runnable, List<JButton>> extraButtons,
+            String etiquetaBusqueda,
+            TablaConBotones.DetalleImagen detalleImagen,
+            int... columnasBusqueda) {
+        mostrarTablaConBotones(titulo, columns, rowsSupplier, extraButtons,
+                etiquetaBusqueda, detalleImagen, null, columnasBusqueda);
+    }
+
+    private void mostrarTablaConBotones(String titulo, String[] columns,
+            Supplier<Object[][]> rowsSupplier,
+            BiFunction<JTable, Runnable, List<JButton>> extraButtons,
+            String etiquetaBusqueda,
+            TablaConBotones.FiltrosConcierto filtrosConcierto,
+            int... columnasBusqueda) {
+        mostrarTablaConBotones(titulo, columns, rowsSupplier, extraButtons,
+                etiquetaBusqueda, null, filtrosConcierto, columnasBusqueda);
+    }
+
+    private void mostrarTablaConBotones(String titulo, String[] columns,
+            Supplier<Object[][]> rowsSupplier,
+            BiFunction<JTable, Runnable, List<JButton>> extraButtons,
+            String etiquetaBusqueda,
+            TablaConBotones.DetalleImagen detalleImagen,
+            TablaConBotones.FiltrosConcierto filtrosConcierto,
+            int... columnasBusqueda) {
+        JFrame openFrame = openTableFrames.get(titulo);
+        if (openFrame != null) {
+            if (openFrame.isDisplayable()) {
+                openFrame.setState(Frame.NORMAL);
+                openFrame.toFront();
+                openFrame.requestFocus();
+                return;
+            }
+            openTableFrames.remove(titulo);
         }
-        int target = row + delta;
-        DefaultTableModel model = (DefaultTableModel) table.getModel();
-        if (target < 0 || target >= model.getRowCount()) {
-            return;
-        }
-        model.moveRow(row, row, target);
-        table.setRowSelectionInterval(target, target);
+
+        TablaConBotones.Busqueda busqueda = etiquetaBusqueda == null
+                ? null
+                : new TablaConBotones.Busqueda(etiquetaBusqueda, columnasBusqueda);
+        JFrame frame = TablaConBotones.mostrar(this, titulo, columns, rowsSupplier, extraButtons,
+                busqueda, detalleImagen, filtrosConcierto);
+        openTableFrames.put(titulo, frame);
+        frame.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosed(WindowEvent e) {
+                if (openTableFrames.get(titulo) == frame) {
+                    openTableFrames.remove(titulo);
+                }
+            }
+        });
+    }
+
+    private TablaConBotones.DetalleImagen detallePosterConcierto(int columnaPoster) {
+        return new TablaConBotones.DetalleImagen(
+                columnaPoster,
+                220,
+                300,
+                new int[] {1, 2, 4, 7},
+                new String[] {"Artista", "Fecha", "Lugar", "Estado"});
     }
 
     private Integer idSeleccionado(JTable table) {
-        int row = table.getSelectedRow();
-        if (row < 0) {
-            mostrarInfo("Accion", "Seleccione una fila.");
-            return null;
-        }
-        Object value = table.getModel().getValueAt(row, 0);
-        return Integer.valueOf(value.toString());
+        return TablaConBotones.idSeleccionado(this, table);
     }
 
-    private String pedirTexto(String campo, String valorInicial) {
-        String valor = (String) JOptionPane.showInputDialog(this,
-                "Ingrese " + campo,
-                campo,
+    private boolean confirmarAccion(String titulo, String mensaje) {
+        int confirmacion = JOptionPane.showConfirmDialog(
+                this,
+                mensaje,
+                titulo,
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.WARNING_MESSAGE);
+        return confirmacion == JOptionPane.YES_OPTION;
+    }
+
+    private String seleccionarRol(String seleccionInicial) {
+        String[] roles = {"Administrador", "Organizador", "Comprador", "PersonalAcceso"};
+        return (String) JOptionPane.showInputDialog(
+                this,
+                "Seleccione el rol:",
+                "Rol de usuario",
                 JOptionPane.PLAIN_MESSAGE,
                 null,
-                null,
-                valorInicial);
-        if (valor == null) {
-            throw new IllegalArgumentException("Operacion cancelada.");
-        }
-        if (valor.trim().isEmpty()) {
-            throw new IllegalArgumentException("El campo " + campo + " es obligatorio.");
-        }
-        return valor.trim();
-    }
-
-    private int pedirEntero(String campo, String valorInicial) {
-        String valor = (String) JOptionPane.showInputDialog(this,
-                "Ingrese " + campo,
-                campo,
-                JOptionPane.PLAIN_MESSAGE,
-                null,
-                null,
-                valorInicial);
-        if (valor == null) {
-            throw new IllegalArgumentException("Operacion cancelada.");
-        }
-        return Integer.parseInt(valor.trim());
-    }
-
-    private LocalDate pedirFecha(String campo, String valorInicial) {
-        String valor = pedirTextoConDefault(campo, valorInicial);
-        try {
-            return LocalDate.parse(valor);
-        } catch (DateTimeParseException e) {
-            throw new IllegalArgumentException("Formato de fecha invalido. Use yyyy-MM-dd.");
-        }
-    }
-
-    private LocalTime pedirHora(String campo, String valorInicial) {
-        String valor = pedirTextoConDefault(campo, valorInicial);
-        try {
-            return LocalTime.parse(valor);
-        } catch (DateTimeParseException e) {
-            throw new IllegalArgumentException("Formato de hora invalido. Use HH:mm.");
-        }
-    }
-
-    private String pedirTextoConDefault(String campo, String valorInicial) {
-        String valor = (String) JOptionPane.showInputDialog(this,
-                "Ingrese " + campo,
-                campo,
-                JOptionPane.PLAIN_MESSAGE,
-                null,
-                null,
-                valorInicial);
-        if (valor == null) {
-            throw new IllegalArgumentException("Operacion cancelada.");
-        }
-        if (valor.trim().isEmpty()) {
-            throw new IllegalArgumentException("El campo " + campo + " es obligatorio.");
-        }
-        return valor.trim();
+                roles,
+                seleccionInicial == null ? "Comprador" : seleccionInicial);
     }
 
     private void mostrarInfo(String titulo, String mensaje) {
