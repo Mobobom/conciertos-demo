@@ -1,0 +1,6 @@
+host=localhost
+puerto=3306
+base=ticketing
+usuario=ticketing
+contrasena=tu_contrasena
+useSSL=false
