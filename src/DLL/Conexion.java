@@ -26,8 +26,16 @@ public class Conexion {
         String puerto = config.getProperty("puerto", "3306");
         String base = config.getProperty("base", "ticketing");
         String useSSL = config.getProperty("useSSL", "false");
+        String requireSSL = config.getProperty("requireSSL", "false");
+        String verifyServerCertificate = config.getProperty("verifyServerCertificate", "false");
+        String allowPublicKeyRetrieval = config.getProperty("allowPublicKeyRetrieval", "true");
+        String serverTimezone = config.getProperty("serverTimezone", "UTC");
         URL = "jdbc:mysql://" + host + ":" + puerto + "/" + base
-            + "?useSSL=" + useSSL + "&allowPublicKeyRetrieval=true&serverTimezone=UTC";
+            + "?useSSL=" + useSSL
+            + "&requireSSL=" + requireSSL
+            + "&verifyServerCertificate=" + verifyServerCertificate
+            + "&allowPublicKeyRetrieval=" + allowPublicKeyRetrieval
+            + "&serverTimezone=" + serverTimezone;
         USER = config.getProperty("usuario", "ticketing");
         PASSWORD = config.getProperty("contrasena", "");
     }
